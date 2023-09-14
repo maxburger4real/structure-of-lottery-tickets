@@ -1,5 +1,9 @@
 # Inside the structure of Lottery tickets
 
+### tasks
+    - [x] setup a todo-list to manage tasks
+    - [ ] find a way to display, watch and reverse neural network pruning.
+ 
 ### conda - setup
 
 First, create an environment and activate it.
@@ -20,3 +24,6 @@ to export the environment, use:
 ```zsh
 % conda list -e > requirements.txt
 ```
+
+### remote 
+https://github.com/maxburger4real/structure-of-lottery-tickets
