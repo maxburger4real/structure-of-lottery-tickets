@@ -8,11 +8,12 @@ STATE_DICT = "model_state_dict"
 POSITIVE_COLOR = "blue"
 NEGATIVE_COLOR = "red"
 
-def black_and_white(layers_of_weights):
 
+# attribute_functions
+def black_and_white(layers_of_weights):
     layers = []
     for weight_matrix in layers_of_weights:
-        X = weight_matrix.numpy()
+        X = weight_matrix.clone().numpy()
         mask = X > 0
 
         # Create X with the same shape as Y and fill it with 'no'
@@ -25,19 +26,24 @@ def black_and_white(layers_of_weights):
     
     return layers
 
-def alpha_value(weights):
-    # TODO: remove complexity of this function style.
-    # simply use a list of matrices.
+def layerwise_normalized_abs_value(layers_of_weights):
+    layers = []
+    for weight_matrix in layers_of_weights:
+        X = weight_matrix.clone().numpy()
+        X = np.abs(X)
+        #X = X / np.abs(X).max(axis=(1,2), keepdims=True)
+        X = X / X.max()
+        
+        X[X < 0.1] = 0
+        X *= 3 
 
-    norm_weights = [ np.abs(w)/ np.abs(w).max() for w in weights]
-
-    def func(G, edge, weight_pos, matrix_idx):
-        W = norm_weights[matrix_idx]
-        return W[weight_pos].item()
-
-    return func
+        layers.append(X)
+    
+    return layers
 
 
+
+# helpers
 def load_state_dict_from_file(file: Path):
     return load(file)[STATE_DICT]
 
@@ -68,7 +74,7 @@ def get_layers_of_nodes(G: nx.DiGraph):
 
 
 # Populate the Graph
-
+from collections import defaultdict
 def add_weight_edges_arrays(
     G: nx.DiGraph,
     layers_to_nodes, 
@@ -76,16 +82,16 @@ def add_weight_edges_arrays(
 ):
     """Inplace add attributes to all edges, according to attribute functions."""
     
-    attrs = {} 
+    attrs = defaultdict(dict)
+
     for name, layers_of_weights in attribute_set.items():
         for layer, timeful_weight_matrix in enumerate(layers_of_weights):
             for i, in_node in enumerate(layers_to_nodes[layer]):
                 for o, out_node in enumerate(layers_to_nodes[layer+1]):
                     graph_pos = (in_node, out_node)
-                    attrs[graph_pos] = {name : timeful_weight_matrix[:, o, i]}
+                    attrs[graph_pos].update({name : timeful_weight_matrix[:, o, i]})
 
     nx.set_edge_attributes(G, attrs)
-
 
 def add_weight_edges(
     G: nx.DiGraph,

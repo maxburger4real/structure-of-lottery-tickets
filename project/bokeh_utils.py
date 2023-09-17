@@ -10,7 +10,8 @@ from bokeh.colors import Color
 
 LINE_COLOR = 'line_color'
 LINE_COLOR_LIST = 'line_color_list'
-
+LINE_WIDTH_LIST = 'line_width_list'
+LINE_WIDTH = 'line_width'
 LINE_ALPHA = 'line_alpha'
 LAYER='layer'
 
@@ -23,9 +24,13 @@ def draw_interactive_mlp_graph(G):
     # to initialize the Line color with something
     line_color_list = graph.edge_renderer.data_source.data[LINE_COLOR_LIST]
     graph.edge_renderer.data_source.data[LINE_COLOR] =  [l[0] for l in line_color_list]
+    line_width_list = graph.edge_renderer.data_source.data[LINE_WIDTH_LIST]
+    graph.edge_renderer.data_source.data[LINE_WIDTH] =  [l[0] for l in line_width_list]
+
     graph.edge_renderer.glyph = MultiLine(
         line_color=LINE_COLOR, # the field of the edges
-        line_width=0.3
+        line_width=LINE_WIDTH,
+        line_alpha=LINE_WIDTH
     )
     plot = figure()
 
@@ -36,9 +41,12 @@ def draw_interactive_mlp_graph(G):
             const new_data = Object.assign({}, source.data)
 
             // update the y column in the new data dict from the appropriate other column
-            const X = source.data['line_color_list']
+            const LC = source.data['line_color_list']
+            new_data.line_color  = LC.map(subArray => subArray[cb_obj.value]);
 
-            new_data.line_color  = X.map(subArray => subArray[cb_obj.value]);
+            const LW = source.data['line_width_list']
+            new_data.line_width  = LW.map(subArray => subArray[cb_obj.value]);
+            console.log(new_data)
 
             // set the new data on source, BokehJS will pick this up automatically
             source.data = new_data
