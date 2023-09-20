@@ -1,6 +1,10 @@
+import sys
+sys.path.append('../')
+
 import numpy as np
 import torch
-import utils
+
+from common import torch_utils
 
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -24,7 +28,7 @@ def _f(data):
 
 def get_train_and_test_data():
     """from BIMT code"""
-    utils.set_seed(_seed)
+    torch_utils.set_seed(_seed)
     inputs = np.random.rand(_N, INPUT_DIM)*2-1
     labels = _f(inputs)
     inputs = torch.tensor(inputs, dtype=torch.float, requires_grad=True)

@@ -1,40 +1,8 @@
-"""
-This module contains the MLP Architectures for reproducibility.
-For reproducibility reasons, the *code* for each model architecture must be
-saved. Otherwise it can not be recreated from state_dicts.
-"""
+"""Code from https://github.com/KindXiaoming/BIMT/blob/main/symbolic_formulas_3.1.ipynb"""
+
 import torch
 import numpy as np
 import torch.nn as nn
-import utils
-from datasets.symbolic_1 import INPUT_DIM, OUTPUT_DIM
-
-
-class ReproducibleModel(nn.Module):
-    """An abstract class that sets the seed for reproducible initialization."""
-    def __init__(self, seed=None):
-        super(ReproducibleModel, self).__init__()
-        if seed is None: seed = utils.SEED
-        utils.set_seed(seed)
-        
-
-class MiniMLP(ReproducibleModel):
-    """A mini mlp for demo purposes."""
-    def __init__(self, seed=None):
-        super(MiniMLP, self).__init__(seed)
-
-        N = 5
-        self.model = nn.Sequential(
-            nn.Linear(INPUT_DIM, N),
-            nn.ReLU(),
-            nn.Linear(N,N),
-            nn.ReLU(),
-            nn.Linear(N,OUTPUT_DIM)
-        )
-
-    def forward(self, x):
-        y = self.model(x)
-        return y
 
 
 class BioLinear(nn.Module):
@@ -293,7 +261,6 @@ class BioMLP(nn.Module):
                         plt.plot([1/(2*p_shp[0])+i/p_shp[0], 1/(2*fold_num)+j/fold_num], [0.1*(ii+1),0.1*ii], lw=0.5*np.abs(p[i,j].detach().numpy()), color="blue" if p[i,j]>0 else "red")
                     
         ax.axis('off')
-        
         
     def thresholding(self, threshold, checkpoint = True):
         # snap too small weights (smaller than threshold) to zero. Useful for pruning.

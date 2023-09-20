@@ -3,8 +3,9 @@ import numpy as np
 from itertools import count
 from torch import load
 from pathlib import Path
+from collections import defaultdict
 
-STATE_DICT = "model_state_dict"
+from common import STATE_DICT
 POSITIVE_COLOR = "blue"
 NEGATIVE_COLOR = "red"
 
@@ -34,7 +35,7 @@ def layerwise_normalized_abs_value(layers_of_weights):
         #X = X / np.abs(X).max(axis=(1,2), keepdims=True)
         X = X / X.max()
         
-        X[X < 0.1] = 0
+        # X[X < 0.1] = 0
         X *= 3 
 
         layers.append(X)
@@ -44,17 +45,17 @@ def layerwise_normalized_abs_value(layers_of_weights):
 
 
 # helpers
-def load_state_dict_from_file(file: Path):
+def load_state_dict(file: Path):
     return load(file)[STATE_DICT]
 
 def get_shape_from_state_dict(state_dict):
     shapes = [v.shape for k,v in state_dict.items() if 'weight' in k]
     return shapes
 
-def get_weights_and_biases_from_state_dict(state_dict):
+def get_weights_from_state_dict(state_dict):
     weights = [v for k,v in state_dict.items() if 'weight' in k]
-    biases = [v for k,v in state_dict.items() if 'bias' in k]
-    return weights, biases
+    # biases = [v for k,v in state_dict.items() if 'bias' in k]
+    return weights
 
 def get_layers_of_nodes(G: nx.DiGraph):
     """
@@ -74,7 +75,6 @@ def get_layers_of_nodes(G: nx.DiGraph):
 
 
 # Populate the Graph
-from collections import defaultdict
 def add_weight_edges_arrays(
     G: nx.DiGraph,
     layers_to_nodes, 
