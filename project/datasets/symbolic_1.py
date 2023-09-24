@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader, TensorDataset
 
 INPUT_DIM = 4
 OUTPUT_DIM = 2
+DATASET_NAME = "Independence_Symbolic"
 
 _N = 100
 _seed = 0
