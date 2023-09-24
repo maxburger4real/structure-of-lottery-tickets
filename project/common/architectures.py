@@ -1,9 +1,47 @@
-"""Code from https://github.com/KindXiaoming/BIMT/blob/main/symbolic_formulas_3.1.ipynb"""
-
 import torch
-import numpy as np
 import torch.nn as nn
+import numpy as np
+from common.datasets import symbolic_1
+from common import torch_utils
 
+"""
+This module contains the MLP Architectures for reproducibility.
+For reproducibility reasons, the *code* for each model architecture must be
+saved. Otherwise it can not be recreated from state_dicts.
+"""
+
+class ReproducibleModel(nn.Module):
+    """An abstract class that sets the seed for reproducible initialization."""
+    def __init__(self, seed=None):
+        super(ReproducibleModel, self).__init__()
+        if seed is None: seed = torch_utils.SEED
+        torch_utils.set_seed(seed)
+
+
+class SimpleMLP(ReproducibleModel):
+    """A mini mlp for demo purposes."""
+    def __init__(self, weight_shape: torch.Size, Activation=nn.ReLU ,seed=None):
+        super(SimpleMLP, self).__init__(seed)
+        self.name = SimpleMLP.__name__ + str(weight_shape).replace(', ','_').replace('[','_').replace(']','')
+
+        modules = []
+        modules.append(nn.Linear(weight_shape[0], weight_shape[1]))
+
+        for i in range(1, len(weight_shape) - 1):
+            modules.append(Activation())
+            in_dim = weight_shape[i]
+            out_dim = weight_shape[i+1]
+            modules.append(nn.Linear(in_dim, out_dim))
+
+        self.modules = modules
+        self.model = nn.Sequential(*modules)
+
+    def forward(self, x):
+        y = self.model(x)
+        return y
+
+
+"""Code from https://github.com/KindXiaoming/BIMT/blob/main/symbolic_formulas_3.1.ipynb"""
 
 class BioLinear(nn.Module):
     # BioLinear is just Linear, but each neuron comes with coordinates.
@@ -29,7 +67,7 @@ class BioLinear(nn.Module):
         self.output = self.linear(x).clone()
         return self.output
     
-    
+
 class BioMLP(nn.Module):
     # BioMLP is just MLP, but each neuron comes with coordinates.
     def __init__(self, in_dim=2, out_dim=2, w=2, depth=2, shp=None, token_embedding=False, embedding_size=None):
@@ -286,4 +324,3 @@ class BioMLP(nn.Module):
         with torch.no_grad():
             for param, original_param in zip(self.parameters(), self.original_params):
                 param.data.copy_(original_param.data)
-                

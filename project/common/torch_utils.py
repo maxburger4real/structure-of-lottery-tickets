@@ -5,8 +5,6 @@ import torch
 import torch.nn.utils.prune as prune
 import numpy as np
 
-from collections import defaultdict
-
 SEED = 64
 
 def get_pytorch_device():
@@ -85,7 +83,7 @@ def measure_global_sparsity(model, weight=True, bias=False, use_mask=False):
 
     return num_zeros, num_elements, sparsity
 
-def save_model(model):
+def save_model(model, path: pathlib.Path):
     # TODO: unify model saving
     raise NotImplementedError
     return

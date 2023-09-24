@@ -1,15 +1,9 @@
+import copy
+from typing import List
 
 import torch
 import torch.nn.utils.prune as prune
 
-import pathlib
-import copy
-from collections import defaultdict
-from typing import List
-import matplotlib.pyplot as plt
-
-from datasets import symbolic_1
-from architectures.simlpe_mlp import SimpleMLP
 from common import torch_utils
 
 def convert_to_pruning_model(modules: List[torch.nn.Module], prune_weights: bool, prune_biases: bool) -> List[torch.nn.Module]:
