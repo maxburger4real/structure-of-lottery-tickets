@@ -33,67 +33,14 @@ def check_if_models_equal(model1, model2):
 def module_is_trainable(module: torch.nn.Module):
     return any(param.requires_grad for param in module.parameters())
 
-def evaluate(model, loader, loss_fn):
-    model.eval()
-    losses = []
-    for _, (x, y) in enumerate(loader):
-        pred  = model(x)
-        loss = loss_fn(pred, y)
-        losses.append(loss.detach().numpy())
-    return losses
-
-def update(model, loader, optim, loss_fn):
-    model.train()
-    losses = []
-    for _, (x, y) in enumerate(loader):
-        optim.zero_grad()
-        pred  = model(x)
-        loss =  loss_fn(pred, y)
-        loss.backward()
-        optim.step()
-        losses.append(loss.detach().numpy())
-    return losses
-
-def train(model, loader, optim, loss_fn, epochs=1):
-    """Train a model for the specified amount of epochs."""
-    losses = []
-    for _ in range(epochs):
-        loss = update(model, loader, optim, loss_fn)
-        losses.append(loss)
-
-    return losses
-
-def count_pruned_weights(model):
-    return sum([torch.sum((module.weight_mask == 0)).item() for module in model.modules if module.hasattr('weight_mask')])
-
-def count_pruned_biases(model):
-    return sum([torch.sum((param == 0)).item() for name, param in model.named_parameters() if 'bias' in name])
-
-def count_model_params(model):
-    return count_model_weights(model) + count_model_biases(model)
-
-def count_model_weights(model):
-    return sum([p.numel() for  name, p in model.named_parameters() if 'weight_orig' in name])
-
-def count_model_biases(model):
-    return sum([p.numel() for name, p in model.named_parameters() if 'bias' in name])
-
 def remaining_weights_by_pruning_steps(model, pruning_rate, pruning_levels=1):
-    n = count_model_weights(model)
+    _, n, _ = measure_global_sparsity(model)
     l = [n]
     for _ in range(pruning_levels):
         n -= prune._compute_nparams_toprune(pruning_rate, n)
         l.append(n)
 
     return l
-
-def pruning_stats(parameters_to_prune, stats_dict=None):
-    if stats_dict is None: stats_dict = defaultdict(list)
-
-    for i, (module, name) in enumerate(parameters_to_prune):
-        zeros = torch.sum((module.weight != 0)).item()
-        stats_dict[f"{i}-{name}"].append(zeros)
-    return stats_dict
 
 def measure_module_sparsity(module, weight=True, bias=False, use_mask=False):
     """from legendary overarchiever lei mao https://leimao.github.io/blog/PyTorch-Pruning/"""
@@ -137,7 +84,6 @@ def measure_global_sparsity(model, weight=True, bias=False, use_mask=False):
     sparsity = num_zeros / num_elements
 
     return num_zeros, num_elements, sparsity
-
 
 def save_model(model):
     # TODO: unify model saving
