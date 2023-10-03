@@ -1,8 +1,9 @@
 # Inside the structure of Lottery tickets
 
 ### tasks
+    - [ ] add device flexibility
     - [x] setup a todo-list to manage tasks
-    - [ ] find a way to display, watch and reverse neural network pruning.
+    - [x] find a way to display, watch and reverse neural network pruning.
  
 ### conda - setup
 

@@ -43,19 +43,29 @@ def layerwise_normalized_abs_value(layers_of_weights):
     return layers
 
 
-
 # helpers
 def load_state_dict(file: Path):
     return load(file)[STATE_DICT]
 
 def get_shape_from_state_dict(state_dict):
-    shapes = [v.shape for k,v in state_dict.items() if 'weight' in k]
+    shapes = [v.shape for k,v in state_dict.items() if ('weight' in k and 'mask' not in k)]
     return shapes
 
 def get_weights_from_state_dict(state_dict):
-    weights = [v for k,v in state_dict.items() if 'weight' in k]
+    weights, masks = [], []
+
+    for  k,v in state_dict.items():
+        if 'weight_mask' in k:
+            masks.append(v)
+        elif 'weight_orig' in k:
+            weights.append(v)
+
+        elif 'bias' in k:
+            pass
+        
+    #weights = [v for k,v in state_dict.items() if 'weight' in k]
     # biases = [v for k,v in state_dict.items() if 'bias' in k]
-    return weights
+    return weights, masks
 
 def get_layers_of_nodes(G: nx.DiGraph):
     """
@@ -71,7 +81,6 @@ def get_layers_of_nodes(G: nx.DiGraph):
         layers_of_nodes[value].append(key)
 
     return layers_of_nodes
-
 
 
 # Populate the Graph

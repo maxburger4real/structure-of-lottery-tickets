@@ -1,5 +1,6 @@
 import random
 import pathlib
+from datetime import datetime
 
 import torch
 import torch.nn.utils.prune as prune
@@ -83,14 +84,3 @@ def measure_global_sparsity(model, weight=True, bias=False, use_mask=False):
 
     return num_zeros, num_elements, sparsity
 
-def save_model(model, path: pathlib.Path):
-    # TODO: unify model saving
-    raise NotImplementedError
-    return
-    torch.save({
-        'epoch': step,
-        STATE_DICT: model.state_dict(),
-        # 'optimizer_state_dict': optimizer.state_dict(),
-        'train_loss': loss.item(),
-        'test_loss': loss_test.item(),
-        }, base / f"{step}.pt")

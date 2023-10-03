@@ -1,5 +1,11 @@
+import wandb
 import numpy as np
 from torch import optim
+from common.torch_utils import measure_global_sparsity
+
+EVAL_LOSS = 'loss/eval'
+TRAIN_LOSS = 'loss/train'
+EPOCH = 'epoch'
 
 def evaluate(model, loader, loss_fn):
     """Evaluate the model and return a numpy array of losses for each batch."""
@@ -24,10 +30,30 @@ def update(model, loader, optim, loss_fn):
         loss.backward()
         optim.step()
         losses.append(loss.detach().cpu().numpy())
+
     return np.array(losses)
 
-def train(model, loader, optim, loss_fn, epochs=1):
+def train_and_evaluate(model, train_loader, test_loader, optim, loss_fn, epochs=1):
     """Train a model for the specified amount of epochs."""
+        
+    N0, N, sparsity = measure_global_sparsity(model, use_mask=True)
+    wandb.log({'nonzero' : N-N0, 'sparsity': sparsity}, commit=False)
+    
+    # train for epochs
+    for epoch in range(1, epochs+1):
+        loss_train = update(model, train_loader, optim, loss_fn).mean().item()
+        loss_eval = evaluate(model, test_loader, loss_fn).mean().item()
+        
+        wandb.log({
+            TRAIN_LOSS + f"/{sparsity:.2f}" : loss_train,
+            EVAL_LOSS + f"/{sparsity:.2f}": loss_eval,
+            EPOCH : epoch
+        })
+
+def train(model, loader, optim, loss_fn, epochs=1):
+    """
+    @deprecated
+    Train a model for the specified amount of epochs."""
     losses = []
     for _ in range(epochs):
         loss = update(model, loader, optim, loss_fn)

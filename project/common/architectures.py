@@ -22,7 +22,6 @@ class SimpleMLP(ReproducibleModel):
     """A mini mlp for demo purposes."""
     def __init__(self, weight_shape: torch.Size, Activation=nn.ReLU ,seed=None):
         super(SimpleMLP, self).__init__(seed)
-        self.name = SimpleMLP.__name__ + str(weight_shape).replace(', ','_').replace('[','_').replace(']','')
 
         modules = []
         modules.append(nn.Linear(weight_shape[0], weight_shape[1]))
