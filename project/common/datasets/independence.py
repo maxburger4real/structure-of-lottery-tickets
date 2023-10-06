@@ -42,8 +42,11 @@ def get_train_and_test_data():
 
     return inputs, labels, inputs_test, labels_test
 
-def get_dataloaders(batch_size=None):
-    """Return Dataloaders with specific Batch size. if ommited, batch size is the complete dataset."""
+def build_loaders(batch_size=None):
+    """
+        Return Dataloaders with specific Batch size. 
+        if ommited, batch size is the complete dataset.
+    """
     if batch_size is None: batch_size = _N
     x,y,xx,yy = get_train_and_test_data()
 

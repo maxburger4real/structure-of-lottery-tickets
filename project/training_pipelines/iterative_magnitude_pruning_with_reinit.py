@@ -1,3 +1,5 @@
+"""DEPRECATED in favor of imp.py"""
+
 import wandb
 from common import pruning
 
