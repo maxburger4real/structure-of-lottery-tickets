@@ -13,21 +13,19 @@ LAST = 'last'
 PRUNE_ITER = 'prune_iter'
 SPARSITY = 'sparsity'
 
-BEST_EVAL = "/".join((SUMMARY, LOSS, EVAL+BEST))
-#LAST_EVAL = "/".join((SUMMARY, LOSS, EVAL+LAST))
-BEST_TRAIN = "/".join((SUMMARY, LOSS, TRAIN+BEST))
-#LAST_TRAIN = "/".join((SUMMARY, LOSS, TRAIN+LAST))
+BEST_EVAL = 'val_loss'  # "-".join((SUMMARY, LOSS, EVAL+BEST))
+BEST_TRAIN = "-".join((SUMMARY, LOSS, TRAIN+BEST))
 
 def run(model, train_loader, test_loader, optim, loss_fn, config: Config):
     device = config.device
     model_path = get_model_path(config)
 
-    wandb.define_metric(PRUNE_ITER)
-    wandb.define_metric(BEST_EVAL, summary="min", step_metric=PRUNE_ITER)
-    #wandb.define_metric(LAST_EVAL, summary="min", step_metric=PRUNE_ITER)
-    wandb.define_metric(BEST_TRAIN, summary="min", step_metric=PRUNE_ITER)
-    #wandb.define_metric(LAST_TRAIN, summary="min", step_metric=PRUNE_ITER)
-    wandb.define_metric(SPARSITY, summary="min", step_metric=PRUNE_ITER)
+
+    # TODO: With SWEEPS this doesnt work as optimization metric
+    # wandb.define_metric(PRUNE_ITER)
+    # wandb.define_metric(BEST_EVAL, summary="min", step_metric=PRUNE_ITER)
+    # wandb.define_metric(BEST_TRAIN, summary="min", step_metric=PRUNE_ITER)
+    # wandb.define_metric(SPARSITY, summary="min", step_metric=PRUNE_ITER)
 
     # preparing for pruning and [OPTIONALLY] save model state
     params_to_prune = pruning.convert_to_pruning_model(model.modules, prune_weights=True, prune_biases=True)
@@ -39,7 +37,6 @@ def run(model, train_loader, test_loader, optim, loss_fn, config: Config):
 
     wandb.log({
         BEST_EVAL : eval_loss_init,
-        #LAST_EVAL : eval_loss_init,
         PRUNE_ITER : 0,
         SPARSITY : 0,
     })
@@ -51,9 +48,7 @@ def run(model, train_loader, test_loader, optim, loss_fn, config: Config):
         train_losses, eval_losses = train_and_evaluate(model, train_loader, test_loader, optim, loss_fn, device, epochs=config.training_epochs)
 
         wandb.log({
-            #LAST_EVAL: eval_losses[-1],
             BEST_EVAL : min(eval_losses),
-            #LAST_TRAIN : train_losses[-1],
             BEST_TRAIN: min(train_losses),
             PRUNE_ITER : lvl,
             SPARSITY : sparsity,
@@ -71,9 +66,7 @@ def run(model, train_loader, test_loader, optim, loss_fn, config: Config):
     N0, N, sparsity = measure_global_sparsity(model, use_mask=True)        
     train_losses, eval_losses = train_and_evaluate(model, train_loader, test_loader, optim, loss_fn, device, epochs=config.training_epochs)
     wandb.log({
-        #LAST_EVAL: eval_losses[-1],
         BEST_EVAL : min(eval_losses),
-        #LAST_TRAIN : train_losses[-1],
         BEST_TRAIN: min(train_losses),
         PRUNE_ITER : lvl +1,
         SPARSITY : sparsity,

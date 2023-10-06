@@ -50,7 +50,7 @@ def get_model_path(config: Config, base: pathlib.Path = None):
 
 def save_hparams(config: Config, base = None):
     # Save the object to a file
-    config.model_class = config.model_class.__name__
+    # config.model_class = config.model_class.__name__
     base = get_model_path(config, base)
     hparams_path = base / HPARAMS_FILE
     with open(hparams_path, 'w') as f:
