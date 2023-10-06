@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 import numpy as np
-from common.datasets import symbolic_1
 from common import torch_utils
+from common.tracking import Config
 
 """
 This module contains the MLP Architectures for reproducibility.
@@ -38,6 +38,14 @@ class SimpleMLP(ReproducibleModel):
     def forward(self, x):
         y = self.model(x)
         return y
+    
+    @staticmethod
+    def make_from_config(config: Config):
+        return SimpleMLP(
+            weight_shape=config.model_shape,
+            seed=config.model_seed,
+            # TODO: support Activations someday
+        )
 
 
 """Code from https://github.com/KindXiaoming/BIMT/blob/main/symbolic_formulas_3.1.ipynb"""
