@@ -1,31 +1,22 @@
-from networkx import multipartite_layout, spring_layout, kamada_kawai_layout, planar_layout
+import json
 import numpy as np
 import networkx as nx
-import json
+from networkx.drawing.nx_agraph import graphviz_layout, write_dot
+from networkx import multipartite_layout, spring_layout, kamada_kawai_layout, planar_layout
+
+# BOKEH
 from bokeh.plotting import figure
 from bokeh.models import Circle, HoverTool,  MultiLine
 from bokeh.plotting import figure, from_networkx, show
-from bokeh.models import Slider, CustomJS, LinearColorMapper, Div
+from bokeh.models import Slider, CustomJS, LinearColorMapper
 from bokeh.layouts import column, row
-from bokeh.models import ColumnDataSource, DataTable, StringFormatter, NumberFormatter, StringEditor, NumberEditor, SelectEditor, IntEditor
+from bokeh.models import ColumnDataSource, DataTable
 from bokeh.models.widgets import TableColumn
 
-from networkx.drawing.nx_agraph import graphviz_layout, write_dot
 
 # plot func
 import re
-import torch
-from common.nx_utils import( 
-    get_weights_from_state_dict, 
-    load_state_dict, 
-    get_shape_from_state_dict,
-    add_neuron_nodes,
-    black_and_white,
-    add_weight_edges_arrays,
-    get_layers_of_nodes,
-    layerwise_normalized_abs_value
-)
-
+from common.nx_utils import load_state_dict
 from common import tracking
 
 
@@ -190,11 +181,10 @@ def _rearranged_layout(G):
 
     return nx.multipartite_layout(G, subset_key='layer')
 
-
 def _renderer_data_from_graph(G):
 
-    #layout = graphviz_layout(G, prog='dot')
-    layout = _rearranged_layout(G)
+    layout = graphviz_layout(G, prog='dot')
+    #layout = _rearranged_layout(G)
     #layout = _layerlayout(G)
 
     graph_renderer = from_networkx(G, layout)
@@ -207,6 +197,10 @@ def _renderer_data_from_graph(G):
     )
 
 def plot_checkpoints(path):
+
+    if not path.exists():
+        print("Path does not exist.")
+        return
 
     config: tracking.Config = tracking.load_hparams(path)
 
@@ -296,130 +290,3 @@ def plot_checkpoints(path):
     show(layout)
 
     return G 
-
-
-# deprecated
-def make_the_graph(path):
-    chkpts = list(path.glob("*.pt"))
-    sort_by_integer_in_filename_key = lambda x : int(*re.findall("(\d+)",x.name))
-    sorted_chkpts = sorted(chkpts, key=sort_by_integer_in_filename_key)
-
-    state_dict = load_state_dict(chkpts[0])
-    weight_shapes = get_shape_from_state_dict(state_dict)
-
-    # retrieve weights from state_dicts
-    state_dicts = [load_state_dict(f) for f in sorted_chkpts]
-    weights = [get_weights_from_state_dict(sd)[0] for sd in state_dicts]
-    masks = [get_weights_from_state_dict(sd)[1] for sd in state_dicts]
-
-    # reshape weights to include "time"-dimension as the first dim. 
-    layers_of_weights = [torch.stack(x) for x in zip(*weights)]
-    layers_of_masks = [torch.stack(x) for x in zip(*masks)]
-
-    layers_of_mask_weights = [w*m for w,m in zip(layers_of_weights, layers_of_masks)]
-
-    # add functions with names, which add attributes to the graph
-    attribute_functions = {
-        LINE_COLOR_LIST : black_and_white(layers_of_mask_weights),
-        LINE_WIDTH_LIST : layerwise_normalized_abs_value(layers_of_mask_weights)
-        }
-
-    # create a graph and populate with nodes
-    G = nx.DiGraph()
-    add_neuron_nodes(G, weight_shapes)
-    add_weight_edges_arrays(G, get_layers_of_nodes(G), attribute_functions)
-
-    return G
-
-def draw_interactive_mlp_graph(G):
-
-    #layout_function = spring_layout(G)
-    #layout_function = kamada_kawai_layout(G)
-    #layout_function = planar_layout(G)
-    #layout_function = graphviz_layout(G, prog='dot')
-    
-    import networkx as nx
-    from networkx.drawing.nx_agraph import graphviz_layout, write_dot
-
-    # write_dot(G,'test.dot')
-    # TODO: find a better way
-    num_timesteps = list(nx.get_edge_attributes(G, 'line_width_list').values())[0].__len__()
-    positions_list = []
-    for i in range(num_timesteps):
-        edges_with_weight = [(u, v) for u, v, d in G.edges(data=True) if d['line_width_list'][i] != 0]
-        # Create a subgraph with these edges
-        G_subgraph = G.edge_subgraph(edges_with_weight)
-        positions = multipartite_layout(G_subgraph, subset_key=LAYER)
-        positions_list.append(positions)
-
-
-    # G_iso = list(nx.isolates(G_subgraph))
-
-    # positions = multipartite_layout(G, subset_key=LAYER)
-    
-    # subset_nodes = [n for n, d in G.nodes(data=True) if 'your_attribute' in d]
-
-    graph = from_networkx(
-        G, 
-        layout_function=positions_list[0]
-        )
-
-    # graph.edge_renderer.data_source.data['layouts_list'] =  positions_list
-
-    graph.node_renderer.glyph = Circle(size=15, fill_color="lightblue")
-
-    # to initialize the Line color with something
-    line_color_list = graph.edge_renderer.data_source.data[LINE_COLOR_LIST]
-    graph.edge_renderer.data_source.data[LINE_COLOR] =  [l[0] for l in line_color_list]
-    
-    line_width_list = graph.edge_renderer.data_source.data[LINE_WIDTH_LIST]
-    graph.edge_renderer.data_source.data[LINE_WIDTH] =  [l[0] for l in line_width_list]
-
-    graph.edge_renderer.glyph = MultiLine(
-        line_color=LINE_COLOR, # the field of the edges
-        line_width=LINE_WIDTH,
-        # line_alpha=LINE_WIDTH
-    )
-
-    plot = figure()
-
-    callback = CustomJS(
-        args=dict(source=graph.edge_renderer.data_source, layouts=positions_list), 
-        code="""
-
-            console.log(layouts)
-            console.log(source.data)
-
-            // make a shallow copy of the current data dict
-            const new_data = Object.assign({}, source.data)
-
-            // update the y column in the new data dict from the appropriate other column
-            const LC = source.data['line_color_list']
-            new_data.line_color  = LC.map(subArray => subArray[cb_obj.value]);
-
-            const LW = source.data['line_width_list']
-            new_data.line_width  = LW.map(subArray => subArray[cb_obj.value]);
-            console.log(new_data)
-
-            // set the new data on source, BokehJS will pick this up automatically
-            source.data = new_data
-        """)
-      
-    slider = Slider(
-        start=0, 
-        end=len(graph.edge_renderer.data_source.data[LINE_COLOR_LIST][0]) - 1, 
-        value=0, 
-        step=1, 
-        title="iteration"
-    )
-    
-    slider.js_on_change('value', callback)
-
-    # oranize the layout of the plotting-window
-    plot.renderers.append(graph)
-    layout = column(slider, plot)
-    show(layout)
-
-def plot(path):
-    G = make_the_graph(path)
-    draw_interactive_mlp_graph(G)

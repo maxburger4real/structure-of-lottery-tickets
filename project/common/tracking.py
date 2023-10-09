@@ -1,7 +1,6 @@
 
 import json
 from dataclasses import dataclass, asdict
-from typing import List, Optional
 import pathlib
 import torch
 from common import STATE_DICT
