@@ -1,4 +1,3 @@
-from common import plotting
 from common import tracking
 from run_plot import plot
 
