@@ -1,13 +1,7 @@
-import wandb
 import torch
 import numpy as np
 from torch import optim
-from common.torch_utils import measure_global_sparsity
-from common.tracking import Config
-
-EVAL_LOSS = 'loss/eval'
-TRAIN_LOSS = 'loss/train'
-EPOCH = 'epoch'
+from common.tracking import Config, ADAM, SGD, MSE, ADAMW
 
 def evaluate(model, loader, loss_fn, device):
     """Evaluate the model and return a numpy array of losses for each batch."""
@@ -70,26 +64,32 @@ def build_optimizer(model, config: Config):
     """inspired by wandb
     https://colab.research.google.com/github/wandb/examples/blob/master/colabs/pytorch/Organizing_Hyperparameter_Sweeps_in_PyTorch_with_W%26B.ipynb#scrollTo=KfkduI6qWBrb
     """
-    if config.optimizer == "sgd":
+    if config.optimizer == SGD:
+        momentum = 0 if config.momentun is None else config.momentum
         optimizer = optim.SGD(
             model.parameters(),
             lr=config.lr, 
-            momentum=config.momentum
+            momentum=momentum
         )
-    elif config.optimizer == "adam":
+    elif config.optimizer == ADAM:
         optimizer = optim.Adam(
             model.parameters(),
             lr=config.lr
         )
 
+    elif config.optimizer == ADAMW:
+        optimizer = optim.AdamW(
+            model.parameters(),
+            lr=config.lr,
+            weight_decay=0.0
+        )
+
     return optimizer
 
-def build_model(config: Config):
-    ModelClass = config.model_class
-    model = ModelClass.make_from_config(config)
-    loss_fn = torch.nn.MSELoss(reduction="mean")
-
-    # send to device
-    model.to(config.device)
-
-    return model, loss_fn
+def build_loss(config: Config):
+    if config.loss_fn == MSE:
+        loss_fn = torch.nn.MSELoss(reduction="mean")
+        return loss_fn
+    
+    else:
+        raise NotImplementedError

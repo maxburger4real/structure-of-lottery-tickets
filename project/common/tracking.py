@@ -1,42 +1,64 @@
 
 import json
+from datetime import datetime
 from dataclasses import dataclass, asdict
 import pathlib
 import torch
 from common import STATE_DICT
 
+
 HPARAMS_FILE = 'hparams.json'
 PROJECT='init-thesis'
 
-ADAM = 'adam'
+# Optimizers
+ADAM = 'Adam'
 SGD = 'sgd'
+ADAMW = 'AdamW'
+
+# Activations
+RELU = 'relu'
+SILU = 'silu'
+
+# Loss Functions
+MSE = 'mse'
+CCE = 'cce'
+
+# Training Pipelines
+VANILLA = 'vanilla'
+IMP = 'imp'
+
 persistance_path = pathlib.Path("runs")
 
 @dataclass
 class Config:
+    pipeline : str
+    activation : str
+    loss_fn : str
     experiment : str
     lr : float
     dataset : str
     training_epochs : int
-    pruning_levels : int
-    pruning_rate   : float
-    prune_weights : bool
-    prune_biases : bool
-    pruning_strategy : str
-    optimizer : str
-    momentum : float
     model_shape : list[int]
     model_class : str
     model_seed : int
     data_seed : int
-    batch_size : int
-    reinit : bool
-    persist : bool
-    timestamp : str
-    device: str
-    wandb: bool
+    optimizer : str
+    persist : bool = True
+    timestamp : str = datetime.now().strftime("%Y_%m_%d_%H%M%S")
+    pruning_levels : int = None
+    pruning_rate   : float = None
+    prune_weights : bool = None
+    prune_biases : bool = None
+    pruning_strategy : str = None
+    momentum : float = None
+    batch_size : int  = None
+    reinit : bool  = None
+    device: str = 'cpu'
 
-    to_dict = asdict
+    def as_dict(self):
+        data = asdict(self)
+        return {key: value for key, value in data.items() if value is not None}
+    
 
 def get_model_path(config: Config, base: pathlib.Path = None):
     """Create the path to save the model from config."""
@@ -53,7 +75,7 @@ def save_hparams(config: Config, base = None):
     base = get_model_path(config, base)
     hparams_path = base / HPARAMS_FILE
     with open(hparams_path, 'w') as f:
-        json.dump(asdict(config), f, indent=4)
+        json.dump(config.as_dict(), f, indent=4)
 
 def load_hparams(base: pathlib.Path):
     """Returns Config Object if exists, else None."""

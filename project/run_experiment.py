@@ -1,35 +1,32 @@
 import wandb
-from training_pipelines import imp
+from training_pipelines import pipeline_selector
 from common.datasets.independence import build_loaders
 from common.tracking import Config, PROJECT, save_hparams
-from common.training import build_optimizer, build_model
+from common.training import build_optimizer, build_loss
+from common.architectures import build_model_from_config
 from configs.runs import (
     _00_baseline,
     _01_first_good,
+    _02_vanilla_mlp_from_bimt
 )
 
 def run_experiment(build_config_func):
 
     config = build_config_func()
-    # import now creates the object and the timestamp
-    with wandb.init(
-        project=PROJECT, 
-        config=config
-    ):
+    with wandb.init(project=PROJECT, config=config):
 
-        # create the model, optimizer and dataloaders
-        config.model_seed = wandb.config.model_seed
-        model, loss_fn = build_model(config)
-
-        # the sweep will overwrite this
+        # make model, loss, optim and dataloaders
         config = wandb.config
+        model = build_model_from_config(config)
+        loss_fn = build_loss(config)
         optim = build_optimizer(model, config)
         train_loader, test_loader = build_loaders(config.batch_size)
 
         # must convert back for serialization
         save_hparams(Config(**config))
 
-        model = imp.run(
+        # run the pipeline defined in the config
+        pipeline_selector.run(
             model=model,
             train_loader=train_loader,
             test_loader=test_loader,
@@ -40,7 +37,7 @@ def run_experiment(build_config_func):
 
 def main():
     # SELECT THE CONFIG YOU WANT FOR THE RUN HERE
-    make_config = _01_first_good.make_config
+    make_config = _02_vanilla_mlp_from_bimt.make_config
     run_experiment(make_config)
 
 def run_with_config(build_config_func):

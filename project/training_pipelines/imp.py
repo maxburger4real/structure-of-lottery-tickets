@@ -2,7 +2,7 @@ import wandb
 from common import pruning
 from common.torch_utils import measure_global_sparsity
 from common.tracking import Config, get_model_path, save_model
-from common.training import evaluate, update, train_and_evaluate, EVAL_LOSS, TRAIN_LOSS
+from common.training import evaluate, train_and_evaluate
 
 SUMMARY = 'summary'
 LOSS = 'loss'

@@ -2,13 +2,35 @@ import torch
 import torch.nn as nn
 import numpy as np
 from common import torch_utils
-from common.tracking import Config
+from common.tracking import Config, RELU, SILU
 
 """
 This module contains the MLP Architectures for reproducibility.
 For reproducibility reasons, the *code* for each model architecture must be
 saved. Otherwise it can not be recreated from state_dicts.
 """
+
+activations = {
+    RELU : nn.ReLU,
+    SILU : nn.SiLU
+}
+
+def build_model_from_config(config: Config):
+
+    name = config.model_class
+    shape = config.model_shape
+    seed = config.model_seed
+    activation = activations[config.activation]
+
+    if name == SimpleMLP.__name__:
+        model =  SimpleMLP(shape, activation, seed)
+        model = model.to(config.device)
+        return model
+    
+    if name == BioMLP.__name__:
+        raise NotImplementedError
+    
+
 
 class ReproducibleModel(nn.Module):
     """An abstract class that sets the seed for reproducible initialization."""
@@ -20,16 +42,16 @@ class ReproducibleModel(nn.Module):
 
 class SimpleMLP(ReproducibleModel):
     """A mini mlp for demo purposes."""
-    def __init__(self, weight_shape: torch.Size, Activation=nn.ReLU ,seed=None):
+    def __init__(self, shape: torch.Size, activation=nn.ReLU ,seed=None):
         super(SimpleMLP, self).__init__(seed)
 
         modules = []
-        modules.append(nn.Linear(weight_shape[0], weight_shape[1]))
+        modules.append(nn.Linear(shape[0], shape[1]))
 
-        for i in range(1, len(weight_shape) - 1):
-            modules.append(Activation())
-            in_dim = weight_shape[i]
-            out_dim = weight_shape[i+1]
+        for i in range(1, len(shape) - 1):
+            modules.append(activation())
+            in_dim = shape[i]
+            out_dim = shape[i+1]
             modules.append(nn.Linear(in_dim, out_dim))
 
         self.modules = modules
@@ -39,14 +61,6 @@ class SimpleMLP(ReproducibleModel):
         y = self.model(x)
         return y
     
-    @staticmethod
-    def make_from_config(config: Config):
-        return SimpleMLP(
-            weight_shape=config.model_shape,
-            seed=config.model_seed,
-            # TODO: support Activations someday
-        )
-
 
 """Code from https://github.com/KindXiaoming/BIMT/blob/main/symbolic_formulas_3.1.ipynb"""
 
