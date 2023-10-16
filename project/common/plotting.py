@@ -1,8 +1,7 @@
-import json
 import numpy as np
 import networkx as nx
 from networkx.drawing.nx_agraph import graphviz_layout, write_dot
-from networkx import multipartite_layout, spring_layout, kamada_kawai_layout, planar_layout
+from networkx import multipartite_layout
 
 # BOKEH
 from bokeh.plotting import figure
@@ -13,13 +12,13 @@ from bokeh.layouts import column, row
 from bokeh.models import ColumnDataSource, DataTable
 from bokeh.models.widgets import TableColumn
 
-
 # plot func
 import re
 from common.nx_utils import load_state_dict
 from common import tracking
 
-GROUP = "group"
+# INDEPENDENT SUBNETWORKS N THE NETWORK
+SUBNETWORK = "group"
 GROUP_COLORS = [
     'red', 'green', 'blue', 'purple', 'orange',
     'pink', 'brown', 'gray', 'olive', 'cyan'
@@ -139,10 +138,10 @@ def _tag_nodes_incoming_outgoing_connections(G):
         layer = G.nodes[node][LAYER]
         output_layer = layer if layer > output_layer else output_layer
         
-        G.nodes[node][GROUP] = 'deeppink'
+        G.nodes[node][SUBNETWORK] = 'deeppink'
         for i, sub_G in enumerate(subgraphs):
             if node in sub_G:
-                G.nodes[node][GROUP] = GROUP_COLORS[i]
+                G.nodes[node][SUBNETWORK] = GROUP_COLORS[i]
 
     for node in G.nodes():  
         is_input_layer = G.nodes[node][LAYER] == 0
@@ -157,7 +156,7 @@ def _tag_nodes_incoming_outgoing_connections(G):
         zombie, headless = False, False
         line_alpha = 0.
         alpha = 1.
-        color = G.nodes[node][GROUP]
+        color = G.nodes[node][SUBNETWORK]
 
         if indegree == 0 and outdegree == 0:
             alpha = 0
@@ -200,28 +199,16 @@ def _tag_edges_with_plus_minus_color(G):
         elif G.nodes[v][IS_HEADLESS]:
             color = 'pink'
         elif w > 0:
-            color = G.nodes[u][GROUP] #'darkturquoise'
+            color = G.nodes[u][SUBNETWORK] #'darkturquoise'
         elif w < 0:
-            color = G.nodes[u][GROUP] # 'teal'
+            color = G.nodes[u][SUBNETWORK] # 'teal'
         else:
-            alpha = .0
             color = 'white'
+            alpha = .0
 
         # Add the calculated x value as an attribute to the edge
         G.edges[u, v][LINE_ALPHA] = alpha
         G.edges[u, v][LINE_COLOR] = color
-    return G
-
-def _tag_isolated_nodes(G):
-    """ This function removes all nodes from a NetworkX graph that do not have any edges connected to them.    """
-
-    # Get a list of all nodes in the graph that have no edges
-    isolated_nodes = [node for node in G.nodes if G.degree(node) == 0]
-
-    # Remove the isolated nodes from the graph
-    for node in isolated_nodes:
-        G.nodes[node]['zombie'] = True
-
     return G
 
 def _delete_zero_weight_edges(G):
@@ -382,10 +369,11 @@ def plot_checkpoints(path):
     plot.add_tools(hover)
     
     # Convert the config dict to a Bokeh ColumnDataSource
-    config: tracking.Config = tracking.load_hparams(path)
-    names = list(config.to_dict().keys())
-    values = list(config.to_dict().values())
-    source = ColumnDataSource({'names':names, 'values':values})
+    config_dict = tracking.load_hparams(path)
+    source = ColumnDataSource({
+        'names' : list(config_dict.keys()),
+        'values' : list(config_dict.values())
+    })
 
     # Define the columns in the DataTable
     columns = [TableColumn(field="names", title="Name"), TableColumn(field="values", title="Value")]
