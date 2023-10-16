@@ -28,7 +28,9 @@ def build_model_from_config(config: Config):
         return model
     
     if name == BioMLP.__name__:
-        raise NotImplementedError
+        model = BioMLP(shp=shape, seed=seed)
+        model = model.to(config.device)
+        return model
     
 
 
@@ -42,7 +44,7 @@ class ReproducibleModel(nn.Module):
 
 class SimpleMLP(ReproducibleModel):
     """A mini mlp for demo purposes."""
-    def __init__(self, shape: torch.Size, activation=nn.ReLU ,seed=None):
+    def __init__(self, shape: torch.Size, activation=nn.ReLU, seed=None):
         super(SimpleMLP, self).__init__(seed)
 
         modules = []
@@ -89,10 +91,10 @@ class BioLinear(nn.Module):
         return self.output
     
 
-class BioMLP(nn.Module):
+class BioMLP(ReproducibleModel):
     # BioMLP is just MLP, but each neuron comes with coordinates.
-    def __init__(self, in_dim=2, out_dim=2, w=2, depth=2, shp=None, token_embedding=False, embedding_size=None):
-        super(BioMLP, self).__init__()
+    def __init__(self, in_dim=2, out_dim=2, w=2, depth=2, shp=None, token_embedding=False, embedding_size=None, seed=None):
+        super(BioMLP, self).__init__(seed)
         if shp == None:
             shp = [in_dim] + [w]*(depth-1) + [out_dim]
             self.in_dim = in_dim

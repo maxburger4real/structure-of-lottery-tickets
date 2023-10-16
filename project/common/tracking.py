@@ -26,34 +26,49 @@ CCE = 'cce'
 # Training Pipelines
 VANILLA = 'vanilla'
 IMP = 'imp'
+BIMT = 'bimt'
 
 persistance_path = pathlib.Path("runs")
 
 @dataclass
 class Config:
-    pipeline : str
-    activation : str
-    loss_fn : str
-    experiment : str
+    dataset : str  # use DATASET.__name__ or sth
+    model_class : str  # use CLASS.__name__
+
+    loss_fn : str  # use CONSTANTS
+    pipeline : str   # use CONSTANTS
+    activation : str # use CONSTANTS
+    optimizer : str  # use CONSTANTS
+
     lr : float
-    dataset : str
     training_epochs : int
     model_shape : list[int]
-    model_class : str
     model_seed : int
     data_seed : int
-    optimizer : str
-    persist : bool = True
-    timestamp : str = datetime.now().strftime("%Y_%m_%d_%H%M%S")
+
+    # DEFAULTED CONFIGS
+    device: str = 'cpu'
+    persist : bool = True  # wether to save the model at the checkpoints
+
+    # OPTIONAL CONFIGS
+    run_name : str = None
+    wandb_url : str = None
+    run_id : str = None
+    local_dir_name: str = None 
     pruning_levels : int = None
     pruning_rate   : float = None
     prune_weights : bool = None
     prune_biases : bool = None
-    pruning_strategy : str = None
+    reinit : bool  = None  # reinitialize the network after pruning (only IMP)
+
+    lamb : float = None  # lambda for regularisation (currently only for bimt)
+    bimt_local : bool = None  # if locality regularisation should be activated
+    bimt_swap : int = None  # swap every n-th iteration
+    bimt_prune : float = None  # if bimt thresholding in the end is activated.
     momentum : float = None
-    batch_size : int  = None
-    reinit : bool  = None
-    device: str = 'cpu'
+    batch_size : int  = None  # if None, batch size is dataset size
+    description : str = None  # just add information about the idea behind the configuration for documentation purposes.
+    pruning_strategy : str = None  # not really in use yet. kindof unnecessary
 
     def as_dict(self):
         data = asdict(self)
@@ -63,9 +78,12 @@ class Config:
 def get_model_path(config: Config, base: pathlib.Path = None):
     """Create the path to save the model from config."""
     if base is None: base = persistance_path
+    
     shape_info = str(config.model_shape).replace(', ','_').replace('[','_').replace(']','')
-    name = config.model_class + shape_info
-    path = base / name / config.timestamp
+    architecture = config.model_class + shape_info
+    dir = config.local_dir_name
+    
+    path = base / architecture / dir
     path.mkdir(parents=True, exist_ok=True)
     return path
 
@@ -74,21 +92,23 @@ def save_hparams(config: Config, base = None):
     # config.model_class = config.model_class.__name__
     base = get_model_path(config, base)
     hparams_path = base / HPARAMS_FILE
+
     with open(hparams_path, 'w') as f:
         json.dump(config.as_dict(), f, indent=4)
 
-def load_hparams(base: pathlib.Path):
-    """Returns Config Object if exists, else None."""
+def load_hparams(base: pathlib.Path) -> dict:
+    """Returns Config dict if exists, else None."""
     filepath = base / HPARAMS_FILE
     
     if not filepath.exists():
         return None
 
     with open(filepath, 'r') as f:
-        loaded_dict = json.load(f)
-        config = Config(**loaded_dict)
-    return config
+        config_dict = json.load(f)
+    return config_dict
 
-def save_model(model, iteration: int , base: pathlib.Path):
+def save_model(model, config: Config, filename):
     """save a model with name property to disk."""
-    torch.save({STATE_DICT: model.state_dict()}, base / f"{iteration}.pt")
+    path = get_model_path(config)
+
+    torch.save({STATE_DICT: model.state_dict()}, path / f"{filename}.pt")

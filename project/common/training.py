@@ -26,7 +26,7 @@ def update(model, loader, optim, loss_fn, device):
         x,y = x.to(device), y.to(device)
         optim.zero_grad()
         pred  = model(x)
-        loss =  loss_fn(pred, y)
+        loss = loss_fn(pred, y)
         loss.backward()
         optim.step()
         losses.append(loss.detach().cpu().numpy())
@@ -76,14 +76,12 @@ def build_optimizer(model, config: Config):
             model.parameters(),
             lr=config.lr
         )
-
     elif config.optimizer == ADAMW:
         optimizer = optim.AdamW(
             model.parameters(),
             lr=config.lr,
             weight_decay=0.0
         )
-
     return optimizer
 
 def build_loss(config: Config):

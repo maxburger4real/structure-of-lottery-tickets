@@ -1,5 +1,5 @@
-from common.tracking import Config, IMP, VANILLA
-from training_pipelines import vanilla, imp
+from common.tracking import Config, IMP, VANILLA, BIMT
+from training_pipelines import vanilla, imp, bimt
 
 def run(model, train_loader, test_loader, optim, loss_fn, config: Config):
     
@@ -9,3 +9,6 @@ def run(model, train_loader, test_loader, optim, loss_fn, config: Config):
 
     if pipeline == IMP:
         return imp.run(model, train_loader, test_loader, optim, loss_fn, config)
+    
+    if pipeline == BIMT:
+        return bimt.run(model, train_loader, test_loader, optim, loss_fn, config)

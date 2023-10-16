@@ -1,33 +1,24 @@
 import wandb
 import run_experiment
-from configs.runs import (
-    _00_baseline,
-    _01_first_good,
-)
-from configs.sweeps import (
-    _00_basic_hparam_search,
-    _01_compare_with_multiple_seeds
-)
+from common.tracking import PROJECT
 
-# SELECT THE CONFIG YOU WANT FOR THE SWEEP HERE
-sweep_config = _01_compare_with_multiple_seeds
-make_run_config = _01_first_good.make_config
+# select the run_config to use
+from configs.runs._03_bimt_swap_local_from_paper import run_config
+
+# select the sweep_config to use
+from configs.sweeps._01_compare_with_multiple_seeds import sweep_config
+
+project = PROJECT
+entity = None  # not needed
+count = None   # number of runs
 
 def main():
-
     # initialize the sweep
-    sweep_id = wandb.sweep(
-        sweep_config.config, 
-        project=sweep_config.config['project']
-    )
+    sweep_id = wandb.sweep(sweep_config, entity, project)
 
     # start execution of the sweeps
-    function = run_experiment.run_with_config(make_run_config)
-    wandb.agent(
-        sweep_id, 
-        function, 
-        #count=50
-    )
+    function = lambda : run_experiment.main(run_config)
+    wandb.agent(sweep_id, function, entity, project, count)
 
 if __name__ == "__main__":
     main()

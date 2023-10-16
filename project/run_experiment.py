@@ -1,7 +1,7 @@
 import wandb
 from training_pipelines import pipeline_selector
 from common.datasets.independence import build_loaders
-from common.tracking import Config, PROJECT, save_hparams
+from common.tracking import Config, PROJECT, save_hparams, get_model_path
 from common.training import build_optimizer, build_loss
 from common.architectures import build_model_from_config
 from configs.runs import (
@@ -10,20 +10,24 @@ from configs.runs import (
     _02_vanilla_mlp_from_bimt
 )
 
-def run_experiment(build_config_func):
+def run_experiment(config):
+    """Run a wandb experiment from a config."""
 
-    config = build_config_func()
-    with wandb.init(project=PROJECT, config=config):
+    with wandb.init(project=PROJECT, config=config) as run:
 
         # make model, loss, optim and dataloaders
-        config = wandb.config
-        model = build_model_from_config(config)
-        loss_fn = build_loss(config)
-        optim = build_optimizer(model, config)
-        train_loader, test_loader = build_loaders(config.batch_size)
+        model = build_model_from_config(wandb.config)
+        loss_fn = build_loss(wandb.config)
+        optim = build_optimizer(model, wandb.config)
+        train_loader, test_loader = build_loaders(wandb.config.batch_size)
 
-        # must convert back for serialization
-        save_hparams(Config(**config))
+        # save the config and add some wandb info to connect wandb with local files
+        config_dict = Config(**wandb.config)
+        config_dict.run_id = run.id
+        config_dict.run_name = run.name
+        config_dict.wandb_url = run.url
+        config_dict.local_dir_name = run.id
+        save_hparams(config_dict)
 
         # run the pipeline defined in the config
         pipeline_selector.run(
@@ -32,17 +36,16 @@ def run_experiment(build_config_func):
             test_loader=test_loader,
             optim=optim,
             loss_fn=loss_fn,
-            config=config,
+            config=config_dict,
         )
 
-def main():
-    # SELECT THE CONFIG YOU WANT FOR THE RUN HERE
-    make_config = _02_vanilla_mlp_from_bimt.make_config
-    run_experiment(make_config)
+def main(config=None):
 
-def run_with_config(build_config_func):
-    """Used to run with config from run_experiments."""
-    return lambda : run_experiment(build_config_func)
+    # SELECT THE CONFIG YOU WANT FOR THE RUN HERE
+    if config is None:
+        config = _02_vanilla_mlp_from_bimt.config
+
+    run_experiment(config)
 
 if __name__ == "__main__":
     main()
