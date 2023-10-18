@@ -1,14 +1,14 @@
 from common.tracking import Config, IMP, VANILLA, BIMT
 from training_pipelines import vanilla, imp, bimt
 
-def run(model, train_loader, test_loader, optim, loss_fn, config: Config):
+def run(model, train_loader, test_loader, loss_fn, config: Config):
     
     pipeline = config.pipeline
     if pipeline == VANILLA:
-        return vanilla.run(model, train_loader, test_loader, optim, loss_fn, config)
+        return vanilla.run(model, train_loader, test_loader, loss_fn, config)
 
     if pipeline == IMP:
-        return imp.run(model, train_loader, test_loader, optim, loss_fn, config)
+        return imp.run(model, train_loader, test_loader, loss_fn, config)
     
     if pipeline == BIMT:
-        return bimt.run(model, train_loader, test_loader, optim, loss_fn, config)
+        return bimt.run(model, train_loader, test_loader, loss_fn, config)

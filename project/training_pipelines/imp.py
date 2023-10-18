@@ -2,7 +2,7 @@ import wandb
 from common import pruning
 from common.torch_utils import measure_global_sparsity
 from common.tracking import Config, save_model
-from common.training import evaluate, train_and_evaluate
+from common.training import build_optimizer, evaluate, train_and_evaluate
 
 SUMMARY = 'summary'
 LOSS = 'loss'
@@ -16,7 +16,10 @@ SPARSITY = 'sparsity'
 BEST_EVAL = 'val_loss'  # "-".join((SUMMARY, LOSS, EVAL+BEST))
 BEST_TRAIN = "-".join((SUMMARY, LOSS, TRAIN+BEST))
 
-def run(model, train_loader, test_loader, optim, loss_fn, config: Config):
+def run(model, train_loader, test_loader, loss_fn, config: Config):
+
+    # optimizer is recreated after model reinit (reset running avgs etc)
+    optim = build_optimizer(model, config)
 
     # preparing for pruning and [OPTIONALLY] save model state
     params_to_prune = pruning.convert_to_pruning_model(model.modules, prune_weights=True, prune_biases=True)
@@ -49,8 +52,10 @@ def run(model, train_loader, test_loader, optim, loss_fn, config: Config):
         pruning.global_magnitude_pruning(params_to_prune, config.pruning_rate)
 
         # [OPTIONAL] reinit
-        if config.reinit: model.load_state_dict(reinit_model_state_dict, strict=False)
-    
+        if config.reinit:
+            model.load_state_dict(reinit_model_state_dict, strict=False)
+            optim = build_optimizer(model, config)
+
     # final finetuning
     N0, N, sparsity = measure_global_sparsity(model, use_mask=True)        
     train_losses, eval_losses = train_and_evaluate(model, train_loader, test_loader, optim, loss_fn, config.device, config.training_epochs)

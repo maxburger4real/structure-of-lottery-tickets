@@ -2,7 +2,7 @@ import wandb
 from training_pipelines import pipeline_selector
 from common.datasets.independence import build_loaders
 from common.tracking import Config, PROJECT, save_hparams
-from common.training import build_optimizer, build_loss
+from common.training import build_loss
 from common.architectures import build_model_from_config
 # select the run_config to use
 from configs.runs._05_imp_bimt_inspired import run_config
@@ -16,7 +16,6 @@ def run_experiment(config):
         # make model, loss, optim and dataloaders
         model = build_model_from_config(wandb.config)
         loss_fn = build_loss(wandb.config)
-        optim = build_optimizer(model, wandb.config)
         train_loader, test_loader = build_loaders(wandb.config.batch_size)
 
         # save the config and add some wandb info to connect wandb with local files
@@ -32,7 +31,6 @@ def run_experiment(config):
             model=model,
             train_loader=train_loader,
             test_loader=test_loader,
-            optim=optim,
             loss_fn=loss_fn,
             config=config_dict,
         )

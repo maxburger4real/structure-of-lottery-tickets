@@ -1,13 +1,14 @@
 import numpy as np
 import wandb
 from common.tracking import Config, save_model
-from common.training import evaluate
+from common.training import build_optimizer, evaluate
 
 VAL_LOSS = 'val_loss'
 TRAIN_LOSS = 'train_loss'
 
-def run(model, train_loader, test_loader, optim, loss_fn, config: Config):
+def run(model, train_loader, test_loader, loss_fn, config: Config):
 
+    optim = build_optimizer(model, config)
     swap_log = config.bimt_swap if config.bimt_swap is not None else np.inf
 
     lamb = config.lamb
