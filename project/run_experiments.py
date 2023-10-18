@@ -3,7 +3,7 @@ import run_experiment
 from common.tracking import PROJECT
 
 # select the run_config to use
-from configs.runs._03_bimt_swap_local_from_paper import run_config
+from configs.runs._05_imp_bimt_inspired import run_config
 
 # select the sweep_config to use
 from configs.sweeps._01_compare_with_multiple_seeds import sweep_config

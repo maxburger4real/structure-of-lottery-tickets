@@ -326,6 +326,7 @@ def plot_checkpoints(path):
         step=1, 
         title="Pruning Levels"
     )
+    
     # Create a CustomJS callback
     callback = CustomJS(
         args=dict(

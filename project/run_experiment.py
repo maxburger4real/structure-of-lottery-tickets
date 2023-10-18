@@ -1,14 +1,12 @@
 import wandb
 from training_pipelines import pipeline_selector
 from common.datasets.independence import build_loaders
-from common.tracking import Config, PROJECT, save_hparams, get_model_path
+from common.tracking import Config, PROJECT, save_hparams
 from common.training import build_optimizer, build_loss
 from common.architectures import build_model_from_config
-from configs.runs import (
-    _00_baseline,
-    _01_first_good,
-    _02_vanilla_mlp_from_bimt
-)
+# select the run_config to use
+from configs.runs._05_imp_bimt_inspired import run_config
+
 
 def run_experiment(config):
     """Run a wandb experiment from a config."""
@@ -42,9 +40,7 @@ def run_experiment(config):
 def main(config=None):
 
     # SELECT THE CONFIG YOU WANT FOR THE RUN HERE
-    if config is None:
-        config = _02_vanilla_mlp_from_bimt.config
-
+    if config is None: config = run_config
     run_experiment(config)
 
 if __name__ == "__main__":
