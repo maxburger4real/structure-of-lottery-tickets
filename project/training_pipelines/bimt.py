@@ -1,9 +1,4 @@
 import numpy as np
-
-import torch.nn as nn
-import torch.nn.functional as F
-from torch import optim
-
 import wandb
 from common.tracking import Config, save_model
 from common.training import evaluate
@@ -59,5 +54,9 @@ def run(model, train_loader, test_loader, optim, loss_fn, config: Config):
     
     if config.bimt_prune is not None:
         model.thresholding(config.bimt_prune)
+        eval_loss = evaluate(model, test_loader, loss_fn, config.device).mean().item()
+        wandb.log({VAL_LOSS : eval_loss})
+        save_model(model, config, steps+1)
+
 
     
