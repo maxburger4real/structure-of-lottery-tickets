@@ -74,7 +74,8 @@ def build_optimizer(model, config: Config):
     elif config.optimizer == ADAM:
         optimizer = optim.Adam(
             model.parameters(),
-            lr=config.lr
+            lr=config.lr,
+            weight_decay=0.0,
         )
     elif config.optimizer == ADAMW:
         optimizer = optim.AdamW(
