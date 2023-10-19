@@ -1,20 +1,21 @@
+import wandb
 from common import tracking
 from common import plotting
-
-def plot(path):
-    plotting.plot_checkpoints(path)
+from common.tracking import PROJECT
  
+entity = 'mxmn'
+project = PROJECT
+
 def main():
-
-    models = {
-        'SimpleMLP_4_20_20_2' : ["ssoy8hp4", ],
-        'BioMLP_4_20_20_2' : ["qv2wt6or"]
-    }
-
-    for model_class, runs in models.items(): 
-        for name in runs:
-            path = tracking.persistance_path / model_class / name
-            plot(path)
+    
+    sweep_id = 'c5cm3766'
+    api = wandb.Api()
+    sweep = api.sweep(f"{entity}/{project}/{sweep_id}")
+    run_ids = [run.id for run in sweep.runs]
+    
+    for name in run_ids:
+        path = tracking.persistance_path / name
+        plotting.plot_checkpoints(path)
 
 if __name__ == '__main__':
     main()
