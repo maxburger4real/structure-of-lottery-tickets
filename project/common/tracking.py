@@ -60,7 +60,7 @@ class Config:
     prune_biases : bool = None
     reinit : bool  = None  # reinitialize the network after pruning (only IMP)
 
-    lamb : float = None  # lambda for regularisation (currently only for bimt)
+    lambda_l1 : float = None  # lambda for l1 regularisation
     bimt_local : bool = None  # if locality regularisation should be activated
     bimt_swap : int = None  # swap every n-th iteration
     bimt_prune : float = None  # if bimt thresholding in the end is activated.

@@ -38,7 +38,7 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
     for lvl in range(1, config.pruning_levels+1):
         
         N0, N, sparsity = measure_global_sparsity(model, use_mask=True)        
-        train_losses, eval_losses = train_and_evaluate(model, train_loader, test_loader, optim, loss_fn, config.device, config.training_epochs)
+        train_losses, eval_losses = train_and_evaluate(model, train_loader, test_loader, optim, loss_fn, config)
 
         wandb.log({
             BEST_EVAL : min(eval_losses),
@@ -58,7 +58,7 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
 
     # final finetuning
     N0, N, sparsity = measure_global_sparsity(model, use_mask=True)        
-    train_losses, eval_losses = train_and_evaluate(model, train_loader, test_loader, optim, loss_fn, config.device, config.training_epochs)
+    train_losses, eval_losses = train_and_evaluate(model, train_loader, test_loader, optim, loss_fn, config)
     wandb.log({
         BEST_EVAL : min(eval_losses),
         BEST_TRAIN: min(train_losses),

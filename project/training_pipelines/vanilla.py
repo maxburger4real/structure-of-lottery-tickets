@@ -14,7 +14,7 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
     wandb.log({VAL_LOSS : eval_loss_init})
 
     # train and evaluate
-    train_losses, eval_losses = train_and_evaluate(model, train_loader, test_loader, optim, loss_fn, config.device, config.training_epochs)
+    train_losses, eval_losses = train_and_evaluate(model, train_loader, test_loader, optim, loss_fn, config)
 
     # log 
     for t, v in zip(train_losses, eval_losses):

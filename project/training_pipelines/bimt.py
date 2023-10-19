@@ -11,7 +11,7 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
     optim = build_optimizer(model, config)
     swap_log = config.bimt_swap if config.bimt_swap is not None else np.inf
 
-    lamb = config.lamb
+    lamb = config.lambda_l1
     if lamb <= 0: raise ValueError("Lambda of 0 or less is not allowed")
 
     LOCAL = config.bimt_local 
