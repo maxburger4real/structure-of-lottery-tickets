@@ -1,13 +1,17 @@
 import json
-from datetime import datetime
-from dataclasses import dataclass, asdict
 import pathlib
+import numpy as np
 import torch
-from common import STATE_DICT
+from dataclasses import dataclass, asdict
 
+STATE_DICT = "model_state_dict"
 
 HPARAMS_FILE = 'hparams.json'
-PROJECT='init-thesis'
+PROJECT='concat_moons' #'init-thesis'
+
+# Datasets
+CONCAT_MOONS = 'moons'
+SYMBOLIC_INDEPENDENCE_REGRESSION = 'symbolic independece regression'
 
 # Optimizers
 ADAM = 'Adam'
@@ -21,6 +25,7 @@ SILU = 'silu'
 # Loss Functions
 MSE = 'mse'
 CCE = 'cce'
+BCE = 'bce'
 
 # Training Pipelines
 VANILLA = 'vanilla'
@@ -31,9 +36,9 @@ persistance_path = pathlib.Path("runs")
 
 @dataclass
 class Config:
-    dataset : str  # use DATASET.__name__ or sth
     model_class : str  # use CLASS.__name__
 
+    dataset : str  # use CONSTANTS
     loss_fn : str  # use CONSTANTS
     pipeline : str   # use CONSTANTS
     activation : str # use CONSTANTS
@@ -50,6 +55,7 @@ class Config:
     persist : bool = True  # wether to save the model at the checkpoints
 
     # OPTIONAL CONFIGS
+    num_concat_datasets: int = None
     run_name : str = None
     wandb_url : str = None
     run_id : str = None
@@ -60,7 +66,7 @@ class Config:
     prune_biases : bool = None
     reinit : bool  = None  # reinitialize the network after pruning (only IMP)
 
-    lambda_l1 : float = None  # lambda for l1 regularisation
+    l1_lambda : float = None  # lambda for l1 regularisation
     bimt_local : bool = None  # if locality regularisation should be activated
     bimt_swap : int = None  # swap every n-th iteration
     bimt_prune : float = None  # if bimt thresholding in the end is activated.
@@ -68,6 +74,9 @@ class Config:
     batch_size : int  = None  # if None, batch size is dataset size
     description : str = None  # just add information about the idea behind the configuration for documentation purposes.
     pruning_strategy : str = None  # not really in use yet. kindof unnecessary
+    early_stopping : bool = False
+    early_stop_delta : float = 0.0
+    early_stop_patience : int = 1
 
     def as_dict(self):
         data = asdict(self)
@@ -106,3 +115,23 @@ def save_model(model, config: Config, filename):
     path = get_model_path(config)
 
     torch.save({STATE_DICT: model.state_dict()}, path / f"{filename}.pt")
+
+def logdict(loss : np.ndarray, prefix):
+    """create a loggable dict for wandb"""
+
+    dims = len(loss.shape)
+    if dims == 0:
+        return {prefix: loss.item()}
+    if 0 < dims < 3:
+        return {prefix: loss.mean().item()}
+    
+    if dims == 3:
+        metrics = {prefix: loss.mean().item()}
+
+        # assumption: last dimension is task dimension
+        all_axis_but_the_last_one = tuple(range(dims-1))
+        taskwise_loss = loss.mean(axis=all_axis_but_the_last_one)
+        for i, l in enumerate(taskwise_loss):
+            metrics[prefix + '_' + str(i)] = l.item()
+
+        return metrics

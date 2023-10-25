@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 from torch import optim
-from common.tracking import Config, ADAM, SGD, MSE, ADAMW
+from common.tracking import Config, ADAM, SGD, MSE, ADAMW, CCE, BCE
 
 def evaluate(model, loader, loss_fn, device):
     """Evaluate the model and return a numpy array of losses for each batch."""
@@ -26,7 +26,7 @@ def update(model, loader, optim, loss_fn, device, lambda_l1=None):
         x,y = x.to(device), y.to(device)
         optim.zero_grad()
         pred  = model(x)
-        loss = loss_fn(pred, y)
+        loss = loss_fn(pred, y).mean()
 
         # L1 regularization. 
         if lambda_l1 is not None and 0 < lambda_l1 < 1:
@@ -34,7 +34,7 @@ def update(model, loader, optim, loss_fn, device, lambda_l1=None):
             for name, param in model.named_parameters():
                 if 'weight' in name:
                     l1 = l1 + torch.linalg.norm(param, 1)
-            loss += lambda_l1.to(device) * l1.to(device)
+            loss += lambda_l1 * l1.to(device)
 
         loss.backward()
         optim.step()
@@ -49,13 +49,13 @@ def train_and_evaluate(model, train_loader, test_loader, optim, loss_fn, config:
 
     # train for epochs
     for _ in range(0, config.training_epochs):
-        loss_train = update(model, train_loader, optim, loss_fn, config.device, config.lambda_l1).mean()
+        loss_train = update(model, train_loader, optim, loss_fn, config.device, config.l1_lambda).mean()
         loss_eval = evaluate(model, test_loader, loss_fn, config.device).mean().item()
 
         train_losses += [loss_train]
         eval_losses += [loss_eval]
 
-    return train_losses, eval_losses
+    return np.array(train_losses), np.array(eval_losses)
 
 def build_optimizer(model, config: Config):
     """inspired by wandb
@@ -84,8 +84,47 @@ def build_optimizer(model, config: Config):
 
 def build_loss(config: Config):
     if config.loss_fn == MSE:
-        loss_fn = torch.nn.MSELoss(reduction="mean")
-        return loss_fn
+        return torch.nn.MSELoss(reduction='mean')
     
-    else:
-        raise NotImplementedError
+    elif config.loss_fn == CCE:
+        # Multiclass [cat, dog, mouse]
+        return torch.nn.CrossEntropyLoss(reduction='mean')
+
+    elif config.loss_fn == BCE:
+        # Binary and Multi-label-Binary
+        return torch.nn.BCEWithLogitsLoss(reduction='none')
+
+def build_early_stopper(config: Config):
+    """Returns a callable object that decides if to early stop."""
+    if config.early_stopping:
+        return EarlyStopper(
+            patience=config.early_stop_patience,
+            min_delta=config.early_stop_delta
+        )
+
+    # MOCK earlystopper
+    def neverstop(*args):
+        return False
+    
+    return neverstop
+        
+
+class EarlyStopper:
+    """from https://stackoverflow.com/a/73704579"""
+    def __init__(self, patience=1, min_delta=0):
+        self.patience = patience
+        self.min_delta = min_delta
+        self.counter = 0
+        self.min_validation_loss = float('inf')
+
+    def __call__(self, validation_loss):
+
+        if validation_loss < self.min_validation_loss:
+            self.min_validation_loss = validation_loss
+            self.counter = 0
+            
+        elif validation_loss > (self.min_validation_loss + self.min_delta):
+            self.counter += 1
+            if self.counter >= self.patience:
+                return True
+        return False
