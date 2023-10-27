@@ -3,34 +3,7 @@ import pathlib
 import numpy as np
 import torch
 from dataclasses import dataclass, asdict
-
-STATE_DICT = "model_state_dict"
-
-HPARAMS_FILE = 'hparams.json'
-PROJECT='concat_moons' #'init-thesis'
-
-# Datasets
-CONCAT_MOONS = 'moons'
-SYMBOLIC_INDEPENDENCE_REGRESSION = 'symbolic independece regression'
-
-# Optimizers
-ADAM = 'Adam'
-SGD = 'sgd'
-ADAMW = 'AdamW'
-
-# Activations
-RELU = 'relu'
-SILU = 'silu'
-
-# Loss Functions
-MSE = 'mse'
-CCE = 'cce'
-BCE = 'bce'
-
-# Training Pipelines
-VANILLA = 'vanilla'
-IMP = 'imp'
-BIMT = 'bimt'
+from common.constants import *
 
 persistance_path = pathlib.Path("runs")
 
@@ -60,8 +33,14 @@ class Config:
     wandb_url : str = None
     run_id : str = None
     local_dir_name: str = None 
-    pruning_levels : int = None
-    pruning_rate   : float = None
+
+    pruning_levels : int = None  # number of times pruning is applied
+    pruning_rate   : float = None  # if pruning target is specified, pruning rate is overwritten
+    pruning_target : int = None  # if specified, pruning rate is ignored
+    params_total  : int = None  # is set when pruning
+    params_prunable : int = None  # is set when pruning
+    pruning_trajectory : list[int] = None
+
     prune_weights : bool = None
     prune_biases : bool = None
     reinit : bool  = None  # reinitialize the network after pruning (only IMP)
@@ -112,8 +91,9 @@ def load_hparams(base: pathlib.Path) -> dict:
 
 def save_model(model, config: Config, filename):
     """save a model with name property to disk."""
-    path = get_model_path(config)
+    if config.persist != True: return
 
+    path = get_model_path(config)
     torch.save({STATE_DICT: model.state_dict()}, path / f"{filename}.pt")
 
 def logdict(loss : np.ndarray, prefix):

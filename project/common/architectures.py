@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import numpy as np
 from common import torch_utils
-from common.tracking import Config, RELU, SILU
-
+from common.tracking import Config
+from common.constants import *
 """
 This module contains the MLP Architectures for reproducibility.
 For reproducibility reasons, the *code* for each model architecture must be

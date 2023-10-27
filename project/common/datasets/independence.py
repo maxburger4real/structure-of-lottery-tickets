@@ -10,18 +10,15 @@ from torch.utils.data import DataLoader, TensorDataset
 
 INPUT_DIM = 4
 OUTPUT_DIM = 2
-DATASET_NAME = "Independence_Symbolic"
 
 _N = 100
 _seed = 0
 
-
-
 def f1(x1, x3):
-    return (x1+x3)**3
+    return ( x1 + x3 )**3
 
 def f2(x2, x4):
-    return x2**2+np.sin(np.pi*x4)
+    return x2**2 + np.sin( np.pi * x4 )
 
 def f(data):
     """
@@ -42,7 +39,7 @@ def f(data):
 def get_train_and_test_data():
     """from BIMT code"""
     torch_utils.set_seed(_seed)
-    inputs = np.random.rand(_N, INPUT_DIM)*2-1
+    inputs = np.random.rand(_N, INPUT_DIM)*2-1 # uniform between -1 and 1
     labels = f(inputs)
     inputs = torch.tensor(inputs, dtype=torch.float, requires_grad=True)
     labels = torch.tensor(labels, dtype=torch.float, requires_grad=True)

@@ -1,12 +1,7 @@
-import random
-import pathlib
-from datetime import datetime
-
 import torch
-import torch.nn.utils.prune as prune
 import numpy as np
-
-SEED = 64
+import random
+from torch.nn.utils.prune import _compute_nparams_toprune
 
 def get_pytorch_device():
     if torch.backends.mps.is_available():
@@ -36,7 +31,7 @@ def remaining_weights_by_pruning_steps(model, pruning_rate, pruning_levels=1):
     _, n, _ = measure_global_sparsity(model)
     l = [n]
     for _ in range(pruning_levels):
-        n -= prune._compute_nparams_toprune(pruning_rate, n)
+        n -= _compute_nparams_toprune(pruning_rate, n)
         l.append(n)
 
     return l

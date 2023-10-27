@@ -1,7 +1,8 @@
 import torch
 import numpy as np
 from torch import optim
-from common.tracking import Config, ADAM, SGD, MSE, ADAMW, CCE, BCE
+from common.tracking import Config
+from common.constants import *
 
 def evaluate(model, loader, loss_fn, device):
     """Evaluate the model and return a numpy array of losses for each batch."""
@@ -19,7 +20,10 @@ def evaluate(model, loader, loss_fn, device):
     return np.array(losses)
 
 def update(model, loader, optim, loss_fn, device, lambda_l1=None):
-    """Update the model and return a numpy array of losses for each batch."""
+    """
+    Update the model and 
+    return a numpy array of losses for each batch.
+    """
     model.train()
     losses = []
     for _, (x, y) in enumerate(loader):
@@ -47,6 +51,8 @@ def train_and_evaluate(model, train_loader, test_loader, optim, loss_fn, config:
 
     train_losses, eval_losses = [], []
 
+    stop = build_early_stopper(config)
+
     # train for epochs
     for _ in range(0, config.training_epochs):
         loss_train = update(model, train_loader, optim, loss_fn, config.device, config.l1_lambda).mean()
@@ -54,6 +60,9 @@ def train_and_evaluate(model, train_loader, test_loader, optim, loss_fn, config:
 
         train_losses += [loss_train]
         eval_losses += [loss_eval]
+
+        if stop(loss_eval): break
+
 
     return np.array(train_losses), np.array(eval_losses)
 
@@ -118,7 +127,6 @@ class EarlyStopper:
         self.min_validation_loss = float('inf')
 
     def __call__(self, validation_loss):
-
         if validation_loss < self.min_validation_loss:
             self.min_validation_loss = validation_loss
             self.counter = 0

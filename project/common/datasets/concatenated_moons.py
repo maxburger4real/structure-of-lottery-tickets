@@ -6,7 +6,6 @@ from torch.utils.data import DataLoader, TensorDataset
 
 INPUT_DIM = 2
 OUTPUT_DIM = 1
-DATASET_NAME = "Two Moons"
 
 _N = 400
 _seed = 0

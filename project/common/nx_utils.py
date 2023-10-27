@@ -5,10 +5,7 @@ from torch import load
 from pathlib import Path
 from collections import defaultdict
 
-from common import STATE_DICT
-POSITIVE_COLOR = "blue"
-NEGATIVE_COLOR = "red"
-
+from common.constants import *
 
 # attribute_functions
 def black_and_white(layers_of_weights):

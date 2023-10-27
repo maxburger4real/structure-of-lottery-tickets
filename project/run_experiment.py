@@ -1,22 +1,23 @@
 import wandb
 from training_pipelines import pipeline_selector
-from common.datasets.independence import build_loaders
-from common.tracking import Config, PROJECT, save_hparams
+from common.datasets.dataset_selector import build_loaders
+from common.tracking import Config, save_hparams
 from common.training import build_loss
 from common.architectures import build_model_from_config
-# select the run_config to use
-from configs.runs._05_imp_bimt_inspired import run_config
+from common.constants import *
 
+# select the run_config to use
+from configs.runs._08_imp_moons import run_config
 
 def run_experiment(config):
     """Run a wandb experiment from a config."""
 
-    with wandb.init(project=PROJECT, config=config) as run:
+    with wandb.init(project=PROJECT, config=config, mode=MODE) as run:
 
         # make model, loss, optim and dataloaders
         model = build_model_from_config(wandb.config)
         loss_fn = build_loss(wandb.config)
-        train_loader, test_loader = build_loaders(wandb.config.batch_size)
+        train_loader, test_loader = build_loaders(wandb.config)
 
         # save the config and add some wandb info to connect wandb with local files
         config_dict = Config(**wandb.config)

@@ -1,9 +1,7 @@
 import wandb
 from common.tracking import Config, save_model, logdict
 from common.training import build_early_stopper, build_optimizer, evaluate, update
-
-VAL_LOSS = 'val_loss'
-TRAIN_LOSS = 'train_loss'
+from common.constants import *
 
 def run(model, train_loader, test_loader, loss_fn, config: Config):
 
@@ -28,6 +26,6 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
         if stop(loss_eval.mean().item()): break
 
     # store model
-    if config.persist: save_model(model, config, config.training_epochs)
+    save_model(model, config, config.training_epochs)
 
     return model

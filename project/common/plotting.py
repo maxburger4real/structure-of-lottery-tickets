@@ -1,7 +1,8 @@
+import re
 import numpy as np
 import networkx as nx
-from networkx.drawing.nx_agraph import graphviz_layout, write_dot
 from networkx import multipartite_layout
+from networkx.drawing.nx_agraph import graphviz_layout, write_dot
 
 # BOKEH
 from bokeh.plotting import figure
@@ -13,30 +14,10 @@ from bokeh.models import ColumnDataSource, DataTable
 from bokeh.models.widgets import TableColumn
 
 # plot func
-import re
+from common.constants import *
 from common.nx_utils import load_state_dict
-from common import tracking
+from common.tracking import load_hparams
 
-# INDEPENDENT SUBNETWORKS N THE NETWORK
-SUBNETWORK = "group"
-GROUP_COLORS = [
-    'red', 'green', 'blue', 'purple', 'orange',
-    'pink', 'brown', 'gray', 'olive', 'cyan'
-]
-
-# EDGES
-LINE_COLOR = 'line_color'
-LINE_WIDTH = 'line_width'
-LINE_ALPHA = 'line_alpha'
-
-# NODES
-LAYER='rank'
-NODE_ALPHA = 'node_alpha'
-NODE_COLOR = 'node_color'
-NODE_LINE_COLOR = 'node_line_color'
-NODE_LINE_ALPHA = 'node_line_alpha'
-IS_ZOMBIE = 'zombie'
-IS_HEADLESS = 'headless'
 
 def _get_sorted_checkpoint_files(path):
     chkpts = list(path.glob("*.pt"))
@@ -370,7 +351,7 @@ def plot_checkpoints(path):
     plot.add_tools(hover)
     
     # Convert the config dict to a Bokeh ColumnDataSource
-    config_dict = tracking.load_hparams(path)
+    config_dict = load_hparams(path)
     source = ColumnDataSource({
         'names' : list(config_dict.keys()),
         'values' : list(config_dict.values())

@@ -1,16 +1,16 @@
 import wandb
 import run_experiment
-from common.tracking import PROJECT
+from common.constants import *
 
 # select the run_config to use
-from configs.runs._05_imp_bimt_inspired import run_config
+from configs.runs._06_imp_bimt_inspired_with_L1 import run_config
 
 # select the sweep_config to use
 from configs.sweeps._01_compare_with_multiple_seeds import sweep_config
 
 project = PROJECT
-entity = None  # not needed
-count = None   # number of runs
+entity = ENTITY
+count = None # 30   # number of runs
 
 def main():
     # initialize the sweep

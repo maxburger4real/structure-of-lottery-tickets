@@ -1,6 +1,7 @@
 import common.datasets.independence as indep
 import common.datasets.concatenated_moons as moons
-from common.tracking import Config, SYMBOLIC_INDEPENDENCE_REGRESSION, CONCAT_MOONS
+from common.tracking import Config
+from common.constants import *
 
 def build_loaders(config: Config):
 
