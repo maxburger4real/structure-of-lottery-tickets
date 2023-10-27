@@ -102,21 +102,3 @@ def _count_prunable_params(model):
                     total += torch.numel(buffer)
 
     return total
-
-def _count_remaining_and_removed(model):
-    
-    pruned = 0
-    total = 0
-
-    for module_name, module in model.named_modules():
-        if isinstance(module, torch.nn.Linear):
-            for buffer_name, buffer in module.named_buffers():
-                if "weight_mask" in buffer_name:
-                    pruned += torch.sum(buffer == 0).item()
-                    total += torch.numel(buffer)
-
-                if "bias_mask" in buffer_name:
-                    pruned += torch.sum(buffer == 0).item()
-                    total += torch.numel(buffer)
-
-    return total, pruned
