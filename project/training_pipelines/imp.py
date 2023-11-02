@@ -1,10 +1,12 @@
 import wandb
+from common.nx_utils import subnet_analysis, build_nx_graph, neuron_analysis
 from common.tracking import Config, save_model, logdict
 from common.pruning import build_pruning_func, build_reinit_func
 from common.training import build_early_stopper, build_optimizer, update, evaluate
 from common.constants import *
 
 def run(model, train_loader, test_loader, loss_fn, config: Config):
+
 
     # preparing for pruning and [OPTIONALLY] save model state
     prune = build_pruning_func(model, config)
@@ -13,6 +15,17 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
 
     # log initial performance
     initial_performace = evaluate(model, test_loader, loss_fn, config.device)
+    
+    # log initial weight distribution
+    G, _ = build_nx_graph(model, config)
+    for u, v, data in G.edges(data=True):
+        l = G.nodes(data=True)[u][LAYER]
+        wandb.log({f'w-{u,v}-l-{l}': data[WEIGHT]}, commit=False)
+
+    for i, data in G.nodes(data=True):
+        l = data[LAYER]
+        wandb.log({f'b-{i}-l-{l}': data[BIAS]}, commit=False)
+
     wandb.log({PRUNABLE : config.params_prunable}, commit=False)
     wandb.log(logdict(initial_performace, VAL_LOSS))
     
@@ -34,14 +47,48 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
 
         save_model(model, config, lvl)
 
-        amount_pruned = prune()
-        params_prunable -= amount_pruned
+        # create the nx.Graph from torch.model
+        G, _ = build_nx_graph(model, config)
+        for u, v, data in G.edges(data=True):
+            l = G.nodes(data=True)[u][LAYER]
+            wandb.log({f'w-{u,v}-l-{l}': data[WEIGHT]}, commit=False)
+
+        for i, data in G.nodes(data=True):
+            l = data[LAYER]
+            b = data[BIAS]
+            if b == 0: continue
+            wandb.log({f'b-{i}-l-{l}': b}, commit=False)
+
+        subnet_report = subnet_analysis(G, config)
+        zombies, comatose = neuron_analysis(G, config)
+
+        # log zombies and comatose
+        wandb.log({
+            'zombies' : len(zombies), 
+            'comatose' : len(comatose)
+            }, commit=False)
+        
+        for i, data in G.subgraph(zombies).nodes(data=True):
+            wandb.log({
+                f'zombie-neuron-{i}': i,
+                f'zombie-bias-{i}' : data[BIAS],
+                f'zombie-out-{i}' : data['out']
+            }, commit=False)
+
+        for i, data in G.subgraph(comatose).nodes(data=True):
+            wandb.log({
+                f'comatose-neuron-{i}': i,
+                f'comatose-bias-{i}' : data[BIAS],
+                f'comatose-in-{i}' : data['in']
+            }, commit=False)
 
         wandb.log({
             STOP : epoch, 
             PRUNABLE : params_prunable, 
         })
 
+        amount_pruned = prune()
+        params_prunable -= amount_pruned
         if config.reinit: reinit(model)
 
     # final finetuning (optionally dont stop early)

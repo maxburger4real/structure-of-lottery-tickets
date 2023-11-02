@@ -3,6 +3,8 @@ import numpy as np
 import networkx as nx
 from networkx import multipartite_layout
 from networkx.drawing.nx_agraph import graphviz_layout, write_dot
+from torch import load
+from pathlib import Path
 
 # BOKEH
 from bokeh.plotting import figure
@@ -15,7 +17,6 @@ from bokeh.models.widgets import TableColumn
 
 # plot func
 from common.constants import *
-from common.nx_utils import load_state_dict
 from common.tracking import load_hparams
 
 
@@ -73,17 +74,17 @@ def _make_graph(state_dict):
         G.add_nodes_from(nodes)
         offset += vals
 
-
     # Generate all edges of the Neural Network
     edges = []
 
     # loop over all layers but the last one
     all_but_output_layer = range(len(layers)-1)
-    for layer in all_but_output_layer:
 
+    for layer in all_but_output_layer:
+        weight_matrix = weights[layer]
+        
         for i, (i_node_id, _) in enumerate(layers[layer]):
             for j, (j_node_id, _) in enumerate(layers[layer+1]):
-                weight_matrix = weights[layer]
 
                 # extract weight from matrix
                 weight = weight_matrix[j,i].item()
@@ -252,6 +253,9 @@ def _rearranged_layout(G):
 
     return nx.multipartite_layout(G, subset_key=LAYER)
 
+def _load_state_dict(file: Path):
+    return load(file)[STATE_DICT]
+
 def _make_datasources(checkpoint_dir):
     """Create Datasources from custom checkpoint directory."""
     # get the state dicts
@@ -260,7 +264,7 @@ def _make_datasources(checkpoint_dir):
     node_layouts, edges_data_sources, nodes_data_sources = [], [], []
     for path in checkpoints:
         # load the graph object from torch_state_dict
-        state_dict = load_state_dict(path)
+        state_dict = _load_state_dict(path)
 
         G = _make_graph(state_dict)
         G = _delete_zero_weight_edges(G)
