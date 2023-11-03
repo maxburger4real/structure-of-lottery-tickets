@@ -7,7 +7,7 @@ HPARAMS_FILE = 'hparams.json'
 PROJECT='concat_moons' #'init-thesis'
 ENTITY='mxmn'
 MODE='online'
-MODE='disabled'
+# MODE='disabled'
 
 # Datasets
 CONCAT_MOONS = 'moons'
@@ -59,6 +59,8 @@ LINE_WIDTH = 'line_width'
 LINE_ALPHA = 'line_alpha'
 
 # NODES
+WEIGHT='weight'
+BIAS='bias'
 LAYER='rank'
 NODE_ALPHA = 'node_alpha'
 NODE_COLOR = 'node_color'

@@ -1,5 +1,6 @@
 import json
 import pathlib
+import wandb
 import numpy as np
 import torch
 from dataclasses import dataclass, asdict
@@ -115,3 +116,47 @@ def logdict(loss : np.ndarray, prefix):
             metrics[prefix + '_' + str(i)] = l.item()
 
         return metrics
+    
+def log_param_aggregate_statistics(G, config: Config, commit=False):
+        # log layerwise weight aggregate statistics
+
+    for l in range(1, len(config.model_shape)):
+        B = np.array([data[BIAS] for _, data in G.nodes(data=True) if data[LAYER]==l])
+        W = np.array([data[WEIGHT] for u, _, data in G.edges(data=True) if G.nodes()[u][LAYER]==l])
+    
+        d = {
+            '(+) weight' : W[W > 0],
+            '(-) weight' : W[W < 0],
+            '(+) bias' :  B[B > 0], 
+            '(-) bias'  : B[B < 0]
+        }
+        for k, v in d.items():
+            if len(v) == 0: continue
+            
+            wandb.log({
+            f'{l}-size {k}' : v.size,
+            f'{l}-median {k}' : np.median(v),
+            f'{l}-max {k}' : np.max(v),
+            f'{l}-min {k}' : np.min(v),
+        }, commit=commit)
+           
+def log_zombies_and_comatose(G, zombies, comatose):
+
+    wandb.log({
+        'zombies' : len(zombies), 
+        'comatose' : len(comatose)
+        }, commit=False)
+    
+    for i, data in G.subgraph(zombies).nodes(data=True):
+        wandb.log({
+            f'zombie-neuron-{i}': i,
+            f'zombie-bias-{i}' : data[BIAS],
+            f'zombie-out-{i}' : data['out']
+        }, commit=False)
+
+    for i, data in G.subgraph(comatose).nodes(data=True):
+        wandb.log({
+            f'comatose-neuron-{i}': i,
+            f'comatose-bias-{i}' : data[BIAS],
+            f'comatose-in-{i}' : data['in']
+        }, commit=False)

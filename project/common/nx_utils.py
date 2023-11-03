@@ -52,10 +52,11 @@ def build_nx_graph(model, config: Config):
     
     # Add the generated edges to the Graph Object
     G.add_edges_from(edges)
-
-
+    
+    # remove nodes without any connections
     G = remove_isolated_nodes(G)
-    return G, layers
+
+    return G
 
 def remove_isolated_nodes(G):
     """ This function removes all nodes from a NetworkX graph that do not have any edges connected to them.    """
@@ -92,9 +93,12 @@ def subnet_analysis(G: nx.DiGraph, config: Config):
 
         input_layer_nodes = [x for x, data in c.nodes(data=True) if data[LAYER]==0]
         output_layer_nodes = [x for x, data in c.nodes(data=True) if data[LAYER]==l-1]
+        
+        # each component gets a subnet metadata dict
         subnet_metadata = {
             'input': { 'complete' : [], 'incomplete' : []},
-            'output':{ 'complete' : [], 'incomplete' : []}
+            'output':{ 'complete' : [], 'incomplete' : []},
+            'num_weights' : len(c.edges())
         }
 
         # check if the infeatures or outfeatures are contained in the subnetwork
