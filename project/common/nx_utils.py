@@ -11,13 +11,12 @@ def build_nx_graph(model, config: Config):
     """
     weights, biases = _get_w_and_b(model)
 
-    node_ids = list(range(config.model_shape[0]))
-    nodes = [ (node_id, {LAYER:0, BIAS:0}) for node_id in node_ids]
+    input_node_ids = list(range(config.model_shape[0]))
+    input_nodes = [ (id, {LAYER:0, BIAS:0}) for id in input_node_ids]
 
     G = nx.DiGraph()
-    G.add_nodes_from(nodes)
-
-    layers = [node_ids]
+    G.add_nodes_from(input_nodes)
+    layers = [input_node_ids]
 
     # add all the nodes
     for layer_id, bias in enumerate(biases, start=1):
@@ -28,7 +27,6 @@ def build_nx_graph(model, config: Config):
             nodes.append(node)
 
         G.add_nodes_from(nodes)
-
         layers += [[node_id for node_id, _ in nodes]]
 
 
@@ -46,7 +44,7 @@ def build_nx_graph(model, config: Config):
 
                 if w == 0: continue  # do not add pruned weights
 
-                edge_attr = {'weight' : w}
+                edge_attr = {WEIGHT : w}
                 edge = (i_node_id, j_node_id, edge_attr)
                 edges += [edge]
     
