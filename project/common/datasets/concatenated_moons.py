@@ -7,9 +7,9 @@ from torch.utils.data import DataLoader, TensorDataset
 INPUT_DIM = 2
 OUTPUT_DIM = 1
 
-_N = 400
+_N = 1000
 _seed = 0
-noise=0.1
+noise=0.0
 
 def get_train_and_test_data(m):
     torch_utils.set_seed(_seed)
