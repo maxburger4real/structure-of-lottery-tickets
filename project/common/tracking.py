@@ -57,6 +57,7 @@ class Config:
     early_stopping : bool = False
     early_stop_delta : float = 0.0
     early_stop_patience : int = 1
+    loss_cutoff : float = 0.0  # if loss is less than this, stop training early
 
     def as_dict(self):
         data = asdict(self)
@@ -120,22 +121,28 @@ def logdict(loss : np.ndarray, prefix):
 def log_param_aggregate_statistics(G, config: Config, commit=False):
         # log layerwise weight aggregate statistics
 
-    for l in range(1, len(config.model_shape)):
+    for l in range(len(config.model_shape)):
+
         B = np.array([data[BIAS] for _, data in G.nodes(data=True) if data[LAYER]==l])
         W = np.array([data[WEIGHT] for u, _, data in G.edges(data=True) if G.nodes()[u][LAYER]==l])
     
         d = {
             '(+) weight' : W[W > 0],
             '(-) weight' : W[W < 0],
-            '(+) bias' :  B[B > 0], 
-            '(-) bias'  : B[B < 0]
+            'abs weight' : np.abs(W)
         }
+        if l != 0:
+            d['(+) bias'] = B[B > 0]
+            d['(-) bias'] = B[B < 0]
+            d['abs bias'] = np.abs(B)
+        
         for k, v in d.items():
             if len(v) == 0: continue
             
             wandb.log({
             f'{l}-size {k}' : v.size,
             f'{l}-median {k}' : np.median(v),
+            f'{l}-mean {k}' : np.mean(v),
             f'{l}-max {k}' : np.max(v),
             f'{l}-min {k}' : np.min(v),
         }, commit=commit)
@@ -159,4 +166,22 @@ def log_zombies_and_comatose(G, zombies, comatose):
             f'comatose-neuron-{i}': i,
             f'comatose-bias-{i}' : data[BIAS],
             f'comatose-in-{i}' : data['in']
+        }, commit=False)
+
+def log_subnet_analysis(subnet_report):
+    metric_name = 'sub_'
+    for net in subnet_report:
+        info = [
+            ('C' ,net['input']['complete']),
+            ('P' ,net['input']['incomplete']),
+            ('outC' ,net['output']['complete']),
+            ('outP' ,net['output']['incomplete']),
+        ]
+        name = metric_name
+        for _, (prefix, i) in enumerate(info):
+            if len(i) == 0: continue
+            name += prefix + '-' +  '+'.join(map(str, net['input']['complete']))
+
+        wandb.log({
+            name : net['num_weights']
         }, commit=False)

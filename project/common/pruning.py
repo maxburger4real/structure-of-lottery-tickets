@@ -45,7 +45,10 @@ def build_pruning_func(model: torch.nn.Module, config: Config):
             pruning_method=prune.L1Unstructured, 
             amount=amount
         )
-        return amount
+        tensors = [getattr(module, name) for module, name in params]
+        min_magnitude = min(T[T != 0].abs().min() for T in tensors if T[T != 0].numel() > 0).item()
+
+        return amount, min_magnitude
 
     return pruning_func
 
