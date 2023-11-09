@@ -48,5 +48,43 @@ TODO:
 track the weights over time, where they end up. Delete weights that are 0. dont log them.
 
 
-Hypothesis:
-If the Lottery ticket is good,
+YAY! Milestone
+I found a setup, where the NN splits before the network quality degrades substantially.
+This is cool
+The question also is
+How likely is it, that the network splits exactly how I want it to be?
+And, at what point should/could the network split first, and when will it split for sure.
+
+There seems to be a relationship between not splitting and bad performance.
+
+
+### params
+
+multiplying the number of neurons in the hidden layer by n, increases the number of weights by a factor of n**2
+The largest possible split subnetworks. lets say neural network has the number of parameters $P$ that covers $k$ equal task.
+Then, the minimum number of weights to remove, such that the largest possible complete subnetworks arise is 
+$$\frac{P(k-1)}{k}$$
+and the minimum number of parameters where this split occurs is obviously 
+$$\frac{P}{k}$$
+
+
+## Observations
+* Zomie Neurons appear more often at higher sparsities
+* Zombie Neurons can appear to survive longer if their associated bias is larger. Zombies with negative, 
+* Comatose Neurons appear to only survive for few iterations
+* Comatose Neurons behave very similarly across different seed-runs  
+    * why? As soon as they become comatose, they do not receive any updates. When the average parameter rises, they lower relatively to the others.
+* Negative Biases disappear (pruned, turn positive) --> RELU -> negative bias increases likelihood of 0-Activation and therefore no update which increases likelihood of pruning.
+
+the pruning horizon. It increases steadily. 
+
+
+## Experiments to run
+
+What is actually interesting to test? What are the Hypothesis?
+
+Hypothesis :
+
+
+New experiment, broader hidden size.
+What do I expect ? 
