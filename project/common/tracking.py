@@ -6,7 +6,7 @@ import torch
 from dataclasses import dataclass, asdict
 from common.constants import *
 
-persistance_path = pathlib.Path("runs")
+persistance_path = pathlib.Path("experiments")
 
 @dataclass
 class Config:

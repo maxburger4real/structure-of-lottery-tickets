@@ -1,6 +1,6 @@
 venv/
 /venv
-runs/
+experiments/
 models/
 __pycache__/
 
