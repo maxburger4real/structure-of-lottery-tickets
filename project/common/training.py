@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 from torch import optim
-from common.tracking import Config
+from common.config import Config
 from common.constants import *
 
 def evaluate(model, loader, loss_fn, device):

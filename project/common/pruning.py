@@ -2,8 +2,9 @@ import copy
 import torch
 import torch.nn.utils.prune as prune
 import numpy as np
-from common.tracking import Config
+from common.config import Config
 from common.torch_utils import module_is_trainable
+from common.constants import MAGNITUDE, RANDOM
 
 def build_reinit_func(model: torch.nn.Module):
     """
@@ -26,14 +27,15 @@ def build_pruning_func(model: torch.nn.Module, config: Config):
     """
     Returns a Closure that prunes the model on call.
     """
-    config.params_total = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    if config.pruning_method == MAGNITUDE: pruning_method = prune.L1Unstructured
+    elif config.pruning_method == RANDOM: pruning_method = prune.RandomUnstructured
+    else: raise ValueError('must specify pruning method')
 
     # convert to the pruning parameterization
     params = _extract_pruning_params(model, config)
     prune.global_unstructured(params, prune.Identity)
-    config.params_prunable = _count_prunable_params(model)
 
-    trajectory = _build_prune_trajectory(config)
+    trajectory = _build_prune_trajectory(model, config)
     trajectory_generator = (y for y in trajectory)
     
     def pruning_func():
@@ -42,33 +44,34 @@ def build_pruning_func(model: torch.nn.Module, config: Config):
         amount = next(trajectory_generator)
         prune.global_unstructured(
             parameters=params, 
-            pruning_method=prune.L1Unstructured, 
+            pruning_method=pruning_method, 
             amount=amount
         )
         tensors = [getattr(module, name) for module, name in params]
         min_magnitude = min(T[T != 0].abs().min() for T in tensors if T[T != 0].numel() > 0).item()
 
         return amount, min_magnitude
-
+    
     return pruning_func
 
-def _build_prune_trajectory(config: Config) -> np.ndarray:
+def _build_prune_trajectory(model, config: Config) -> np.ndarray:
     """
     Return a ndarray of length pruning_levels with the 
     number of parameters to prune every level.
     """
     T = config.pruning_levels
+    prunable = _count_prunable_params(model)
+
     if T is None: raise ValueError('Must specify pruning_levels')
     
     # override pruning rate if target is specified
     if config.pruning_target is not None:
-        N0 = config.params_prunable
+        N0 = prunable
         NT = config.pruning_target
         config.pruning_rate = 1 - (NT / N0) ** (1 / T)
 
     # if not overridden and not specified
-    if config.pruning_rate is None:
-        raise ValueError('Pruning not specified')
+    if config.pruning_rate is None: raise ValueError('Pruning not specified')
     
     pr = config.pruning_rate
     t = torch.arange(0, T+1)
@@ -92,10 +95,15 @@ def _extract_pruning_params(model, config: Config):
 
     return params
 
+def count_trainable_and_prunable_params(model):
+    trainable = _count_trainable_params(model)
+    prunable = _count_prunable_params(model)
+    return trainable, prunable
+
 def _count_prunable_params(model):
-    
+    """Counts the number of weights and biases that are prunable with pytorch, meaning they have _mask """
     total = 0
-    for module_name, module in model.named_modules():
+    for name, module in model.named_modules():
         if isinstance(module, torch.nn.Linear):
             for buffer_name, buffer in module.named_buffers():
                 if "weight_mask" in buffer_name:
@@ -105,3 +113,7 @@ def _count_prunable_params(model):
                     total += torch.numel(buffer)
 
     return total
+
+def _count_trainable_params(model):
+    """Counts the number of weights and biases that require grad, hence are trainable."""
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)

@@ -1,5 +1,5 @@
 from common.architectures import SimpleMLP
-from common.tracking import Config
+from common.config import Config
 from common.constants import *
 
 m = 1

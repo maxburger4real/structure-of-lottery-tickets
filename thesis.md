@@ -84,7 +84,66 @@ the pruning horizon. It increases steadily.
 What is actually interesting to test? What are the Hypothesis?
 
 Hypothesis :
-
-
 New experiment, broader hidden size.
 What do I expect ? 
+
+Comatose Neurons seem to follow a pattern like existence. First a peak, as the randomly dying neurons click out. Then they start to disappear fast. Then, the features that are deleted on purpose 
+![Alt text](image-1.png)
+
+This graph looks very cool  and is actually interesting.
+It looks like the peak is relative between beginning and end.
+So say, the peaks is **always** around iteration 12 of 20. lets say 11-13
+
+
+Notes on experiments
+the runs were fast up until 2 layer 600 or say 700.
+Then tey quickly started to get very looong.
+
+Now lets do experiments up until 300k parameters. Later it gets really really slow
+
+
+
+# Plotting Network splitting
+
+Goal. I want to see how network size (number of parameters) influences splitting pf the network.
+To really compare, the networks would need to be pruned at the same parameters. 
+
+When I keep the pruning iterations constant, but increase P, then the pruning rate is larger and the steps are at different numbers.
+
+Then, it is hard to compare, since the steps where the network would exist are at different place, with different distances to each other.
+How can we avoid that? 
+
+Increasing P leads to an increased
+
+Could compare: 
+* one more pruning iteration and increase the number of parameters by *pr*, so that after 1 pruning iteration, the network has the same number of parameters.
+* also simply increase the number of pruning iterations, without increasing P.
+
+Then, if increasing parameters yields better results, more parameters mean better splitting.
+
+Experiment setup:
+
+I have a model with a defined Shape $S_0$ and associated number of prunable parameters $P_0$.
+I decide for a pruning target $P_T$, the number of prunable parameters left after $T$ iterations of pruning.
+The pruning rate $p$ is implicit form $P_0$, $P_T$ and $T$.  
+
+The model can be extended. To extend the model according the the pruning trajectory $[P_0, P_1,...P_{T-1},P_T]$, the inverse pruning rate, or growing rate $g$ is calculated as follows
+$$(1-p)*(1+g) = 1 \quad g = \frac{1}{1-p} - 1$$
+
+To to get the shape of the extended model $S_{-1}$, first the number of parameters are calculated $P_{-1} = P_0 * (1+g)$.
+The parameters are rounded to an integer, and the solve for the simple equation for the hidden dimension, which is the only variable in $S$ that we can change.
+
+This can be generalized to 
+$$
+P_{-k} = P_0 * (1+g)^k
+$$
+
+The trajectory is simply extended, such that pruning $P_{-1}$ for one iteration yields $P_0$, which makes the networks comparable based on the number of prunable parameters they have.
+
+### TODOs
+
+What are the minimum defining characteristics for extending a network? 
+Number of extensions, pruning rate, initial shape
+
+
+- 

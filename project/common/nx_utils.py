@@ -1,7 +1,7 @@
 import networkx as nx
 import numpy as np
 from collections import defaultdict
-from common.tracking import Config
+from common.config import Config
 from common.constants import *
 
 def build_nx_graph(model, config: Config):
@@ -123,7 +123,7 @@ def subnet_analysis(G: nx.DiGraph, config: Config):
             # some outputs are in subnet
             elif 0 < len(out_features_in_subnet) < len(out_features):
                 subnet_metadata['output']['incomplete'].append(i)
-
+        
         subnet_metadatas.append(subnet_metadata)
 
     return subnet_metadatas

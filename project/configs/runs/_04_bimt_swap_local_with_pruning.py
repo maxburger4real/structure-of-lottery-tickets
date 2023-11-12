@@ -1,6 +1,6 @@
 from common.architectures import BioMLP
 from common.datasets.independence import INPUT_DIM, OUTPUT_DIM, DATASET_NAME
-from common.tracking import Config
+from common.config import Config
 from common.constants import *
 
 run_config = Config(

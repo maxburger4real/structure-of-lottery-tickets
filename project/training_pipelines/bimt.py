@@ -1,6 +1,7 @@
 import numpy as np
 import wandb
-from common.tracking import Config, save_model
+from common.config import Config
+from common.persistance import save_model
 from common.training import build_optimizer, evaluate
 
 VAL_LOSS = 'val_loss'

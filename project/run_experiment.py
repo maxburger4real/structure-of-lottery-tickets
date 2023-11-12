@@ -13,7 +13,9 @@ from configs.config_importer import import_config
 from training_pipelines import pipeline_selector
 from common.architectures import build_model_from_config
 from common.datasets.dataset_selector import build_loaders
-from common.tracking import Config, save_hparams
+from common.persistance import save_hparams
+from common.config import Config
+from common.pruning_trajectory import update_pruning_config
 from common.training import build_loss
 from common.constants import *
 
@@ -25,6 +27,9 @@ def run_experiment(config, mode=None):
     """Run a wandb experiment from a config."""
 
     with wandb.init(project=PROJECT, config=config, mode=mode) as run:
+
+        # optional config updates needed for model extension
+        update_pruning_config(wandb.config)
 
         # make model, loss, optim and dataloaders
         model = build_model_from_config(wandb.config)

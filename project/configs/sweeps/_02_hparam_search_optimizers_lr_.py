@@ -1,6 +1,6 @@
 """Simply run the configuration with multiple seeds to see stability."""
 from training_pipelines.imp import BEST_EVAL
-from common.tracking import ADAM, ADAMW, SGD
+from common.persistance import ADAM, ADAMW, SGD
 
 sweep_config = {
     'method': 'bayes', 

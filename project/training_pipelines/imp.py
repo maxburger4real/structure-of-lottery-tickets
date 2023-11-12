@@ -1,7 +1,9 @@
 import wandb
-from common.nx_utils import build_nx_graph, neuron_analysis, subnet_analysis
-from common.tracking import Config, save_model, logdict, log_param_aggregate_statistics, log_zombies_and_comatose, log_subnet_analysis
-from common.pruning import build_pruning_func, build_reinit_func
+from common.config import Config
+from common.logging import logdict, log_param_aggregate_statistics, log_zombies_and_comatose, log_subnet_analysis
+from common.nx_utils import build_nx_graph
+from common.persistance import save_model
+from common.pruning import build_pruning_func, build_reinit_func, count_trainable_and_prunable_params
 from common.training import build_early_stopper, build_optimizer, update, evaluate
 from common.constants import *
 
@@ -10,6 +12,12 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
     # preparing for pruning and [OPTIONALLY] save model state
     prune = build_pruning_func(model, config)
     reinit = build_reinit_func(model)
+    trainable, prunable = count_trainable_and_prunable_params(model)
+    wandb.log({
+        'params_trainable': trainable, 
+        'params_pruneable': prunable
+    }, commit=False)
+
     save_model(model, config, 0)
 
     # log initial performance
@@ -17,12 +25,10 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
     
     # log initial weight distribution
     G = build_nx_graph(model, config)
-
     log_param_aggregate_statistics(G, config)
 
-    params_prunable = config.params_prunable
     wandb.log({
-            PRUNABLE : params_prunable,
+            PRUNABLE : prunable,
             **logdict(initial_performace, VAL_LOSS),
         })
     
@@ -39,22 +45,19 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
         
         save_model(model, config, lvl)
 
-        # log parameter statistics
+        # Log Graph based Statistics
         G = build_nx_graph(model, config)
-
         log_param_aggregate_statistics(G, config)
-
-        zombies, comatose = neuron_analysis(G, config)
-        log_zombies_and_comatose(G, zombies, comatose)
-        log_subnet_analysis(subnet_analysis(G, config))
+        log_zombies_and_comatose(G, config)
+        log_subnet_analysis(G, config)
 
         # prune and return the number of params pruned
         amount_pruned, pruning_border = prune()
-        params_prunable -= amount_pruned
+        prunable -= amount_pruned
 
         wandb.log({
             STOP : epoch,
-            PRUNABLE : params_prunable,
+            PRUNABLE : prunable,
             'border' : pruning_border,
             **logdict(loss_eval, VAL_LOSS),
             **logdict(loss_train, TRAIN_LOSS), 
@@ -71,7 +74,7 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
 
     wandb.log({
         STOP : epoch,
-        PRUNABLE : params_prunable,
+        PRUNABLE : prunable,
         **logdict(loss_eval, VAL_LOSS),
         **logdict(loss_train, TRAIN_LOSS), 
     })

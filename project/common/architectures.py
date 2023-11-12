@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 from common import torch_utils
-from common.tracking import Config
+from common.config import Config
 from common.constants import *
 """
 This module contains the MLP Architectures for reproducibility.

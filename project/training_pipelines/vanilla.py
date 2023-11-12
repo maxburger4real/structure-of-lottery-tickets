@@ -1,5 +1,7 @@
 import wandb
-from common.tracking import Config, save_model, logdict
+from common.config import Config
+from common.logging import logdict
+from common.persistance import save_model
 from common.training import build_early_stopper, build_optimizer, evaluate, update
 from common.constants import *
 

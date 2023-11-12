@@ -1,6 +1,6 @@
 import wandb
-from common import tracking
-from common import plotting
+from common.persistance import persistance_path
+from common.plotting import plot_checkpoints
 from common.constants import *
  
 entity = ENTITY
@@ -24,7 +24,15 @@ def main():
         run_ids = [run.id for run in sweep.runs]
 
     run_ids = [
-        'evmykexg',
+        'xi8wprwh',
+        'k90pihpr',
+        '67y2zskn',
+        'x2gkwc1b',
+        'czbqa4ve',
+        #'hezzefi6',
+        #'uj4oim94',
+        #'drtwf1qd',
+        #'evmykexg',
         #'4shs3f8q',
         #'pgl0pqdh',
         #'oqhn7xq5', 
@@ -32,8 +40,7 @@ def main():
         ]
 
     for name in run_ids:
-        path = tracking.persistance_path / name
-        plotting.plot_checkpoints(path)
+        plot_checkpoints(persistance_path / name)
 
 if __name__ == '__main__':
     main()

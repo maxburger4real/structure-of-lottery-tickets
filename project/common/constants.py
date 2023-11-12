@@ -27,6 +27,10 @@ MSE = 'mse'
 CCE = 'cce'
 BCE = 'bce'
 
+# Pruning Methods
+MAGNITUDE = 'magnitude'
+RANDOM = 'random'
+
 # Training Pipelines
 VANILLA = 'vanilla'
 IMP = 'imp'

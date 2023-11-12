@@ -1,5 +1,5 @@
 from common.architectures import SimpleMLP
-from common.tracking import Config
+from common.config import Config
 from common.constants import *
 
 m = 2
@@ -11,7 +11,7 @@ run_config = Config(
     dataset=CONCAT_MOONS,
     num_concat_datasets=m,
     
-    model_shape=[2*m, 20, 20, 1*m],
+    model_shape=[2*m, 40, 40, 1*m],
     model_class = SimpleMLP.__name__,
 
     # training

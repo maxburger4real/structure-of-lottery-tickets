@@ -1,6 +1,7 @@
 from common.architectures import SimpleMLP
 from common.datasets.independence import INPUT_DIM, OUTPUT_DIM, DATASET_NAME
-from common.tracking import Config, ADAM, IMP, SILU, MSE
+from common.config import Config
+from common.constants import *
 
 run_config = Config(
     pipeline=IMP,

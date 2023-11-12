@@ -17,7 +17,7 @@ from bokeh.models.widgets import TableColumn
 
 # plot func
 from common.constants import *
-from common.tracking import load_hparams
+from common.persistance import load_hparams
 
 
 def _get_sorted_checkpoint_files(path):
