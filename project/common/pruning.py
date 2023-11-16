@@ -35,13 +35,11 @@ def build_pruning_func(model: torch.nn.Module, config: Config):
     params = _extract_pruning_params(model, config)
     prune.global_unstructured(params, prune.Identity)
 
-    trajectory = _build_prune_trajectory(model, config)
-    trajectory_generator = (y for y in trajectory)
+    # trajectory = _build_prune_trajectory(model, config)
     
-    def pruning_func():
+    def pruning_func(amount):
         """A Closure that contains the trajectory Generator and the pruning parameters."""
 
-        amount = next(trajectory_generator)
         prune.global_unstructured(
             parameters=params, 
             pruning_method=pruning_method, 
@@ -50,9 +48,9 @@ def build_pruning_func(model: torch.nn.Module, config: Config):
         tensors = [getattr(module, name) for module, name in params]
         min_magnitude = min(T[T != 0].abs().min() for T in tensors if T[T != 0].numel() > 0).item()
 
-        return amount, min_magnitude
+        return min_magnitude
     
-    return pruning_func
+    return pruning_func, config.pruning_trajectory
 
 def _build_prune_trajectory(model, config: Config) -> np.ndarray:
     """

@@ -1,3 +1,4 @@
+import importlib.util
 from dataclasses import dataclass, asdict
 
 @dataclass
@@ -32,7 +33,7 @@ class Config:
     pruning_target : int = None  # if specified, pruning rate is ignored
     params_total  : int = None  # is set when pruning
     params_prunable : int = None  # is set when pruning
-    pruning_trajectory : list[int] = None
+    params_before_pruning : int = None # params in the beginning param_trajectory[0]
 
     prune_weights : bool = None
     prune_biases : bool = None
@@ -50,10 +51,36 @@ class Config:
     early_stop_delta : float = 0.0
     early_stop_patience : int = 1
     loss_cutoff : float = 0.0  # if loss is less than this, stop training early
-
-    # this is whack, but saves a lot of time through being abble to use sweeps
-    model_extension: int = 0
+    
+    base_model_shape: str = None # if extenion overrides model shape, this is original
+    extension_levels: int = 0 # how many 
+    pruning_trajectory : list[int] = None
+    param_trajectory : list[int] = None
 
     def as_dict(self):
         data = asdict(self)
         return {key: value for key, value in data.items() if value is not None}
+
+def import_config(filename):
+    """Import a file, used for config."""
+    if filename is None: return None
+
+    # Remove the '.py' extension from the filename
+    module_name = filename.replace('.py', '')
+
+    # Create a module spec from the filename
+    spec = importlib.util.spec_from_file_location(module_name, filename)
+
+    # Create a new module based on the spec
+    module = importlib.util.module_from_spec(spec)
+
+    # Execute the module in its own namespace
+    spec.loader.exec_module(module)
+
+    config = getattr(module, 'run_config', None)
+    if config is not None: return config
+
+    config = getattr(module, 'sweep_config', None)
+    if config is not None: return config
+
+    raise ValueError('No valid config found.')
