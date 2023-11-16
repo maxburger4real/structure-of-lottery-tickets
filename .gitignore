@@ -1,11 +1,14 @@
-venv/
+.venv/
 /venv
 experiments/
 models/
 __pycache__/
-
+.original_bimt/
 .DS_Store
 .vscode/
 wandb/
-others/
+.others/
 .html
+.runs/
+.images/
+.poster/

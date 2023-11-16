@@ -88,7 +88,7 @@ New experiment, broader hidden size.
 What do I expect ? 
 
 Comatose Neurons seem to follow a pattern like existence. First a peak, as the randomly dying neurons click out. Then they start to disappear fast. Then, the features that are deleted on purpose 
-![Alt text](image-1.png)
+![Alt text](.images/image-1.png)
 
 This graph looks very cool  and is actually interesting.
 It looks like the peak is relative between beginning and end.
@@ -145,5 +145,28 @@ The trajectory is simply extended, such that pruning $P_{-1}$ for one iteration 
 What are the minimum defining characteristics for extending a network? 
 Number of extensions, pruning rate, initial shape
 
+create pruning trajectory at beginning of experiment. 
+Optionally extend network and pruning trajectory. 
+optionally only increase pruning iterations? but then, also the number of weights at times is different.
 
-- 
+Experiments:
+* different number of layers (do zombies and comatose occur at different times?)
+* comates and zombie layers - is there a pattern over pruning-time?
+* increase number of task
+* add noise to the task (shrink the dataset for speedup?)
+
+
+Final Boss:
+* see zombies and comatose at MNIST
+* concat MNIST (FASHION) and see if it splits
+* 
+
+
+## interesting finding! 
+comatose neurons biases are often pruned, before they are deleted
+![comatose neuron biases are pruned before the neuron is detached.](.images/image-2.png)
+
+Why is that?
+- the avg magnitude grows faster than the biases which dont change anymore in comatose neurons.
+- pruning comatose biases is a complete waste of resources.
+How often does it happen?   

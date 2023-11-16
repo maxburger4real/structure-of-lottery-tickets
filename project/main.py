@@ -9,12 +9,12 @@ python project/run_experiment.py -d -r project/configs/runs/_000_debug.py -s pro
 import wandb
 import argparse
 import argcomplete
-from configs.config_importer import import_config
 from training_pipelines import pipeline_selector
+from settings import WANDB_DIR
 from common.architectures import build_model_from_config
 from common.datasets.dataset_selector import build_loaders
 from common.persistance import save_hparams
-from common.config import Config
+from common.config import Config, import_config
 from common.pruning_trajectory import update_pruning_config
 from common.training import build_loss
 from common.constants import *
@@ -26,7 +26,7 @@ count = None # 30   # number of runs
 def run_experiment(config, mode=None):
     """Run a wandb experiment from a config."""
 
-    with wandb.init(project=PROJECT, config=config, mode=mode) as run:
+    with wandb.init(project=PROJECT, config=config, mode=mode, dir=WANDB_DIR) as run:
 
         # optional config updates needed for model extension
         update_pruning_config(wandb.config)

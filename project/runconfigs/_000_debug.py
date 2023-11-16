@@ -30,10 +30,14 @@ run_config = Config(
     early_stop_patience=20,
     early_stop_delta=0.0,
 
+    extension_levels=2,
+
     # pruning
     prune_biases=True,
     prune_weights=True,
     pruning_target=30,
     pruning_levels=30,
+    pruning_method=MAGNITUDE,
     reinit=True,
+
 )

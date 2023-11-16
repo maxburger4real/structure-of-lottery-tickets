@@ -1,21 +1,10 @@
 from common.architectures import SimpleMLP
 from common.config import Config
 from common.constants import *
-from common.pruning_trajectory import calc_params
 
-m = 2
-in_dim = m*2
-out_dim = m
-hidden_dim = 40
-num_hidden = 2
-
-P0 = calc_params(in_dim, out_dim, hidden_dim)
-
-for i in range(5):
-    shape = [in_dim] + [hidden_dim]*num_hidden + [out_dim]
-
+m=2
 run_config = Config(
-    description='''This is the winning formula. The netowrk splits before the performance degrades.''',
+    description='''Make the first attempt of ''',
     pipeline=IMP,
     activation=RELU,
     loss_fn= BCE,
@@ -28,7 +17,7 @@ run_config = Config(
     # training
     lr=0.001,
     optimizer=ADAM,
-    training_epochs= 3000,
+    training_epochs=3000,
 
     # seeds
     model_seed=5, # good seeds : 2
@@ -48,5 +37,6 @@ run_config = Config(
     prune_weights=True,
     pruning_target=50,
     pruning_levels=20,
+    extension_levels=1,
     reinit=True
 )
