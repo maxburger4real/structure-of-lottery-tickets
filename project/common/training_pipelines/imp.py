@@ -1,6 +1,6 @@
 import wandb
 from common.config import Config
-from common.logging import logdict, log_param_aggregate_statistics, log_zombies_and_comatose, log_subnet_analysis
+from common.log import logdict, log_param_aggregate_statistics, log_zombies_and_comatose, log_subnet_analysis
 from common.nx_utils import build_nx_graph
 from common.persistance import save_model
 from common.pruning import build_pruning_func, build_reinit_func, count_trainable_and_prunable_params

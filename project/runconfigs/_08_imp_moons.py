@@ -1,4 +1,4 @@
-from common.architectures import SimpleMLP
+from common.models import SimpleMLP
 from common.config import Config
 from common.constants import *
 

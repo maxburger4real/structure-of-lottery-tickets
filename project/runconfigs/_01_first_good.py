@@ -1,4 +1,4 @@
-from common.architectures import SimpleMLP
+from common.models import SimpleMLP
 from common.datasets.independence import INPUT_DIM, OUTPUT_DIM, DATASET_NAME
 from common.config import Config
 from common.constants import *

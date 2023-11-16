@@ -1,5 +1,5 @@
 """Simply run the configuration with multiple seeds to see stability."""
-from training_pipelines.imp import BEST_EVAL
+from common.training_pipelines.imp import BEST_EVAL
 from common.persistance import ADAM, ADAMW, SGD
 
 sweep_config = {

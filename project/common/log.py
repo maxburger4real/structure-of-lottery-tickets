@@ -54,6 +54,23 @@ def log_param_aggregate_statistics(G, config: Config, commit=False):
         }, commit=commit)
 
 def log_zombies_and_comatose(G, config):
+    """
+    TODO:
+    - problem: there are too many metrics that are tracked
+    - it is unnecessary to track a metric for every single comatose or zombie neuron.
+    - i dont care about it
+    - what do i car about?
+    - how many comatose/zombies are there in total
+    - min-max-mean-median of their bias
+    - lifespan of them
+    - how long do they survive? -> histogram
+    - how long do they survive when they have a positive bias vs 0 bias
+    - how long do they survive depending on their remaining inputs or outputs
+
+    Histogram of zombies/comatose by number of in/out connections
+    Histogram of zombies based on how long they already exist
+    Histogram
+    """
     zombies, comatose = neuron_analysis(G, config)
     wandb.log({
         'zombies' : len(zombies), 

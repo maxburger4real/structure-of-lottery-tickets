@@ -9,9 +9,11 @@ python project/run_experiment.py -d -r project/configs/runs/_000_debug.py -s pro
 import wandb
 import argparse
 import argcomplete
-from training_pipelines import pipeline_selector
+
 from settings import WANDB_DIR
-from common.architectures import build_model_from_config
+
+from common.training_pipelines import pipeline_selector
+from common.models import build_model_from_config
 from common.datasets.dataset_selector import build_loaders
 from common.persistance import save_hparams
 from common.config import Config, import_config
@@ -19,9 +21,6 @@ from common.pruning_trajectory import update_pruning_config
 from common.training import build_loss
 from common.constants import *
 
-project = PROJECT
-entity = ENTITY
-count = None # 30   # number of runs
 
 def run_experiment(config, mode=None):
     """Run a wandb experiment from a config."""
@@ -59,28 +58,32 @@ def main():
     parser.add_argument('-r', '--run_config', help='run config file', required=True)
     parser.add_argument('-s', '--sweep_config', help='sweep config file')
     parser.add_argument('-d', '--disable', action='store_true', help="Disable WANDB mode.")
+    parser.add_argument('--count', help="The maximum number of runs for this sweep")
     argcomplete.autocomplete(parser)  # Enable autocompletion with argcomplete
     args = parser.parse_args()  # Parse the arguments
 
     run_config = import_config(args.run_config)
     sweep_config = import_config(args.sweep_config)
     mode = 'disabled' if args.disable else None
+    
+    count = None
+    if args.count is not None:
+        if args.count.isdigit():
+            count = int(args.count)
 
     if run_config is None:
-        raise ValueError
+        raise ValueError('No run config provided')
 
     if sweep_config is not None:
         # initialize the sweep
-        sweep_id = wandb.sweep(sweep_config, entity, project)
+        sweep_id = wandb.sweep(sweep_config, ENTITY, PROJECT)
 
         # start execution of the sweeps
         function = lambda : run_experiment(run_config, mode)
-        wandb.agent(sweep_id, function, entity, project, count)
+        wandb.agent(sweep_id, function, ENTITY, PROJECT, count)
 
     else:
         run_experiment(run_config, mode)
-
-
 
 if __name__ == "__main__":
     main()

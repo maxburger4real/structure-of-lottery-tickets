@@ -1,4 +1,4 @@
-from common.architectures import SimpleMLP
+from common.models import InitMLP
 from common.config import Config
 from common.constants import *
 
@@ -12,7 +12,7 @@ run_config = Config(
     num_concat_datasets=m,
     
     model_shape=[2*m, 40, 40, 1*m],
-    model_class = SimpleMLP.__name__,
+    model_class = InitMLP.__name__,
 
     # training
     lr=0.01,
@@ -23,7 +23,7 @@ run_config = Config(
     model_seed=42,
     data_seed=0,
 
-    persist=True,
+    persist=False,
 
     # early stop
     early_stopping=True,
@@ -39,5 +39,4 @@ run_config = Config(
     pruning_levels=30,
     pruning_method=MAGNITUDE,
     reinit=True,
-
 )

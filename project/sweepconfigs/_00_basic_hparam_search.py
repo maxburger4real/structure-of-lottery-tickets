@@ -1,4 +1,4 @@
-from training_pipelines.imp import BEST_EVAL
+from common.training_pipelines.imp import BEST_EVAL
 
 sweep_config = {
     'method': 'random', # random, grid, bayes
