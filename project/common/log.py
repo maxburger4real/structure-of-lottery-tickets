@@ -12,7 +12,6 @@ def logdict(loss : np.ndarray, prefix):
         return {prefix: loss.item()}
     if 0 < dims < 3:
         return {prefix: loss.mean().item()}
-    
     if dims == 3:
         metrics = {prefix: loss.mean().item()}
 
@@ -23,35 +22,42 @@ def logdict(loss : np.ndarray, prefix):
             metrics[prefix + '_' + str(i)] = l.item()
 
         return metrics
-    
+
+ 
 def log_param_aggregate_statistics(G, config: Config, commit=False):
-        # log layerwise weight aggregate statistics
+    """Log statistics of weights and bias matrices.
+    """
 
+    # go over every layer in the nn
     for l in range(len(config.model_shape)):
+        parameters = {}
 
-        B = np.array([data[BIAS] for _, data in G.nodes(data=True) if data[LAYER]==l])
-        W = np.array([data[WEIGHT] for u, _, data in G.edges(data=True) if G.nodes()[u][LAYER]==l])
-    
-        d = {
-            '(+) weight' : W[W > 0],
-            '(-) weight' : W[W < 0],
-            'abs weight' : np.abs(W)
-        }
+        w = []
+        for u, v, data in G.edges(data=True):
+            input_node = G.nodes()[u]
+            if input_node[LAYER]==l:
+                w.append(data[WEIGHT])
+        parameters['w'] = w
+
         if l != 0:
-            d['(+) bias'] = B[B > 0]
-            d['(-) bias'] = B[B < 0]
-            d['abs bias'] = np.abs(B)
-        
-        for k, v in d.items():
-            if len(v) == 0: continue
-            
+            b = []
+            for _, data in G.nodes(data=True):
+                if data[LAYER] == l:
+                    b.append(data[BIAS])
+            parameters['b'] = b
+
+        for name, p in parameters.items():
+            zeros = p[p == 0].numel().item()
+            total = p.numel().item()
             wandb.log({
-            f'{l}-size {k}' : v.size,
-            f'{l}-median {k}' : np.median(v),
-            f'{l}-mean {k}' : np.mean(v),
-            f'{l}-max {k}' : np.max(v),
-            f'{l}-min {k}' : np.min(v),
-        }, commit=commit)
+                f'L{l}-size({name}<0)' : p[p < 0].numel().item(),
+                f'L{l}-size({name}>0)' : p[p > 0].numel().item(),
+                f'L{l}-size({name}==0)' : zeros,
+                f'L{l}-mean({name})' : np.mean(p).item(),
+                f'L{l}-mean(abs({name}))' : np.mean(np.abs(p)).item(),
+                f'L{l}-spratio({name})' : zeros / total
+            }, commit=commit)
+
 
 def log_zombies_and_comatose(G, config):
     """
@@ -90,6 +96,7 @@ def log_zombies_and_comatose(G, config):
             f'comatose-bias-{i}' : data[BIAS],
             f'comatose-in-{i}' : data['in']
         }, commit=False)
+
 
 def log_subnet_analysis(G, config, ignore_fragments=True, log_detailed=True):
     """Log everything about subnetworks."""

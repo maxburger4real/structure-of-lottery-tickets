@@ -170,3 +170,20 @@ Why is that?
 - the avg magnitude grows faster than the biases which dont change anymore in comatose neurons.
 - pruning comatose biases is a complete waste of resources.
 How often does it happen?   
+
+
+
+
+# Important changes made to initialization
+
+Initialize with kaiming uniform
+and initialize biases with 0
+https://cs231n.github.io/neural-networks-2/
+https://pytorch.org/docs/stable/nn.init.html#torch.nn.init.kaiming_uniform_
+
+
+Interesting development:
+Now when I use the new, apparently correct kaiming initialization, the network does not split anymore.
+All weights get pruned except the ones in the input layer.
+This is weird but interesting.
+Investigating currently.

@@ -1,4 +1,4 @@
-from common.models import InitMLP
+from common.models import SimpleMLP, InitMLP
 from common.config import Config
 from common.constants import *
 
@@ -11,7 +11,7 @@ run_config = Config(
     dataset=CONCAT_MOONS,
     num_concat_datasets=m,
     
-    model_shape=[m*2, 60, 60, m],
+    model_shape=[m*2, 80, 80, m],
     model_class = InitMLP.__name__,
 
     # training
@@ -20,23 +20,22 @@ run_config = Config(
     training_epochs=3000,
 
     # seeds
-    model_seed=5, # good seeds : 2
+    model_seed=11, #[7, 9, 11]
     data_seed=0,
 
-    persist=False,
+    persist=True,
 
     # early stop
     early_stopping=True,
     early_stop_patience=10,
     early_stop_delta=0.0,
-    loss_cutoff=0.01,  # yielded good results
+    # loss_cutoff=0.01,  # yielded good results
 
     # pruning
     pruning_method=MAGNITUDE,
-    prune_biases=True,
+    prune_biases=True, # TODO: 
     prune_weights=True,
     pruning_target=50,
     pruning_levels=20,
-    extension_levels=1,
     reinit=True
 )

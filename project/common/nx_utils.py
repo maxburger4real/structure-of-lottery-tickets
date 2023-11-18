@@ -1,6 +1,4 @@
 import networkx as nx
-import numpy as np
-from collections import defaultdict
 from common.config import Config
 from common.constants import *
 
@@ -9,6 +7,10 @@ def build_nx_graph(model, config: Config):
     Create a networkx graph from torch state dict. 
     The Graph contains all Nodes and all Edges, even if 0.
     """
+
+    _omit_zero_edges = True  # do not add edges with weight 0 to the graph.
+    _omit_unconnected_nodes = True  # remove nodes that have no inputs and no outputs.
+
     weights, biases = _get_w_and_b(model)
 
     input_node_ids = list(range(config.model_shape[0]))
@@ -42,7 +44,7 @@ def build_nx_graph(model, config: Config):
             for j, j_node_id in enumerate(layers[layer_id+1]):
                 w = weight_matrix[j,i].item()
 
-                if w == 0: continue  # do not add pruned weights
+                if _omit_zero_edges and w == 0: continue  # do not add pruned weights
 
                 edge_attr = {WEIGHT : w}
                 edge = (i_node_id, j_node_id, edge_attr)
@@ -52,18 +54,7 @@ def build_nx_graph(model, config: Config):
     G.add_edges_from(edges)
     
     # remove nodes without any connections
-    G = remove_isolated_nodes(G)
-
-    return G
-
-def remove_isolated_nodes(G):
-    """ This function removes all nodes from a NetworkX graph that do not have any edges connected to them.    """
-
-    # Get a list of all nodes in the graph that have no edges
-    isolated_nodes = [node for node in G.nodes if G.degree(node) == 0]
-
-    # Remove the isolated nodes from the graph
-    G.remove_nodes_from(isolated_nodes)
+    G = _remove_isolated_nodes(G)
 
     return G
 
@@ -156,6 +147,17 @@ def neuron_analysis(G: nx.DiGraph, config: Config):
     return zombies, comatose
 
 # helpers
+def _remove_isolated_nodes(G):
+    """ This function removes all nodes from a NetworkX graph that do not have any edges connected to them.    """
+
+    # Get a list of all nodes in the graph that have no edges
+    isolated_nodes = [node for node in G.nodes if G.degree(node) == 0]
+
+    # Remove the isolated nodes from the graph
+    G.remove_nodes_from(isolated_nodes)
+
+    return G
+
 def _get_w_and_b(model):
     state_dict = model.state_dict()
     weights = _weights_from_state_dict(state_dict)
@@ -195,58 +197,3 @@ def _weights_from_state_dict(state_dict):
         return masked
     elif weights:
         return weights
-
-
-
-
-
-# DEPRECATED
-# attribute_functions
-def black_and_white(layers_of_weights):
-    layers = []
-    for weight_matrix in layers_of_weights:
-        X = weight_matrix.clone().numpy()
-        mask = X > 0
-
-        # Create X with the same shape as Y and fill it with 'no'
-        Y = np.full(X.shape, fill_value='red', dtype=object)
-
-        # Fill X with 'yes' where Y is True
-        Y[mask] = 'blue'
-
-        layers.append(Y)
-    
-    return layers
-
-def get_layers_of_nodes(G: nx.DiGraph):
-    """
-    Returns a dictionary of Attributes as keys, 
-    with a list of nodes that have that attribute as the value
-    """
-    mydict = nx.get_node_attributes(G, 'layer')
-    layers_of_nodes = []
-    for key, value in mydict.items():
-        if value == len(layers_of_nodes):
-            layers_of_nodes.append([])
-
-        layers_of_nodes[value].append(key)
-
-    return layers_of_nodes
-
-def add_weight_edges_arrays(
-    G: nx.DiGraph,
-    layers_to_nodes, 
-    attribute_set,  # list of functions that return attribute and value
-):
-    """Inplace add attributes to all edges, according to attribute functions."""
-    
-    attrs = defaultdict(dict)
-
-    for name, layers_of_weights in attribute_set.items():
-        for layer, timeful_weight_matrix in enumerate(layers_of_weights):
-            for i, in_node in enumerate(layers_to_nodes[layer]):
-                for o, out_node in enumerate(layers_to_nodes[layer+1]):
-                    graph_pos = (in_node, out_node)
-                    attrs[graph_pos].update({name : timeful_weight_matrix[:, o, i]})
-
-    nx.set_edge_attributes(G, attrs)

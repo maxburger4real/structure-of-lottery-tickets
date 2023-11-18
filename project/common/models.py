@@ -31,7 +31,13 @@ def build_model_from_config(config: Config):
         model = BioMLP(shp=shape, seed=seed)
         model = model.to(config.device)
         return model
+
+    if name == InitMLP.__name__:
+        model = InitMLP(shape=shape, activation=activation, seed=seed)
+        model = model.to(config.device)
+        return model
     
+    raise ValueError('Model Unkown')
 
 def _make_linear_init_kaiming_relu_zero_bias(in_features: int, out_features: int):
 
@@ -73,6 +79,7 @@ class SimpleMLP(ReproducibleModel):
     
 
 class InitMLP(ReproducibleModel):
+
     """A MLP where initialization is explicitly set."""
     def __init__(self, shape: torch.Size, activation=nn.ReLU, seed=None):
         super().__init__(seed)
@@ -92,9 +99,6 @@ class InitMLP(ReproducibleModel):
         y = self.model(x)
         return y
     
-
-
-
 
 # TODO: delete as is not needed anymore
 """Code from https://github.com/KindXiaoming/BIMT/blob/main/symbolic_formulas_3.1.ipynb"""

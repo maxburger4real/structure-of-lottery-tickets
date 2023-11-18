@@ -34,8 +34,6 @@ def build_pruning_func(model: torch.nn.Module, config: Config):
     # convert to the pruning parameterization
     params = _extract_pruning_params(model, config)
     prune.global_unstructured(params, prune.Identity)
-
-    # trajectory = _build_prune_trajectory(model, config)
     
     def pruning_func(amount):
         """A Closure that contains the trajectory Generator and the pruning parameters."""
@@ -51,32 +49,6 @@ def build_pruning_func(model: torch.nn.Module, config: Config):
         return min_magnitude
     
     return pruning_func, config.pruning_trajectory
-
-def _build_prune_trajectory(model, config: Config) -> np.ndarray:
-    """
-    Return a ndarray of length pruning_levels with the 
-    number of parameters to prune every level.
-    """
-    T = config.pruning_levels
-    prunable = _count_prunable_params(model)
-
-    if T is None: raise ValueError('Must specify pruning_levels')
-    
-    # override pruning rate if target is specified
-    if config.pruning_target is not None:
-        N0 = prunable
-        NT = config.pruning_target
-        config.pruning_rate = 1 - (NT / N0) ** (1 / T)
-
-    # if not overridden and not specified
-    if config.pruning_rate is None: raise ValueError('Pruning not specified')
-    
-    pr = config.pruning_rate
-    t = torch.arange(0, T+1)
-    param_trajectory = np.rint((N0 * (1 - pr) ** t).numpy()).astype(int)
-    prune_trajectory = -np.diff(param_trajectory)
-
-    return prune_trajectory
 
 def _extract_pruning_params(model, config: Config):
     """Returns the parameters which are selected for pruning based on the Config."""
