@@ -6,14 +6,12 @@ sweep_config = {
     'name': 'different network sizes',
     'parameters':{
         "extension_levels" : {
-            "values": [6,7,8,9,10]
+            "values": [0,1,2,3,4,5]
         },
         "model_seed":  {
             "values": [7, 9, 11]
         },
         # "pruning_method":  { "values": [RANDOM, MAGNITUDE]},
-        "prune_biases" : { 
-            'values' : [ True, False ]
-        }
+        # "prune_biases" : {  'values' : [ True, False ]        }
     }
 }

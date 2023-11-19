@@ -11,6 +11,7 @@ import argparse
 import argcomplete
 
 from settings import WANDB_DIR
+import plot_nn
 
 from common.training_pipelines import pipeline_selector
 from common.models import build_model_from_config
@@ -52,12 +53,15 @@ def run_experiment(config, mode=None):
             config=config_dict,
         )
 
+        return str(run.id)
+
 def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-r', '--run_config', help='run config file', required=True)
     parser.add_argument('-s', '--sweep_config', help='sweep config file')
     parser.add_argument('-d', '--disable', action='store_true', help="Disable WANDB mode.")
+    parser.add_argument('-p', '--plot', action='store_true', help="plot nn.")
     parser.add_argument('--count', help="The maximum number of runs for this sweep")
     argcomplete.autocomplete(parser)  # Enable autocompletion with argcomplete
     args = parser.parse_args()  # Parse the arguments
@@ -82,8 +86,13 @@ def main():
         function = lambda : run_experiment(run_config, mode)
         wandb.agent(sweep_id, function, ENTITY, PROJECT, count)
 
+
     else:
-        run_experiment(run_config, mode)
+        id = run_experiment(run_config, mode)
+
+        if args.plot:
+            plot_nn.main(run_ids=[id])
+
 
 if __name__ == "__main__":
     main()

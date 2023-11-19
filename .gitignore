@@ -8,7 +8,7 @@ __pycache__/
 .vscode/
 wandb/
 .others/
-.html
+**/*.html
 .runs/
 .images/
 .poster/
