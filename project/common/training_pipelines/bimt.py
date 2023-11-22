@@ -1,7 +1,7 @@
 import numpy as np
 import wandb
 from common.config import Config
-from common.persistance import save_model
+from common.persistance import save_model_or_skip
 from common.training import build_optimizer, evaluate
 
 VAL_LOSS = 'val_loss'
@@ -50,15 +50,15 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
         wandb.log({VAL_LOSS : eval_loss, TRAIN_LOSS : np.array(losses).mean()})
 
         if (step+1) % swap_log == 0:
-            save_model(model, config, step)
+            save_model_or_skip(model, config, step)
             model.relocate()
-            save_model(model, config, step+1)
+            save_model_or_skip(model, config, step+1)
     
     if config.bimt_prune is not None:
         model.thresholding(config.bimt_prune)
         eval_loss = evaluate(model, test_loader, loss_fn, config.device).mean().item()
         wandb.log({VAL_LOSS : eval_loss})
-        save_model(model, config, steps+1)
+        save_model_or_skip(model, config, steps+1)
 
 
     

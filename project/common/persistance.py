@@ -32,7 +32,7 @@ def load_hparams(base: pathlib.Path) -> dict:
         config_dict = json.load(f)
     return config_dict
 
-def save_model(model, config: Config, filename):
+def save_model_or_skip(model, config: Config, filename):
     """save a model with name property to disk."""
     if config.persist != True: return
 

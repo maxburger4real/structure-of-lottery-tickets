@@ -112,7 +112,8 @@ def main():
     # single run
     elif sweep_config is None:
         id = run_experiment(run_config, mode)
-        if args.plot: plot(run_ids=[id])
+        if args.plot and run_config.persist: 
+            plot(run_ids=[id])
 
     # sweep
     else: 

@@ -1,17 +1,48 @@
 import wandb
 import numpy as np
-from common.nx_utils import neuron_analysis, subnet_analysis
+from common.nx_utils import neuron_analysis, subnet_analysis, _get_w_and_b
 from common.config import Config
 from common.constants import *
 
-def logdict(loss : np.ndarray, prefix):
-    """create a loggable dict for wandb"""
+def log_descriptive_statistics(model, at_init=False, prefix='descriptive'):
+    weights, biases = _get_w_and_b(model)
+
+    for l, (w, b) in enumerate(zip(weights, biases, strict=True)):
+        params = dict(w=w.numpy(), b=b.numpy())
+
+        for name, p in params.items():
+            num_params = p.size
+            num_zeros = np.sum(p == 0)
+            num_nonzeros = np.sum(p != 0)
+            abs_nonzero_params = np.abs(p[p != 0])
+
+            if len(abs_nonzero_params) > 0:
+                median = np.median(abs_nonzero_params)
+                mean = np.mean(abs_nonzero_params)
+            else:
+                median, mean = 0,0
+            
+            assert num_params == num_nonzeros + num_zeros
+
+            rate_remaining = 1. if num_zeros == 0 else (num_nonzeros / num_params)
+
+            if at_init and rate_remaining != 1.0:
+                rate_remaining = 1.0
+
+            wandb.log({
+                f'{prefix} L{l}-rate-remaining({name})' : rate_remaining,
+                f'{prefix} L{l}-median(abs({name}))' : median,
+                f'{prefix} L{l}-mean(abs({name}))' : mean,
+            }, commit=False)
+
+def log_loss(loss : np.ndarray, prefix):
+    """log loss that takes care of logging the tasks sepertely."""
 
     dims = len(loss.shape)
     if dims == 0:
-        return {prefix: loss.item()}
+        d = {prefix: loss.item()}
     if 0 < dims < 3:
-        return {prefix: loss.mean().item()}
+        d =  {prefix: loss.mean().item()}
     if dims == 3:
         metrics = {prefix: loss.mean().item()}
 
@@ -21,43 +52,9 @@ def logdict(loss : np.ndarray, prefix):
         for i, l in enumerate(taskwise_loss):
             metrics[prefix + '_' + str(i)] = l.item()
 
-        return metrics
+        d = metrics
 
- 
-def log_param_aggregate_statistics(G, config: Config, commit=False):
-    """Log statistics of weights and bias matrices.
-    """
-
-    # go over every layer in the nn
-    for l in range(len(config.model_shape)):
-        parameters = {}
-
-        w = []
-        for u, v, data in G.edges(data=True):
-            input_node = G.nodes()[u]
-            if input_node[LAYER]==l:
-                w.append(data[WEIGHT])
-        parameters['w'] = w
-
-        if l != 0:
-            b = []
-            for _, data in G.nodes(data=True):
-                if data[LAYER] == l:
-                    b.append(data[BIAS])
-            parameters['b'] = b
-
-        for name, p in parameters.items():
-            zeros = p[p == 0].numel().item()
-            total = p.numel().item()
-            wandb.log({
-                f'L{l}-size({name}<0)' : p[p < 0].numel().item(),
-                f'L{l}-size({name}>0)' : p[p > 0].numel().item(),
-                f'L{l}-size({name}==0)' : zeros,
-                f'L{l}-mean({name})' : np.mean(p).item(),
-                f'L{l}-mean(abs({name}))' : np.mean(np.abs(p)).item(),
-                f'L{l}-spratio({name})' : zeros / total
-            }, commit=commit)
-
+    wandb.log(d, commit=False)
 
 def log_zombies_and_comatose(G, config):
     """
@@ -96,7 +93,6 @@ def log_zombies_and_comatose(G, config):
             f'comatose-bias-{i}' : data[BIAS],
             f'comatose-in-{i}' : data['in']
         }, commit=False)
-
 
 def log_subnet_analysis(G, config, ignore_fragments=True, log_detailed=True):
     """Log everything about subnetworks."""
@@ -150,3 +146,58 @@ def log_subnet_analysis(G, config, ignore_fragments=True, log_detailed=True):
         'fragment_subnetworks' : fragment_subnetworks,
         'zombie_subnetworks' : zombie_subnetworks,
     }, commit=False)
+
+def every_n(n):
+
+    if n is None or n <= 0:
+        return lambda : False
+
+    N = range(n)
+
+    def generator():
+        yield True
+        while True:
+            for _ in N:
+                yield False
+            yield True
+    g = generator()
+
+    def closure():
+        return next(g)
+
+    return closure
+
+def deprecated_log_param_aggregate_statistics(G, config: Config, commit=False):
+    """Log statistics of weights and bias matrices.
+    """
+
+    # go over every layer in the nn
+    for l in range(len(config.model_shape)):
+        parameters = {}
+
+        w = []
+        for u, v, data in G.edges(data=True):
+            input_node = G.nodes()[u]
+            if input_node[LAYER]==l:
+                w.append(data[WEIGHT])
+        parameters['w'] = w
+
+        if l != 0:
+            b = []
+            for _, data in G.nodes(data=True):
+                if data[LAYER] == l:
+                    b.append(data[BIAS])
+            parameters['b'] = b
+
+        for name, p in parameters.items():
+            p = np.array(p)
+            zeros = np.sum(p == 0)
+            total = p.size
+            wandb.log({
+                f'L{l}-size({name}<0)' : np.sum( p < 0),
+                f'L{l}-size({name}>0)' : np.sum( p > 0),
+                f'L{l}-size({name}==0)' : zeros,
+                f'L{l}-mean({name})' : np.mean(p),
+                f'L{l}-mean(abs({name}))' : np.mean(np.abs(p)),
+                f'L{l}-spratio({name})' : 0 if zeros == 0 else zeros / total
+            }, commit=commit)

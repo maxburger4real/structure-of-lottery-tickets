@@ -22,6 +22,9 @@ class Config:
     persist : bool = True  # wether to save the model at the checkpoints
 
     # OPTIONAL CONFIGS
+    log_every_n_epochs: int = None
+    log_graph_statistics: bool = True
+
     num_concat_datasets: int = None
     run_name : str = None
     wandb_url : str = None
