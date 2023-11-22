@@ -187,3 +187,9 @@ Now when I use the new, apparently correct kaiming initialization, the network d
 All weights get pruned except the ones in the input layer.
 This is weird but interesting.
 Investigating currently.
+
+how did frankle do it? 
+kaiming, but his network had reletively similar input dim to hidden dim ratio.
+https://github.com/facebookresearch/open_lth/blob/2ce732fe48abd5a80c10a153c45d397b048e980c/models/initializers.py
+
+now using simple normal distribution for the layers, since it is a toy task. Dont use the pytorch default, as it cannot be argued for.
