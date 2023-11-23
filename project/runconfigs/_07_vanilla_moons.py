@@ -8,7 +8,7 @@ run_config = Config(
     pipeline=VANILLA,
     activation=RELU,
     loss_fn= BCE,
-    dataset=CONCAT_MOONS,
+    dataset=MULTI_MOONS,
     num_concat_datasets=m,
     
     model_shape=[2*m, 9, 9, 1*m],

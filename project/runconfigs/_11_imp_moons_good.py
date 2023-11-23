@@ -9,7 +9,7 @@ run_config = Config(
     pipeline=IMP,
     activation=RELU,
     loss_fn= BCE,
-    dataset=CONCAT_MOONS,
+    dataset=MULTI_MOONS,
     num_concat_datasets=m,
     
     model_shape=[m*2, 40, 40, m],
