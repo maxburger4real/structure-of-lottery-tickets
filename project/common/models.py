@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import numpy as np
 from common import torch_utils
 from common.config import Config
 from common.constants import *
@@ -32,15 +31,13 @@ def build_model_from_config(config: Config):
         model = model.to(config.device)
         return model
     
+    if name == MLP.__name__: 
+        model = MLP(shape=shape, activation=activation, seed=seed)
+        __initialize_modules(model.modules, config)
+        model = model.to(config.device)
+        return model
+
     raise ValueError('Model Unkown')
-
-def _make_linear_init_kaiming_relu_zero_bias(in_features: int, out_features: int):
-
-    linear = nn.Linear(in_features, out_features)
-    nn.init.kaiming_uniform_(linear.weight, mode='fan_in', nonlinearity='relu')
-    nn.init.zeros_(linear.bias)
-
-    return linear
 
 def _make_linear_init_normal_relu_zero_bias(in_features: int, out_features: int):
 
@@ -49,6 +46,39 @@ def _make_linear_init_normal_relu_zero_bias(in_features: int, out_features: int)
     nn.init.zeros_(linear.bias)
 
     return linear
+
+def __initialize_modules(modules, config: Config):
+    """Initialize the weights and biases according to the init strategy provided in config."""
+
+    for module in modules:
+
+        # skip everything other than linear layers
+        if not isinstance(module, nn.Linear): continue
+        
+        # because enums are parsed to strings in config, parse back and convert to enum
+        weight_init = InitializationStrategy[config.init_strategy_weights.split('.')[-1]]
+        bias_init = InitializationStrategy[config.init_strategy_biases.split('.')[-1]]
+
+        match weight_init:
+            case InitializationStrategy.NORMAL:
+                print(f'Using normal : mean={config.init_mean}, std={config.init_std} for weight init')
+                nn.init.normal_(module.weight, mean=config.init_mean, std=config.init_std)
+
+            case InitializationStrategy.KAIMING_NORMAL:
+                print(f'Using Kaiming for weight init')
+                nn.init.kaiming_uniform_(module.weight, mode='fan_in', nonlinearity='relu')
+
+            case _:
+                print('Using Default initialization for Weights')
+
+        match bias_init:
+            case InitializationStrategy.ZERO:
+                print('Using Zeros initialization for Bias')
+                nn.init.zeros_(module.bias)
+
+            case _:
+                print('Using Default initialization for Bias')
+                
 
 class ReproducibleModel(nn.Module):
     """An abstract class that sets the seed for reproducible initialization."""
@@ -103,18 +133,23 @@ class InitMLP(ReproducibleModel):
 
 
 class MLP(ReproducibleModel):
-
-    """A MLP where initialization is explicitly set."""
-    def __init__(self, shape: torch.Size, activation=nn.ReLU, seed=None):
+    """A mini mlp for demo purposes."""
+    def __init__(
+            self, 
+            shape: torch.Size,
+            activation=nn.ReLU,  
+            seed=None
+    ):
         super().__init__(seed)
 
-        linear = _make_linear_init_kaiming_relu_zero_bias(shape[0], shape[1])
-        modules = [linear]
+        modules = []
+        modules.append(nn.Linear(shape[0], shape[1]))
 
         for i in range(1, len(shape) - 1):
             modules.append(activation())
-            linear = _make_linear_init_kaiming_relu_zero_bias(shape[i], shape[i+1])
-            modules.append(linear)
+            in_dim = shape[i]
+            out_dim = shape[i+1]
+            modules.append(nn.Linear(in_dim, out_dim))
 
         self.modules = modules
         self.model = nn.Sequential(*modules)
@@ -122,3 +157,4 @@ class MLP(ReproducibleModel):
     def forward(self, x):
         y = self.model(x)
         return y
+    

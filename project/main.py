@@ -29,7 +29,7 @@ def run_experiment(config, mode=None):
     with wandb.init(project=PROJECT, config=config, mode=mode, dir=WANDB_DIR) as run:
 
         # optional config updates needed for model extension
-        update_pruning_config(wandb.config)
+        if config.pipeline == IMP: update_pruning_config(wandb.config)
 
         # make model, loss, optim and dataloaders
         model = build_model_from_config(wandb.config)

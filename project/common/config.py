@@ -1,10 +1,18 @@
 import importlib.util
 from dataclasses import dataclass, asdict
+from common.constants import *
 
 @dataclass
 class Config:
+    # MODEL and INITIALIZATION
     model_class : str  # use CLASS.__name__
+    init_strategy_biases : InitializationStrategy
+    init_strategy_weights : InitializationStrategy
+    init_mean : float
+    init_std : float
 
+    n_samples : int 
+    noise : float
     dataset : str  # use CONSTANTS
     loss_fn : str  # use CONSTANTS
     pipeline : str   # use CONSTANTS

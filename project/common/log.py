@@ -35,15 +35,15 @@ def log_descriptive_statistics(model, at_init=False, prefix='descriptive'):
                 f'{prefix} L{l}-mean(abs({name}))' : mean,
             }, commit=False)
 
-def log_loss(loss : np.ndarray, prefix):
+def log_loss(loss : np.ndarray, prefix, commit=False):
     """log loss that takes care of logging the tasks sepertely."""
 
     dims = len(loss.shape)
     if dims == 0:
         d = {prefix: loss.item()}
-    if 0 < dims < 3:
+    elif 0 < dims < 3:
         d =  {prefix: loss.mean().item()}
-    if dims == 3:
+    elif dims == 3:
         metrics = {prefix: loss.mean().item()}
 
         # assumption: last dimension is task dimension
@@ -54,7 +54,7 @@ def log_loss(loss : np.ndarray, prefix):
 
         d = metrics
 
-    wandb.log(d, commit=False)
+    wandb.log(d, commit=commit)
 
 def log_zombies_and_comatose(G, config):
     """

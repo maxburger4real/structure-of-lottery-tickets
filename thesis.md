@@ -192,4 +192,16 @@ https://github.com/facebookresearch/open_lth/blob/2ce732fe48abd5a80c10a153c45d39
 
 now using simple normal distribution for the layers, since it is a toy task. Dont use the pytorch default, as it cannot be argued for.
 
-What do we need to do now
+Experiments on 23.11.
+
+Training with the new datasets.
+Using the concat datasets, there is the phenomenon that the performnance doesnt increase with model size. Or rather, that early stopping is triggered early. Why is that? Maybe because the network has many more parameters than there are samples in the dataset. Lets try doubling the number of samples
+
+Increasing the datset size helps. however somehow the performance on the combined dataset with the circles isnt as good 
+This might be due to the ability to predict.
+
+The reason was that the circle dataset was not predictable. overlapping class distributions.
+Changing the 'factor' from 0.8 to 0.5. This makes the classes better seperable.
+Now the combined dataset trains to 0.01 Loss.
+original torch https://github.com/pytorch/pytorch/blob/main/torch/nn/modules/linear.py
+
