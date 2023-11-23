@@ -91,7 +91,7 @@ def build_optimizer(model, config: Config):
         )
     return optimizer
 
-def build_loss(config: Config):
+def build_loss_from_config(config: Config):
     if config.loss_fn == MSE:
         return torch.nn.MSELoss(reduction='mean')
     

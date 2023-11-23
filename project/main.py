@@ -14,13 +14,13 @@ from settings import WANDB_DIR, RUNS_DATA_DIR
 
 from common.training_pipelines import pipeline_selector
 from common.models import build_model_from_config
-from common.datasets.dataset_selector import build_loaders
 from common.persistance import save_hparams
 from common.config import Config, import_config
 from common.pruning_trajectory import update_pruning_config
-from common.training import build_loss
-from common.constants import *
 from common.plotting import plot_checkpoints
+from common.training import build_loss_from_config
+from common.datasets import build_dataloaders_from_config
+from common.constants import *
 
 
 def run_experiment(config, mode=None):
@@ -33,8 +33,8 @@ def run_experiment(config, mode=None):
 
         # make model, loss, optim and dataloaders
         model = build_model_from_config(wandb.config)
-        loss_fn = build_loss(wandb.config)
-        train_loader, test_loader = build_loaders(wandb.config)
+        loss_fn = build_loss_from_config(wandb.config)
+        train_loader, test_loader = build_dataloaders_from_config(wandb.config)
 
         # save the config and add some wandb info to connect wandb with local files
         config_dict = Config(**wandb.config)

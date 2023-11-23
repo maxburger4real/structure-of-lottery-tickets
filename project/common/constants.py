@@ -10,6 +10,7 @@ MODE='online'
 # MODE='disabled'
 
 # Datasets
+MOONS_AND_CIRCLES = 'moons and circles concatenated classification'
 CONCAT_MOONS = 'moons'
 SYMBOLIC_INDEPENDENCE_REGRESSION = 'symbolic independece regression'
 

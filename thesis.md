@@ -172,8 +172,6 @@ Why is that?
 How often does it happen?   
 
 
-
-
 # Important changes made to initialization
 
 Initialize with kaiming uniform
@@ -193,3 +191,5 @@ kaiming, but his network had reletively similar input dim to hidden dim ratio.
 https://github.com/facebookresearch/open_lth/blob/2ce732fe48abd5a80c10a153c45d397b048e980c/models/initializers.py
 
 now using simple normal distribution for the layers, since it is a toy task. Dont use the pytorch default, as it cannot be argued for.
+
+What do we need to do now
