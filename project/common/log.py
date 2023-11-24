@@ -1,7 +1,5 @@
 import wandb
 import numpy as np
-import torch
-from sklearn.metrics import accuracy_score
 from common.nx_utils import neuron_analysis, subnet_analysis, _get_w_and_b
 from common.config import Config
 from common.constants import *
@@ -38,50 +36,30 @@ def descriptive_statistics(model, at_init=False, prefix='descriptive'):
                 f'{prefix} L{l}-mean(abs({name}))' : mean,
             }, commit=False)
 
-def loss(loss : np.ndarray, prefix, commit=False):
+def metric(value, prefix, commit=False):
+    '''Log a singular scalar value.'''
+
+    if isinstance(value, np.ndarray):
+        value = value.item()
+
+    wandb.log({prefix:value}, commit=commit)
+
+def taskwise_metric(metric : np.ndarray, prefix, commit=False):
     """log loss that takes care of logging the tasks sepertely."""
+    
+    batch_size, num_tasks = metric.shape
+    batch_metric = metric.mean(axis=0)
+    d = {prefix : batch_metric.mean()}
 
-    dims = len(loss.shape)
-    if dims == 0:
-        d = {prefix: loss.item()}
-    elif 0 < dims < 3:
-        d =  {prefix: loss.mean().item()}
-    elif dims == 3:
-        metrics = {prefix: loss.mean().item()}
+    if num_tasks < 2:
+        wandb.log(d, commit=commit)
+        return
 
-        # assumption: last dimension is task dimension
-        all_axis_but_the_last_one = tuple(range(dims-1))
-        taskwise_loss = loss.mean(axis=all_axis_but_the_last_one)
-        for i, l in enumerate(taskwise_loss):
-            metrics[prefix + '_' + str(i)] = l.item()
-
-        d = metrics
+    for i, task_metric in enumerate(batch_metric, start=1):
+        key = f'{prefix}-{i}'
+        d[key] = task_metric.item()
 
     wandb.log(d, commit=commit)
-
-def accuracy(model, dataloader):
-    """log loss that takes care of logging the tasks sepertely."""
-
-
-    model.eval()  # Set the model to evaluation mode
-    all_predictions = []
-    all_labels = []
-
-    with torch.no_grad():  # No need to track gradients
-        for inputs, labels in dataloader:
-            outputs = model(inputs)
-            _, predicted = torch.max(outputs, 1)
-
-            # Append current predictions and labels
-            all_predictions.extend(predicted.cpu().numpy())
-            all_labels.extend(labels.cpu().numpy())
-
-    # Calculate accuracy using sklearn's accuracy_score
-    accuracy = accuracy_score(all_labels, all_predictions)
-
-    return accuracy
-
-    # wandb.log(d, commit=commit)
 
 def zombies_and_comatose(G, config: Config):
     """

@@ -1,23 +1,42 @@
 import torch
+import torch.nn.functional as F
 import numpy as np
 from torch import optim
+from sklearn.metrics import accuracy_score
+
 from common.config import Config
 from common.constants import *
 
-def evaluate(model, loader, loss_fn, device):
+def calc_accuracy(logits, y):
+    '''Calculate Accuracy from logits and labels.'''
+    pred = (logits > 0).int()
+    assert pred.shape == y.shape, 'True labels must habe same shape as predictions.'
+    accs = []
+    for i in range(y.shape[1]):
+        y_true = y[:,i]
+        y_pred = pred[:,i]
+        acc = accuracy_score(y_true, y_pred)
+        accs.append(acc)
+    return np.array(accs, dtype=np.float32)
+
+def evaluate(model, loader, loss_fn, device, accuracy=True):
     """Evaluate the model and return a numpy array of losses for each batch."""
 
     model.eval()
-    losses = []
+    accs, losses = [],[]
     with torch.no_grad():
         for _, (x, y) in enumerate(loader):
             x,y = x.to(device), y.to(device)
 
             pred  = model(x)
-            loss = loss_fn(pred, y)
-            losses.append(loss.detach().cpu().numpy())
+            batch_loss = loss_fn(pred, y).mean(axis=0).numpy()
+            batch_acc = calc_accuracy(pred.detach().cpu(), y.detach().cpu())
+            assert batch_acc.shape == batch_loss.shape, 'Metrics must have the same size'
 
-    return np.array(losses)
+            accs.append(batch_acc)
+            losses.append(batch_loss)
+
+    return np.array(losses), np.array(accs)
 
 def update(model, loader, optim, loss_fn, device, lambda_l1=None):
     """
@@ -56,7 +75,7 @@ def train_and_evaluate(model, train_loader, test_loader, optim, loss_fn, config:
     # train for epochs
     for _ in range(0, config.training_epochs):
         loss_train = update(model, train_loader, optim, loss_fn, config.device, config.l1_lambda).mean()
-        loss_eval = evaluate(model, test_loader, loss_fn, config.device).mean().item()
+        loss_eval, acc = evaluate(model, test_loader, loss_fn, config.device).mean().item()
 
         train_losses += [loss_train]
         eval_losses += [loss_eval]

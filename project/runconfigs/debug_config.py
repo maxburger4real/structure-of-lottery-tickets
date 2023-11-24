@@ -10,7 +10,7 @@ run_config = Config(
     loss_fn= BCE,
     dataset=MULTI_MOONS,
     num_concat_datasets=m,
-    
+    n_samples=800,
     model_shape=[2*m, 40, 40, 1*m],
     model_class = InitMLP.__name__,
 

@@ -50,9 +50,11 @@ BIMT = 'bimt'
 # Metrics to Track
 VAL, TRAIN = 'val', 'train'
 ACC, LOSS = 'acc', 'loss'
-VAL_LOSS = VAL + "_" + LOSS
-TRAIN_LOSS = TRAIN + "_" + LOSS
+VAL_LOSS = VAL + "-" + LOSS
+TRAIN_LOSS = TRAIN + "-" + LOSS
+ACCURACY = 'accuracy'
 
+# 
 PRUNABLE = 'prunable_params'
 SPARSITY = 'sparsity'
 STOP = 'stop'

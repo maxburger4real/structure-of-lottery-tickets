@@ -12,21 +12,22 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
     stop = build_early_stopper(config)
 
     # log initial performance
-    loss_init = evaluate(model, test_loader, loss_fn, config.device)
-    log.loss(loss_init, VAL_LOSS, commit=True)
+    loss_init, acc = evaluate(model, test_loader, loss_fn, config.device)
+    log.taskwise_metric(loss_init, VAL_LOSS)
+    log.taskwise_metric(acc, ACCURACY, commit=True)
 
     # train and evaluate
     epochs = config.training_epochs
-
     for epoch in tqdm(range(epochs), 'Training', epochs):
         
         # update
-        loss_train = update(model, train_loader, optim, loss_fn, config.device, config.l1_lambda).mean()
-        log.loss(loss_train, TRAIN_LOSS)
+        loss_train = update(model, train_loader, optim, loss_fn, config.device, config.l1_lambda)
+        log.metric(loss_train, TRAIN_LOSS)
 
         # evaluate
-        loss_eval = evaluate(model, test_loader, loss_fn, config.device)
-        log.loss(loss_eval, VAL_LOSS, commit=True)
+        loss_eval, acc = evaluate(model, test_loader, loss_fn, config.device)
+        log.taskwise_metric(loss_eval, VAL_LOSS)
+        log.taskwise_metric(acc, ACCURACY, commit=True)
 
         if stop(loss_eval.mean().item()): break
 

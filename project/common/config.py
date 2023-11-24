@@ -6,13 +6,6 @@ from common.constants import *
 class Config:
     # MODEL and INITIALIZATION
     model_class : str  # use CLASS.__name__
-    init_strategy_biases : InitializationStrategy
-    init_strategy_weights : InitializationStrategy
-    init_mean : float
-    init_std : float
-
-    n_samples : int 
-    noise : float
     dataset : str  # use CONSTANTS
     loss_fn : str  # use CONSTANTS
     pipeline : str   # use CONSTANTS
@@ -26,6 +19,13 @@ class Config:
     data_seed : int
 
     # DEFAULTED CONFIGS
+    init_strategy_biases : InitializationStrategy = None
+    init_strategy_weights : InitializationStrategy = None
+    init_mean : float = None
+    init_std : float = None
+
+    n_samples : int = 800
+    noise : float = None
     device: str = 'cpu'
     persist : bool = True  # wether to save the model at the checkpoints
 
