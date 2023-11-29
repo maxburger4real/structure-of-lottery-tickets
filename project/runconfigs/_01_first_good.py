@@ -20,7 +20,7 @@ run_config = Config(
         prune_biases=False,
 
         # training
-        training_epochs=500,
+        epochs=500,
         lr=0.0033,
         momentum=0,
         optimizer=ADAM,
