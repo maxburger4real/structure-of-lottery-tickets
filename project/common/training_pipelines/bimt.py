@@ -22,7 +22,7 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
     eval_loss_init, acc = evaluate(model, test_loader, loss_fn, config.device).mean().item()
     wandb.log({VAL_LOSS : eval_loss_init})
     
-    steps=config.training_epochs
+    steps=config.epochs
     for step in range(steps):
 
         # crank up lambda after first quarter of training
