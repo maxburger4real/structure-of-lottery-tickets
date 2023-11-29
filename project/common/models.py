@@ -61,11 +61,9 @@ def __initialize_modules(modules, config: Config):
 
         match weight_init:
             case InitializationStrategy.NORMAL:
-                print(f'Using normal : mean={config.init_mean}, std={config.init_std} for weight init')
                 nn.init.normal_(module.weight, mean=config.init_mean, std=config.init_std)
 
             case InitializationStrategy.KAIMING_NORMAL:
-                print(f'Using Kaiming for weight init')
                 nn.init.kaiming_uniform_(module.weight, mode='fan_in', nonlinearity='relu')
 
             case _:
@@ -73,7 +71,6 @@ def __initialize_modules(modules, config: Config):
 
         match bias_init:
             case InitializationStrategy.ZERO:
-                print('Using Zeros initialization for Bias')
                 nn.init.zeros_(module.bias)
 
             case _:

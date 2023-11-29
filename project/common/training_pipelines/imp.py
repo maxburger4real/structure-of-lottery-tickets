@@ -14,23 +14,21 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
     prune, trajectory = build_pruning_func(model, config)
     reinit = build_reinit_func(model)
     pparams = count_prunable_params(model)
-    
     save_model_or_skip(model, config, f'{-config.extension_levels}_init')
 
     # log initial performance and descriptive statistics
     initial_performace, accuracy = evaluate(model, test_loader, loss_fn, config.device)
-    log.taskwise_metric(initial_performace, prefix=VAL_LOSS)
+    log.taskwise_metric(initial_performace, VAL_LOSS)
     log.taskwise_metric(accuracy, ACCURACY)
     log.descriptive_statistics(model, at_init=True)
 
     # get the complete levels
     levels = range(-config.extension_levels, config.pruning_levels)
+    epochs = config.epochs
 
     pborder = 0
     for level, pruning_amount in tqdm(
-        zip(levels, trajectory, strict=True), 
-        total=len(levels), 
-        desc='running pruning levels'
+        zip(levels, trajectory, strict=True), 'Pruning Levels', len(levels) 
     ):
 
         log_now = log.returns_true_every_nth_time(
@@ -40,27 +38,30 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
 
         # train and evaluate the model and log the performance
         optim = build_optimizer(model, config)
-        stop = build_early_stopper(config)
+        stopper = build_early_stopper(config)
 
-        for epoch in range(config.training_epochs):
-            loss_train = update(model, train_loader, optim, loss_fn, config.device, config.l1_lambda).mean()
+        for epoch in tqdm(range(epochs), f'Training Level {level}', epochs):
+            loss_train = update(model, train_loader, optim, loss_fn, config.device, config.l1_lambda)
             loss_eval, accuracy = evaluate(model, test_loader, loss_fn, config.device)
 
+            mean_train_loss: float = loss_train.mean().item()
+            mean_eval_loss: float = loss_eval.mean().item()
+            mean_eval_acc: float = accuracy.mean().item()
+
             if log_now():
-                log.descriptive_statistics(model, prefix=f'epochs Lv. {level} descriptive')
+                log.descriptive_statistics(model, prefix=f'epochwise-descriptive')
                 wandb.log({
-                    f'epochs Lv. {level} epoch-loss-train' : loss_train.item(),
-                    f'epochs Lv. {level} epoch-loss-val' : loss_eval.mean().item(),
-                    'epoch' : epoch
+                    f'epochwise-train-loss' : mean_train_loss, 
+                    f'epochwise-val-loss' : mean_eval_loss,
+                    f'epochwise-accuracy' : mean_eval_acc
                 })
 
-            if loss_eval.mean().item() < config.loss_cutoff: break
-            if stop(loss_eval.mean().item()): break
+            if stopper(mean_eval_loss): break
 
         save_model_or_skip(model, config, level)
 
-        # log weights and biases metrics
-        log.metric(loss_train, TRAIN_LOSS) 
+        # log weights, biases, metrics at early stopping iteration
+        log.scalar_metric(loss_train, TRAIN_LOSS) 
         log.taskwise_metric(loss_eval, VAL_LOSS)
         log.taskwise_metric(accuracy, ACCURACY)
         log.descriptive_statistics(model)
@@ -77,28 +78,37 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
         pborder = prune(pruning_amount)
         pparams -= pruning_amount
 
+        # reinitialize
         if config.reinit: reinit(model)
 
     wandb.log({'level' : level+1, 'pborder' : pborder, 'pparams' : pparams})
 
     # final finetuning (optionally dont stop early)
-    stop = build_early_stopper(config)
+    stopper = build_early_stopper(config)
     optim = build_optimizer(model, config)
     log_now = log.returns_true_every_nth_time(config.log_every_n_epochs)
 
-    for epoch in range(config.training_epochs):
-        loss_train = update(model, train_loader, optim, loss_fn, config.device, config.l1_lambda).mean()
+    for epoch in tqdm(range(epochs), f'Final Finetuning',epochs):
+
+        loss_train = update(model, train_loader, optim, loss_fn, config.device, config.l1_lambda)
         loss_eval, accuracy = evaluate(model, test_loader, loss_fn, config.device)
+
+        mean_train_loss: float = loss_train.mean().item()
+        mean_eval_loss: float = loss_eval.mean().item()
+        mean_eval_acc: float = accuracy.mean().item()
+
         if log_now():
+            log.descriptive_statistics(model, prefix=f'epochwise-descriptive')
             wandb.log({
-                f'Lv. {level} epoch-loss-train' : loss_train.item(),
-                f'Lv. {level} epoch-loss-val' : loss_eval.mean().item(),
-                'epoch' : epoch
+                f'epochwise-train-loss' : mean_train_loss, 
+                f'epochwise-val-loss' : mean_eval_loss,
+                f'epochwise-accuracy' : mean_eval_acc
             })
-        if stop(loss_eval.mean().item()): break
+
+        if stopper(mean_eval_loss): break
 
      # log weights and biases metrics
-    log.metric(loss_train, TRAIN_LOSS) 
+    log.scalar_metric(loss_train, TRAIN_LOSS) 
     log.taskwise_metric(loss_eval, VAL_LOSS)
     log.taskwise_metric(accuracy, ACCURACY)
     log.descriptive_statistics(model)

@@ -36,7 +36,7 @@ def descriptive_statistics(model, at_init=False, prefix='descriptive'):
                 f'{prefix} L{l}-mean(abs({name}))' : mean,
             }, commit=False)
 
-def metric(value, prefix, commit=False):
+def scalar_metric(value, prefix, commit=False):
     '''Log a singular scalar value.'''
 
     if isinstance(value, np.ndarray):

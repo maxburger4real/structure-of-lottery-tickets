@@ -1,5 +1,4 @@
 import torch
-import torch.nn.functional as F
 import numpy as np
 from torch import optim
 from sklearn.metrics import accuracy_score
@@ -73,7 +72,7 @@ def train_and_evaluate(model, train_loader, test_loader, optim, loss_fn, config:
     stop = build_early_stopper(config)
 
     # train for epochs
-    for _ in range(0, config.training_epochs):
+    for _ in range(0, config.epochs):
         loss_train = update(model, train_loader, optim, loss_fn, config.device, config.l1_lambda).mean()
         loss_eval, acc = evaluate(model, test_loader, loss_fn, config.device).mean().item()
 
@@ -124,34 +123,49 @@ def build_loss_from_config(config: Config):
 
 def build_early_stopper(config: Config):
     """Returns a callable object that decides if to early stop."""
-    if config.early_stopping:
-        return EarlyStopper(
-            patience=config.early_stop_patience,
-            min_delta=config.early_stop_delta
-        )
+    return EarlyStopper(
+        patience=config.early_stop_patience,
+        min_delta=config.early_stop_delta
+    )
 
-    # MOCK earlystopper
-    def neverstop(*args):
-        return False
-    
-    return neverstop
-        
 
 class EarlyStopper:
-    """from https://stackoverflow.com/a/73704579"""
-    def __init__(self, patience=1, min_delta=0):
+    """from https://stackoverflow.com/a/73704579 assuming the loss is always larger than 0.
+    - positive min_delta can be used to define, 
+        how big a loss increase must be to count as such
+    - negative min_delta can be used to define, 
+        how big an improvement must be, 
+        to not count as a loss increase
+    """
+
+    def __init__(self, patience=None, min_delta=0, loss_cutoff=None):
+        self.counter = 0
         self.patience = patience
         self.min_delta = min_delta
-        self.counter = 0
-        self.min_validation_loss = float('inf')
+        self.loss_cutoff = loss_cutoff
+        self.min_loss = float('inf')
 
-    def __call__(self, validation_loss):
-        if validation_loss < self.min_validation_loss:
-            self.min_validation_loss = validation_loss
-            self.counter = 0
-            
-        elif validation_loss > (self.min_validation_loss + self.min_delta):
-            self.counter += 1
-            if self.counter >= self.patience:
+    def __call__(self, loss):
+
+        if self.loss_cutoff is not None: 
+            if loss < self.loss_cutoff:
                 return True
+
+        loss_decreased = loss < self.min_loss
+        loss_increased = loss > (self.min_loss + self.min_delta)
+
+        if loss_decreased:
+            self.min_loss = loss
+            self.counter = 0
+
+        if self.patience is None: return False
+
+        elif loss_increased:
+            self.counter += 1
+            loss_increased_too_often = (self.counter >= self.patience)
+            
+            if loss_increased_too_often:
+                return True
+        
+        
         return False

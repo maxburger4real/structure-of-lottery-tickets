@@ -17,7 +17,7 @@ run_config = Config(
     # training
     lr=0.1,
     optimizer=ADAM,
-    training_epochs=100,
+    epochs=100,
     log_every_n_epochs = 10,  # insert int to log every n epochs
 
     # seeds

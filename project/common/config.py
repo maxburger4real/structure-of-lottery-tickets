@@ -13,10 +13,10 @@ class Config:
     optimizer : str  # use CONSTANTS
 
     lr : float
-    training_epochs : int
+    epochs : int
     model_shape : list[int]
     model_seed : int
-    data_seed : int
+    # data_seed : int
 
     # DEFAULTED CONFIGS
     init_strategy_biases : InitializationStrategy = None
@@ -24,6 +24,7 @@ class Config:
     init_mean : float = None
     init_std : float = None
 
+    task_description : dict = None
     n_samples : int = 800
     noise : float = None
     device: str = 'cpu'
@@ -39,17 +40,6 @@ class Config:
     run_id : str = None
     local_dir_name: str = None 
 
-    pruning_levels : int = None  # number of times pruning is applied
-    pruning_rate   : float = None  # if pruning target is specified, pruning rate is overwritten
-    pruning_target : int = None  # if specified, pruning rate is ignored
-    params_total  : int = None  # is set when pruning
-    params_prunable : int = None  # is set when pruning
-    params_before_pruning : int = None # params in the beginning param_trajectory[0]
-
-    prune_weights : bool = None
-    prune_biases : bool = None
-    reinit : bool  = None  # reinitialize the network after pruning (only IMP)
-
     l1_lambda : float = None  # lambda for l1 regularisation
     bimt_local : bool = None  # if locality regularisation should be activated
     bimt_swap : int = None  # swap every n-th iteration
@@ -57,16 +47,30 @@ class Config:
     momentum : float = None
     batch_size : int  = None  # if None, batch size is dataset size
     description : str = None  # just add information about the idea behind the configuration for documentation purposes.
-    pruning_method : str = None  # RANDOM or MAGNITUDE
-    early_stopping : bool = False
+
+    # Early stopping
     early_stop_delta : float = 0.0
-    early_stop_patience : int = 1
-    loss_cutoff : float = 0.0  # if loss is less than this, stop training early
+    early_stop_patience : int = None
+    loss_cutoff : float = None  # if loss is less than this, stop training early
     
-    base_model_shape: str = None # if extenion overrides model shape, this is original
+    # Pruning
+    pruning_method : str = None  # RANDOM or MAGNITUDE
     extension_levels: int = 0 # how many 
+    pruning_levels : int = None  # number of times pruning is applied
+    pruning_rate   : float = None  # if pruning target is specified, pruning rate is overwritten
+    pruning_target : int = None  # if specified, pruning rate is ignored
+    prune_weights : bool = None
+    prune_biases : bool = None
+
+    # Set by program
+    params_before_pruning : int = None # params in the beginning param_trajectory[0]
+    params_prunable : int = None  # is set when pruning
+    params_total  : int = None  # is set when pruning
     pruning_trajectory : list[int] = None
     param_trajectory : list[int] = None
+    reinit : bool  = None  # reinitialize the network after pruning (only IMP)
+
+    base_model_shape: str = None # if extenion overrides model shape, this is original
 
     def as_dict(self):
         data = asdict(self)

@@ -281,7 +281,7 @@ def update_pruning_config(config: Config):
     update_dict['param_trajectory'] = param_trajectory
     update_dict['pruning_trajectory'] = pruning_trajectory
 
-    config.update(update_dict, allow_val_change=True )
+    config.update(update_dict, allow_val_change=True)
 
 
 if __name__ == '__main__':

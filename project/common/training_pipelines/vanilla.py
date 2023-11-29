@@ -17,21 +17,22 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
     log.taskwise_metric(acc, ACCURACY, commit=True)
 
     # train and evaluate
-    epochs = config.training_epochs
+    epochs = config.epochs
     for epoch in tqdm(range(epochs), 'Training', epochs):
         
         # update
         loss_train = update(model, train_loader, optim, loss_fn, config.device, config.l1_lambda)
-        log.metric(loss_train, TRAIN_LOSS)
+        log.scalar_metric(loss_train, TRAIN_LOSS)
 
         # evaluate
         loss_eval, acc = evaluate(model, test_loader, loss_fn, config.device)
         log.taskwise_metric(loss_eval, VAL_LOSS)
         log.taskwise_metric(acc, ACCURACY, commit=True)
 
-        if stop(loss_eval.mean().item()): break
+        if stop(loss_eval.mean().item()): 
+            break
 
     wandb.log({'stop': epoch})
 
     # store model
-    save_model_or_skip(model, config, config.training_epochs)
+    save_model_or_skip(model, config, config.epochs)
