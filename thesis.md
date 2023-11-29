@@ -205,3 +205,26 @@ Changing the 'factor' from 0.8 to 0.5. This makes the classes better seperable.
 Now the combined dataset trains to 0.01 Loss.
 original torch https://github.com/pytorch/pytorch/blob/main/torch/nn/modules/linear.py
 
+### Zombies
+How can we look at the NN from a different perspective? Directed Acyclic Graph view.
+The first differentiation can be made into subgraphs either change the network output or not. Assuming there are only linear layers and activations.
+A subgraph that doesnt change the network output is *unproductive*.
+It either :
+
+- has no connections to the output. A feature with zero output connections is a head of an unproductive subgraph. (excluding output_features themselves). All parent features of the unproductive feature belong to the uproductive subgraph if all other children of the parent are also unproductive. If it has at least one child that is productive ( meaning it can change the output), it is also productive.
+
+- produces a constant activation of 0 assuming that network input is completely unknown. This can occur, if the input of the feature is predictable. e.g. there are no inputs but a negative bias with ReLU or no inputs and 0 bias.
+
+On the other hand there are *productive* subgraphs.
+These are simply all subgraphs that are not unproductive.
+
+Within the productive subgraphs, there are some interesting distinctions to make.
+The only 'valuable' subgraphs of the productive ones are the ones,
+that are somehow connected to the network input. and actually use it.
+
+Productive features, that do not receive any information from the input features are termed 'zombie features'. 
+All child features of a zombie feature, that only has zombie parents is also a zombie feature. All zombie features that are connected with weights form a 'zombie subgraph'.
+
+
+
+
