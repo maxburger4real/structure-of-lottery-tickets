@@ -225,6 +225,55 @@ that are somehow connected to the network input. and actually use it.
 Productive features, that do not receive any information from the input features are termed 'zombie features'. 
 All child features of a zombie feature, that only has zombie parents is also a zombie feature. All zombie features that are connected with weights form a 'zombie subgraph'.
 
+However, amongst the zombies there is yet another distinction to make, that is relevant. 
+There are are **frozen** zombies. These are zombies, where the parameters will stay the same, because they will receive 0 gradients.
+Since zombies have no connection to the input, their preactivation must come from somewhere, otherwise it is 0, therefore the activation is 0 (assuming RELU) and their Gradient is also 0. So the weight would not change based on gradient updates from alone (ignoring weight decay and L1 or L2 Regularisation)
+
+When this happens, these zombies are actually unproductive parameters and behave exactly the same way.
+
+The most interesting zombies are the productive ones.
+![Alt text](image.png)
 
 
+ALL parameters can be put into 1 of 5 states:
+1. alive  : connected to input and output
+2. audience : only receives input from zombies
+3. zombie : no inputs but a bias
+4. unproductive : no influence on output of network
+5. pruned : parameter is set to 0 aka removed
 
+One can only go from 1 in the direction of 5, and not the other way. Each from each state, each lower state is reachable.
+
+One can track the state of each parameter as a 5-Tuple, that contains the number of iterations the parameter was in the state.
+
+
+# TODO: 
+some next steps. To check the path from the network towards splitting into 2. 
+Idea: Take the number of tasks and create a matrix of that size TxT. If all tasks are split perfectly as the should be, this matrix should look like the identity matrix. 
+
+I asked CHAT GPT how to track that convergence:
+
+```When tracking the convergence of a matrix to the identity matrix, you can use the same matrix norms mentioned earlier to quantify the progress of convergence. The key is to calculate the norm of the difference between the matrix at each step and the identity matrix. A decreasing trend in the norm value over iterations indicates convergence towards the identity matrix. 
+
+Here's how you might approach this:
+
+1. **Choose an Appropriate Norm**: Depending on the properties you're most interested in, choose a norm (like the Frobenius norm, 2-norm, infinity norm, or 1-norm). The Frobenius norm is often used for its simplicity and intuitive interpretation.
+
+2. **Compute the Norm at Each Step**: At each iteration or step in your process, compute the chosen norm of the difference between the current matrix \( A_k \) and the identity matrix \( I \). This calculation will give you a measure of how "far" your current matrix is from being an identity matrix.
+
+   For instance, using the Frobenius norm, you would compute:
+   \[
+   \| A_k - I \|_F
+   \]
+   at each step \( k \).
+
+3. **Track the Changes in the Norm**: Plot or record the value of the norm over each iteration. A decreasing trend in this value indicates that the matrix is converging towards the identity matrix. The closer the norm is to zero, the closer your matrix is to the identity matrix.
+
+4. **Establish a Convergence Criterion**: You might want to define a threshold for the norm value, below which you consider the matrix to have effectively converged to the identity matrix. This threshold depends on the precision requirements of your specific application.
+
+5. **Analyze the Convergence Rate**: The rate at which the norm decreases can also give insights into the convergence behavior. A rapid decrease might indicate fast convergence, while a slow or stagnating decrease could signal issues in the convergence process.
+
+This method gives a quantitative and systematic way to monitor the convergence of a matrix towards the identity matrix across iterations.
+```
+
+![Alt text](image-1.png)

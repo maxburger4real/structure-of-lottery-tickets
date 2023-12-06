@@ -5,8 +5,9 @@
 '''
 
 import networkx as nx
+import numpy as np
 from common.config import Config
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Set
 from collections import defaultdict
 import matplotlib.pyplot as plt
 
@@ -14,133 +15,203 @@ from common.constants import *
 
 class GraphManager():
     '''A class that manages the state over the pruning iterations'''
-    def __init__(self, model, shape, task_description):
+    ALIVE, AUDIENCE, UNPRODUCTIVE, ZOMBIE, PRUNED = range(5)
+
+    def __init__(self, unpruned_model, shape, task_description):
         '''Initialize the contant values of the Network, that will remain true over pruning iterations.'''
-        G = build_graph_from_model(model, shape)
-        self.G = G
         self.shape = shape
-        self.input_layer, self.output_layer = find_min_max_attribute(G, LAYER)
+        self.iteration = 0
+        self.graveyard = {}  # the pruned parameters are here
+        self.subnetworks = {}  # a list of subnetworks described by their task descriptions, and the number of weights, biases
+
+        self.G = build_graph_from_model(unpruned_model, shape)
+        self.input_layer, self.output_layer = _find_min_max_attribute(self.G, LAYER)
 
         # retreive the ids of the input and output features from G
-        self.in_features, self.out_features = get_in_and_out_features(
-            G, self.input_layer, self.output_layer
-        )
+        self.in_features, self.out_features = get_in_and_out_features(self.G, self.input_layer, self.output_layer)
 
         # map the tasks to the network features
-        self.task_description = map_tasks_to_features(
-            task_description, self.in_features, self.out_features
-        )
+        self.task_description = map_tasks_to_features(task_description, self.in_features, self.out_features)
 
-        # a dict of parameters that are part of the zombie network, and their lifetime
-        self.zombie_params = {'existing': {}, 'pruned': {}}
+        # a dictionary with keys as parameter ids and values are 4-Tuples, that contain the number of iterations 
+        # the parameter was in each state. The order is implicit. The sum of the numbers is the number of iterations this parameter survived
+        biases: Set = set(self.G.nodes()) - set(self.in_features)
+        weights: Set = set(self.G.edges())
+        params: Set = set().union(biases, weights)
 
-        # a list of parameters that are unproductive and their lifetime
-        self.unproductive_params = {'existing': {}, 'pruned': {}}
+        self.lifecycles = {k:{'current_state' : self.ALIVE, 'lifecycle': [0,0,0,0]} for k in params}
 
-        # a list of subnetworks described by their task descriptions, and the number of weights, biases
-        self.subnetworks = {}
+        self.coverage = {}
+
+    @property
+    def unproductive_params_list(self):
+        return [k for k,v in self.lifecycles.items() if v['current_state'] == self.UNPRODUCTIVE]
+
+    @property
+    def zombie_params_list(self):
+        return [k for k,v in self.lifecycles.items() if v['current_state'] == self.ZOMBIE]
+    
+    @property
+    def audience_params_list(self):
+        return [k for k,v in self.lifecycles.items() if v['current_state'] == self.AUDIENCE]
+
+    @property
+    def alive_params_list(self):
+        return [k for k,v in self.lifecycles.items() if v['current_state'] == self.ALIVE]
+
+    @property
+    def pruned_params_list(self):
+        return list(self.graveyard.keys())
 
     def print_info(self):
-        print(
-f'''unpr : {self.unproductive_params}
-zomb : {self.zombie_params}
-subn : {len(self.subnetworks)}'''
-        )    
+        print(f'unproductive :{len(self.unproductive_params_list)} {self.unproductive_params_list}')
+        print(f'zomb :{len(self.zombie_params_list)} {self.zombie_params_list}')
+        return
+        for s in self.subnetworks.values():
+            print('in : ', *s['in'].items())
+            print('out: ', *s['out'].items())
 
-    def __update_lifetimes(self, params, params_dict):
-        existing_params = params_dict['existing'].keys()
-        
-        # new parameters from this update
-        new_params = set(params).difference(existing_params)
+    def plot(self):
+        '''For debugging purposes. Plots the Neural Network graph.
+        - green : productive (or at least not proven otherwise)
+        - black : pruned
+        - red   : zombie
+        - blue  : unproductive
+        '''
+        node_colors = []
+        for feature in self.G.nodes():
+            if feature in self.unproductive_params_list: node_colors.append('blue')
+            elif feature in self.audience_params_list: node_colors.append('pink')
+            elif feature in self.zombie_params_list: node_colors.append('red')
+            elif feature in self.alive_params_list: node_colors.append('green')  # Default color for other nodes
+            elif feature in self.pruned_params_list: node_colors.append('black')  # Default color for other nodes
+            else: node_colors.append('yellow')  # Default color for other nodes
 
-        # parameters that existed but not anymore in this update
-        lost_params = set(existing_params).difference(params)
-        
-        # parameters that have existed and still do after this update
-        remaining_params = set(existing_params).intersection(params)
+        edge_colors = []
+        for weight in self.G.edges():
+            if weight in self.unproductive_params_list: edge_colors.append('blue')
+            elif weight in self.zombie_params_list: edge_colors.append('red')
+            elif weight in self.audience_params_list: edge_colors.append('pink')
+            elif weight in self.alive_params_list: edge_colors.append('green')  # Default color for other nodes
+            elif weight in self.pruned_params_list: edge_colors.append('black')  # Default color for other nodes
+            else: edge_colors.append('yellow')  # Default color for other nodes
 
-        # TODO: remove
-        assert new_params.isdisjoint(lost_params)
-        assert new_params.isdisjoint(remaining_params)
-        assert lost_params.isdisjoint(remaining_params)
+        pos=nx.multipartite_layout(self.G, LAYER)
+        nx.draw(self.G, pos, with_labels=True, node_color=node_colors, edge_color=edge_colors)
+        plt.show()
 
-        for p in new_params: 
-            params_dict['existing'][p] = 0
-        
-        for p in lost_params:
-            assert p not in params_dict
-            params_dict['pruned'][p] = params_dict['existing'].pop(p)
+    @DeprecationWarning
+    def __append_task_coverage(self, G: nx.DiGraph):
+        in_features, out_features = get_in_and_out_features(G, self.input_layer, self.output_layer)
+        coverage = get_task_coverage(self.task_description, in_features, out_features)
 
-        for p in remaining_params:
-            params_dict['existing'][p] += 1
-
-    def __update_task_coverage(self, productive):
-        task_coverage = []
-        for g in productive:
-            coverage = get_task_coverage(g, self.task_description, self.input_layer, self.output_layer)
+    @DeprecationWarning
+    def __update_task_coverage(self, subnetworks: List[nx.DiGraph]):
+        for g in subnetworks:
+            coverage = get_task_coverage(self.task_description, self.in_features, self.out_features)
             self.subnetworks[g] = coverage
-            
-            task_coverage.append(coverage)
 
-    def __get_unproductive_and_zombie_params(self, productive):
-        
-        unproductive_params = []
-        zombie_params = []
-        for g in productive:
-            pg = get_productive_subgraph(g, self.out_features)
-            unprod_features, unprod_weights = get_difference(g, pg)
-            unproductive_params += unprod_features + unprod_weights
+    def __update_lifecycle(self, alive, audience, unproductive, zombie):
+        # TODO: for testing
+        l_before = len(self.lifecycles.keys()) + len(self.graveyard.keys())
 
-            nzg = get_non_zombious_subnetwork(pg, self.in_features)
-            zombie_features, zombie_weights = get_difference(pg, nzg)
-            zombie_params += zombie_features + zombie_weights
+        for p in list(self.lifecycles.keys()):
+            if p in alive:
+                self.lifecycles[p]['lifecycle'][self.ALIVE] += 1
+                self.lifecycles[p]['current_state'] = self.ALIVE
+            elif p in audience:
+                self.lifecycles[p]['lifecycle'][self.AUDIENCE] += 1
+                self.lifecycles[p]['current_state'] = self.AUDIENCE
+            elif p in zombie:
+                self.lifecycles[p]['lifecycle'][self.ZOMBIE] += 1
+                self.lifecycles[p]['current_state'] = self.ZOMBIE
+            elif p in unproductive:
+                self.lifecycles[p]['lifecycle'][self.UNPRODUCTIVE] += 1
+                self.lifecycles[p]['current_state'] = self.UNPRODUCTIVE
+            elif p not in self.in_features:
+                self.graveyard[p] = {
+                    'survived_iterations': self.iteration,
+                    'lifecycle':self.lifecycles[p]['lifecycle']
+                }
+                del self.lifecycles[p]
+            else:
+                # p is a in_feature, and they have no parameters.
+                pass
 
-            node_colors = []
-            for feature in g.nodes():
-                if feature in unproductive_params: node_colors.append('blue')
-                elif feature in zombie_params: node_colors.append('red')
-                else: node_colors.append('green')  # Default color for other nodes
+        l_after = len(self.lifecycles.keys()) + len(self.graveyard.keys())
 
-            edge_colors = []
-            for weight in g.edges():
-                if weight in unproductive_params: edge_colors.append('blue')
-                elif weight in zombie_params: edge_colors.append('red')
-                else: edge_colors.append('green')  # Default color for other nodes
-
-            pos=nx.multipartite_layout(self.G, LAYER)
-            nx.draw(g, pos, with_labels=True, node_color=node_colors, edge_color=edge_colors)
-            plt.show()
-        
-        return unproductive_params, zombie_params
+        assert l_before == l_after
 
     def update(self, model):
-
-        G = build_graph_from_model(model, self.shape)
+        self.G = build_graph_from_model(model, self.shape)
 
         # split the network into subnetworks
-        subnetworks = split_into_subnetworks(G)
+        subnetworks = split_into_subnetworks(self.G)
 
-        # sort the networks by productivity
-        productive_subnetworks, unproductive_subnetworks = sort_by_productivity(
+        # sort the networks by productivity (productive means has output connections)
+        productive_subnetworks, fragments = sort_by_productivity(
             subnetworks, self.out_features
         )
 
-        # update lifetimes of the unproductive parameters
-        params = []
-        for g in unproductive_subnetworks:
-            weights, biases = get_param_ids(g)
-            params += weights + biases
-        unproductive_params, zombie_params = self.__get_unproductive_and_zombie_params(productive_subnetworks)
-        unproductive_params += params
+        # fragments are seperate graphs that contain parameters
+        fragment_params = []
+        for g in fragments:
+            params = _filter_pruned_params(g)
+            fragment_params.extend(params)
 
-        #print(f'#productive              : {len(productive_subnetworks)}')
-        #print(f'#unproductive subnetworks: {len(unproductive_subnetworks)}')
-        print(f'#unproductive params(frag): {len(params)}, {params}')
-        print(f'#unproductive params(prod): {len(unproductive_params)}, {params}')
+        # sort all params into the following categories
+        unproductive_params, zombie_params, alive_params, audience_params = [], [], [], []
+        for g in productive_subnetworks:
+            
+            # sort the parameters into the buckets of states
+            alive, audience, unproductive, zombies = sort_network_parameters(g, self.in_features, self.out_features)
+            alive_params.extend(alive)
+            audience_params.extend(audience)
+            unproductive_params.extend(unproductive)
+            zombie_params.extend(zombies)
 
-        self.__update_lifetimes(unproductive_params, self.unproductive_params)
-        self.__update_lifetimes(zombie_params, self.zombie_params)
-        self.__update_task_coverage(productive_subnetworks)
+        unproductive.extend(fragment_params)
+
+        print(f'#subnets : {len(productive_subnetworks)}')
+        tX = task_matrix(productive_subnetworks, self.task_description)
+
+        potential = np.sum(tX) / len(self.task_description)
+        print(tX)
+
+        full_potential = np.isclose(potential, 1)
+        print(f'potential : {potential}, full={full_potential}')
+
+        # mitigate floating point errors
+
+        self.__update_lifecycle(alive_params, audience_params, unproductive_params, zombie_params)
+        
+        # self.__update_task_coverage(productive_subnetworks)
+        
+        self.iteration += 1
+
+
+def task_matrix(subnetworks :List[nx.DiGraph], task_description):
+    
+    L = len(task_description)
+    X = np.zeros(shape=(L,L))
+    #X_out = np.zeros_like(X_in)
+
+    for i, g in enumerate(subnetworks):
+        for j, (name, (in_features, out_features)) in enumerate(task_description.items()):
+
+            # find the features contained in the subnetwork
+            in_features_in_subnetwork = set(g.nodes()).intersection(in_features)
+            out_features_in_subnetwork = set(g.nodes()).intersection(out_features)
+
+            # their product is the number of inout pairs in the network.
+            num_in_out_pairs = len(in_features_in_subnetwork) * len(out_features_in_subnetwork)
+
+            percentage_num_in_out_pairs = num_in_out_pairs / (len(in_features)*len(out_features))
+
+            X[i,j] = percentage_num_in_out_pairs
+            #X_out[i,j] = ratio_out_features
+
+    return X
 
 def build_graph_from_model(model, shape):
     
@@ -195,11 +266,11 @@ def build_graph_from_model(model, shape):
 
     return G
 
-def find_min_max_attribute(G: nx.DiGraph, key):
+def _find_min_max_attribute(G: nx.DiGraph, key):
     values = [data[key] for _, data in G.nodes(data=True) if key in data]
     return min(values), max(values)
 
-def get_in_and_out_features(G: nx.DiGraph, input_layer, output_layer):
+def get_in_and_out_features(G: nx.DiGraph, input_layer, output_layer) -> Tuple[List[int], List[int]]:
     in_features  = [id for id, data in G.nodes(data=True) if data[LAYER]==input_layer]
     out_features = [id for id, data in G.nodes(data=True) if data[LAYER]==output_layer]
     return in_features, out_features
@@ -209,7 +280,28 @@ def split_into_subnetworks(G: nx.DiGraph):
     components = [G.subgraph(c) for c in nx.connected_components(H)]
     return components
 
-def is_unproductive(G: nx.DiGraph, out_features):
+def sort_network_parameters(
+    G: nx.DiGraph, 
+    in_features: List[int], 
+    out_features: List[int]
+) -> Tuple[List, List, List]:
+    '''Sort the parameters of into alive, zombie and unproductive'''    
+
+    G_prod, unproductive = get_productive_subnetwork(G, out_features)
+
+    G_alive, audience, _unproductive, zombies = get_alive_subnetwork(G_prod, in_features)
+
+    # add the unproductive parameters from the productive subnetwork
+    assert lists_are_mutually_disjoint(unproductive, _unproductive)
+    unproductive += _unproductive
+
+    alive = _filter_pruned_params(G_alive)
+
+    assert lists_are_mutually_disjoint(alive, audience, unproductive, zombies)
+
+    return alive, audience, unproductive, zombies
+
+def _contains_out_features(G: nx.DiGraph, out_features):
     '''
     Check if the network contains any of the output features.
     If not, it is unproductive.
@@ -217,60 +309,49 @@ def is_unproductive(G: nx.DiGraph, out_features):
     '''
     network_features = set(G.nodes())
 
-    no_features_contained = network_features.isdisjoint(out_features)
+    contains_out_features = not network_features.isdisjoint(out_features)
 
-    return no_features_contained
+    return contains_out_features
 
 def sort_by_productivity(subnetworks: List[nx.DiGraph], out_features):
     '''Take a graph and split it into '''
     prod, nprod = [], []
     
     for g in subnetworks:
-        nprod.append(g) if is_unproductive(g, out_features) else prod.append(g)
+        prod.append(g) if _contains_out_features(g, out_features) else nprod.append(g)
 
     return prod, nprod
 
-def get_coverage(to_be_covered: List, cover: List):
-
+def get_coverage(to_be_covered: List, cover: List) -> TaskCoverage:
+    '''Get if the First list is completely covered by the second list.'''
     coverage = set(to_be_covered).intersection(cover)
+    complete_coverage = (coverage == set(to_be_covered))
 
-    complete_coverage = (coverage == to_be_covered)
+    if complete_coverage: return TaskCoverage.COMPLETE
+    if  (len(coverage) > 0): return TaskCoverage.PARTIAL
+    return TaskCoverage.ABSENT
 
-    if complete_coverage:
-        return 'complete'
-    
-    partial_coverage = (len(coverage) > 0)
-    if partial_coverage:
-        return 'partial'
-    
-    return 'absent'
-
-def get_task_coverage(
-    G: nx.DiGraph, 
-    task_description: Dict, 
-    input_layer: int, 
-    output_layer: int
-) -> Dict:
+def get_task_coverage(task_description: Dict, in_features: List[int], out_features: List[int]) -> Dict:
     '''
     Returns a dict that describes the extent to which the network covers a task,
     meaning if it completely, partialy or not at all contains the input features or 
     output features of the tasks,
     '''
     
-    data = {'in' : defaultdict(list),'out': defaultdict(list),}
-
-    in_features  = [id for id, data in G.nodes(data=True) if data[LAYER]==input_layer]
-    out_features = [id for id, data in G.nodes(data=True) if data[LAYER]==output_layer]
+    data = {
+        'in' : defaultdict(list),
+        'out': defaultdict(list)
+    }
 
     # go through every task and sort by coverage
     for name, (task_in_features, task_out_features) in task_description.items():
         
         # The Inputs
-        coverage = get_coverage(task_in_features, in_features)
+        coverage: TaskCoverage = get_coverage(task_in_features, in_features)
         data['in'][coverage].append(name)
 
         # The Outputs
-        coverage = get_coverage(task_out_features, out_features)
+        coverage: TaskCoverage = get_coverage(task_out_features, out_features)
         data['out'][coverage].append(name)
 
     return data
@@ -300,16 +381,9 @@ def map_tasks_to_features(
 
     return ret
 
-def get_param_ids(G: nx.Graph):
-    '''Get the identification of each parameter in the graph.
-    TODO: currently checks if parameters are 0. but should check if the mask is 1.
-    '''
-    weights = [(u,v) for u,v,data in G.edges(data=True) if data[WEIGHT] != 0]
-    biases = [feature for feature, data in G.nodes(data=True) if BIAS in data and data[BIAS] != 0]
-    return weights, biases
-
-def get_productive_subgraph(G: nx.DiGraph, out_features):
+def get_productive_subnetwork(G: nx.DiGraph, out_features) -> Tuple[nx.DiGraph, List]:
     assert isinstance(G, nx.DiGraph), 'only works for Directed Graphs'
+    
     productive = set(out_features)
     for feature in out_features:
 
@@ -319,29 +393,139 @@ def get_productive_subgraph(G: nx.DiGraph, out_features):
         ancestors = nx.ancestors(G, feature)
         productive.update(ancestors)
 
-    return G.subgraph(productive)
+    G_prod = G.subgraph(productive)
 
-def get_non_zombious_subnetwork(G: nx.DiGraph, in_features):
+    # get all nodes and edges that are not in the productive subnetwork
+    nodes, edges = _get_difference(G, G_prod)
+
+    # get all non-pruned parameters from those nodes and edges
+    params = _filter_pruned_params(G, nodes, edges)
+
+    return G_prod, params
+
+def get_alive_subnetwork(G: nx.DiGraph, in_features) -> Tuple[nx.DiGraph, List, List, List]:
+    '''Take the subgraph of the network with all nodes/features that
+    are reachable from at least on of the input features.
+    Return this subgraph G_alive and the ids of the parameters that are unproductive, zombies or their audiences.
+
+    Return G_alive, audience, unproductive, zombies
+    '''
     assert isinstance(G, nx.DiGraph), 'only works for Directed Graphs'
 
     # features are connnected to at least one input feature
-    non_zombious_features = set(in_features)
+    alive_features = set(in_features)
 
     # for each input feature, find all descendants and collect in set
     for in_feature in in_features:
         if in_feature not in G.nodes(): continue
         descendants = nx.descendants(G, in_feature)
-        non_zombious_features.update(descendants)
+        alive_features.update(descendants)
 
-    return G.subgraph(non_zombious_features)
+    G_alive = G.subgraph(alive_features)
 
-def get_difference(G: nx.Graph, H: nx.Graph):
+    # get all nodes and edges that are not in the alive subgraph
+    nodes, edges = _get_difference(G, G_alive)
+
+    if not nodes and not edges:
+        return G_alive, [], [], []
+    
+    print('not all nodes in this graph are alive')
+
+    # get all unpruned parameters of those zombies
+    # zombie_nodes, zombie_edges = _filter_pruned_params(G, nodes, edges, merge=False)
+
+    # canonicalize the zombies
+    G_Dangling = G.subgraph(nodes).copy()
+    G_Dangling.add_edges_from(edges)
+
+    extra_nodes = set(nodes).symmetric_difference(G_Dangling.nodes())
+
+    # G_Dangling might have some nodes, that are added through adding the edges, yet belong to G_alive.
+    audience, unproductive, zombies = seperate_zombies_audience_unproductive(G_Dangling, extra_nodes)
+
+    # TEST if the graphs are indeed
+    assert set(G_Dangling.edges()).isdisjoint(G_alive.edges())
+    assert nx.is_isomorphic(nx.compose(G_alive, G_Dangling), G)
+
+    return G_alive, audience, unproductive, zombies
+
+def seperate_zombies_audience_unproductive(G: nx.DiGraph, borrowed_features: List[int]):
+    '''
+    Sort each parameter in a graph into buckets: 
+    - zombies      : dangling features with bias != 0 (ignore RELu dangling)
+    - audience     : parameters (w, b) that are nonzero and have input connections
+    - unproductive : parameters that do not contribute to the output
+                     - dangling feature with bias == 0
+                     - weight connected to unproductive feature
+    
+    Assuming that the Graph is productive (all nodes connected to output features)
+    '''
+    unpruned_params = _filter_pruned_params(G)
+    unproductive, zombies = [], []
+    H = G.copy()
+    # find Dangling features
+    done = False
+
+
+
+    while not done:
+        done = True
+
+        # find the dangling features (no input connections) and remove the ones that dont do anything
+        features = list(H.nodes())
+        for i in features:
+
+            # feature is already categorized in other graph.
+            if i in borrowed_features: 
+                continue
+
+            feature_is_dangling = (H.in_degree(i) == 0)
+            if not feature_is_dangling: 
+                continue
+
+            feature_has_bias = i in unpruned_params
+            if feature_has_bias: 
+                zombies.append(i)
+                continue
+            
+            # feature is not productive -> put edges in the unproductive bucket and remove feature from the graph
+            unproductive.extend(H.edges(i))
+            H.remove_node(i)
+            done = False
+
+    # TODO: Remove
+    for zf in zombies:
+        assert H.nodes[zf][BIAS] != 0, 'There is a Zombie without a bias. That is impossible.'
+
+    audience = [i for i in H.nodes() if i not in zombies and i not in borrowed_features] + list(H.edges())
+
+    assert lists_are_mutually_disjoint(audience, unproductive, zombies)
+
+    return audience, unproductive, zombies
+    
+def _get_difference(G: nx.Graph, H: nx.Graph):
     '''Get all parameters that are not in both Graphs'''
     diff_nodes = set(G.nodes()).symmetric_difference(H.nodes())
     diff_edges = set(G.edges()).symmetric_difference(H.edges())
     return list(diff_nodes), list(diff_edges)
 
-    
+def _filter_pruned_params(G: nx.Graph, nodes: List[int] = None, edges: List[Tuple[int,int]] = None, merge=True) -> List:
+    '''Filter out pruned parameters, namely params that are 0. Either a list of nodes and edges is provided, then they are filtered. Or the nodes and edges of the provided graph are filtered.'''
+    if nodes is None:
+        nodes = G.nodes()
+    if edges is None:
+        edges = G.edges()
+
+    filtered_nodes = [i for i in nodes if BIAS in G.nodes[i] and G.nodes[i][BIAS] != 0]
+
+    # TODO: since there are no unpruned edges in the graph, this can be omitted.
+    # filtered_edges = [edge for edge in edges if G.edges[edge][WEIGHT] != 0]
+    filtered_edges = list(edges)
+    if not merge: return filtered_nodes, filtered_edges
+
+    return filtered_nodes + filtered_edges
+
+
 # helpers
 def _get_w_and_b(model):
     state_dict = model.state_dict()
@@ -382,3 +566,16 @@ def _weights_from_state_dict(state_dict):
         return masked
     elif weights:
         return weights
+
+
+# GENERAL UTILS for testing and so on.
+def lists_are_mutually_disjoint(*lists):
+    combined = set()
+    for lst in lists:
+        lst_set = set(lst)
+
+        if not combined.isdisjoint(lst_set):
+            return False
+        
+        combined.update(lst_set)
+    return True
