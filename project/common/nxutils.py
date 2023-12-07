@@ -19,6 +19,8 @@ class GraphManager():
         '''Initialize the contant values of the Network, that will remain true over pruning iterations.'''
         self.shape = shape
         self.iteration = 0
+        self.untapped_potential = len(task_description) - 1
+
         self.graveyard = {}  # the pruned parameters are here
 
         self.G = build_graph_from_model(unpruned_model, shape)
@@ -68,16 +70,30 @@ class GraphManager():
 
         unproductive.extend(fragment_params)
 
-        print(f'#subnets : {len(productive_subnetworks)}')
-        tX = task_matrix(productive_subnetworks, self.task_description)
+        # print(f'#subnets : {len(productive_subnetworks)}')
+        tmx = task_matrix(productive_subnetworks, self.task_description)
 
-        potential = np.sum(tX) / len(self.task_description)
-        print(tX)
-
-        full_potential = np.isclose(potential, 1)
-        print(f'potential : {potential}, full={full_potential}')
+        potential = np.sum(tmx) / len(self.task_description)
+        # print(tmx)
 
         # mitigate floating point errors
+        full_potential = np.isclose(potential, 1)
+        # print(f'potential : {potential}, full={full_potential}')
+        
+        if full_potential:
+            assert all(i.is_integer() for i in tmx.flatten()), f'values must be integers. got {tmx}'
+            tmx = tmx.astype(int)
+            # print(np.sum(tmx, axis=1))
+
+            # number of values larger than 1
+            num_tasks_per_network = np.sum(tmx, axis=1)
+            splits_remaining = np.sum(num_tasks_per_network - 1)
+
+            self.untapped_potential = splits_remaining
+
+        else:
+            self.untapped_potential = potential - 1
+        # print(f'untapped potential : {self.untapped_potential}')
 
         self.__update_lifecycle(alive_params, audience_params, unproductive_params, zombie_params)
                 
@@ -167,8 +183,8 @@ class GraphManager():
 def task_matrix(subnetworks :List[nx.DiGraph], task_description):
     
     L = len(task_description)
-    X = np.zeros(shape=(L,L))
-    #X_out = np.zeros_like(X_in)
+    N = len(subnetworks)
+    X = np.ones(shape=(N,L)) * np.inf
 
     for i, g in enumerate(subnetworks):
         for j, (name, (in_features, out_features)) in enumerate(task_description.items()):
@@ -183,7 +199,6 @@ def task_matrix(subnetworks :List[nx.DiGraph], task_description):
             percentage_num_in_out_pairs = num_in_out_pairs / (len(in_features)*len(out_features))
 
             X[i,j] = percentage_num_in_out_pairs
-            #X_out[i,j] = ratio_out_features
 
     return X
 
@@ -353,8 +368,6 @@ def get_alive_subnetwork(G: nx.DiGraph, in_features) -> Tuple[nx.DiGraph, List, 
     if not nodes and not edges:
         return G_alive, [], [], []
     
-    print('not all nodes in this graph are alive')
-
     # get all unpruned parameters of those zombies
     # zombie_nodes, zombie_edges = _filter_pruned_params(G, nodes, edges, merge=False)
 

@@ -251,29 +251,17 @@ One can track the state of each parameter as a 5-Tuple, that contains the number
 some next steps. To check the path from the network towards splitting into 2. 
 Idea: Take the number of tasks and create a matrix of that size TxT. If all tasks are split perfectly as the should be, this matrix should look like the identity matrix. 
 
-I asked CHAT GPT how to track that convergence:
-
-```When tracking the convergence of a matrix to the identity matrix, you can use the same matrix norms mentioned earlier to quantify the progress of convergence. The key is to calculate the norm of the difference between the matrix at each step and the identity matrix. A decreasing trend in the norm value over iterations indicates convergence towards the identity matrix. 
-
-Here's how you might approach this:
-
-1. **Choose an Appropriate Norm**: Depending on the properties you're most interested in, choose a norm (like the Frobenius norm, 2-norm, infinity norm, or 1-norm). The Frobenius norm is often used for its simplicity and intuitive interpretation.
-
-2. **Compute the Norm at Each Step**: At each iteration or step in your process, compute the chosen norm of the difference between the current matrix \( A_k \) and the identity matrix \( I \). This calculation will give you a measure of how "far" your current matrix is from being an identity matrix.
-
-   For instance, using the Frobenius norm, you would compute:
-   \[
-   \| A_k - I \|_F
-   \]
-   at each step \( k \).
-
-3. **Track the Changes in the Norm**: Plot or record the value of the norm over each iteration. A decreasing trend in this value indicates that the matrix is converging towards the identity matrix. The closer the norm is to zero, the closer your matrix is to the identity matrix.
-
-4. **Establish a Convergence Criterion**: You might want to define a threshold for the norm value, below which you consider the matrix to have effectively converged to the identity matrix. This threshold depends on the precision requirements of your specific application.
-
-5. **Analyze the Convergence Rate**: The rate at which the norm decreases can also give insights into the convergence behavior. A rapid decrease might indicate fast convergence, while a slow or stagnating decrease could signal issues in the convergence process.
-
-This method gives a quantitative and systematic way to monitor the convergence of a matrix towards the identity matrix across iterations.
-```
-
 ![Alt text](image-1.png)
+
+
+This is done now. A simple metric for now is as follows.
+A value describes the splitting state
+if this value is 0, the network is perfectly split, all features are in the networks they belong to. 
+If it is larger than 0, the network has still the possibility to go to the perfect split. The integer number implies the number of splits necessary to achieve this.
+If the value is below 0, this indicates that the network cannot reach the perfect split anymore. The value is the `potential` - 1. Potential refers to the number of in-out pairs that are still available in the collection of networks. Every 'bad' split, decreases this number. As long as there is no bad split, potential == 1. When none of the in-out pairs remain, potential is 0. Therefore our metric is -1, which is the lowest possible value.
+
+
+Found a setup where it splits again.
+Somehow the bias-as-zero initialization doesnt split so well.
+Might be interesting to check this out, what happens inside differently.
+Anyways, this is the run path to the splittery boy mxmn/concat_moons/f20n8zem
