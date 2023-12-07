@@ -76,7 +76,7 @@ def main():
     argcomplete.autocomplete(parser)  # Enable autocompletion with argcomplete
 
     # runs
-    parser.add_argument('-r', '--run_config', help='run config file', required=True)
+    parser.add_argument('-r', '--run_config', help='run config file')
     parser.add_argument('-p', '--plot', action='store_true', help="plot nn that are created. No sweeps yet.")
 
     # sweeps
