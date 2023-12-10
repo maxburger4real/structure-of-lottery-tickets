@@ -271,4 +271,6 @@ Nice neew developments. The splitting works. Now it is just a matter of interest
 What is still missing is plotting the lifetimes.
 
 # TODOS
+
+- [ ] connect accuracy to task metric. Why is one task so much worse than the other? And why is it always the same one. 
 - [ ] plot the lifetimes.
