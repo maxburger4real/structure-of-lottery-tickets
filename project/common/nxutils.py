@@ -7,7 +7,6 @@
 import networkx as nx
 import numpy as np
 from typing import List, Dict, Tuple, Set
-import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 from common.constants import *
 
@@ -132,41 +131,7 @@ class GraphManager():
             )
         
         return fig
-
-    def plot(self):
-        '''For debugging purposes. Plots the Neural Network graph.
-        - green : productive (or at least not proven otherwise)
-        - black : pruned
-        - red   : zombie
-        - blue  : unproductive
-        '''
-        node_colors = self.get_node_colors()
-        edge_colors = self.get_edge_colors()
-        pos=nx.multipartite_layout(self.G, LAYER)
-
-        fig, ax = plt.subplots(figsize=(15,12))
-        nodes = nx.draw_networkx_nodes(
-            self.G, 
-            pos=pos, 
-            # node_size=0.5,
-            #node_color=node_colors
-        )
-        nx.draw_networkx_edges(
-            self.G, 
-            pos=pos, 
-            width=0.5,
-            edge_color=edge_colors
-        )
-
-        plt.colorbar(nodes)
-
-        # nx.draw(self.G, pos, with_labels=True, node_color=node_colors, edge_color=edge_colors)
-        fig = plt.gcf()
-
-        return fig
         
-        # plt.show()
-
     def __update_lifecycle(self, alive, audience, unproductive, zombie):
         # TODO: for testing
         l_before = len(self.lifecycles.keys()) + len(self.graveyard.keys())
