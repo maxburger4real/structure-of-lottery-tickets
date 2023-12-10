@@ -9,7 +9,6 @@ run_config = Config(
     dataset=MOONS_AND_CIRCLES,
     n_samples = 800,
     noise = 0.1,
-    device=
 
     # initialization strategy for the weights
     model_seed=12,
@@ -18,7 +17,7 @@ run_config = Config(
     init_strategy_weights = InitializationStrategy.DEFAULT,
     init_strategy_biases = InitializationStrategy.DEFAULT,
     activation=RELU,
-    persist=True,
+    persist=False,
 
     # training
     pipeline=IMP,
@@ -32,6 +31,7 @@ run_config = Config(
     early_stop_delta=0.001,
 
     # pruning
+    extension_levels=10,
     pruning_method=MAGNITUDE,
     prune_biases=True,
     prune_weights=True,
