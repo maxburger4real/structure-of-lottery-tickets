@@ -8,9 +8,12 @@ from common.constants import *
 class Logger():
     '''This class handles logging with Wandb and is strict with overriding. It raises an Exception.'''
     def __init__(self):
+        self.log_graphs = False
         self.logdict = {}
 
     def commit(self):
+        '''Commit to wandb, but only if there is something to commit.'''
+        if not self.logdict: return
         wandb.log(self.logdict)
         self.logdict = {}
 
@@ -18,9 +21,15 @@ class Logger():
         if gm is None: return
         self.__strict_insert('untapped-potential', gm.untapped_potential)
     
+    def graphs(self, gm: GraphManager):
+        if gm is None: return
+        if len(gm.catalogue) > 1: self.log_graphs =  True  # only log 2 or more.
+        if not self.log_graphs: return
+        for name, g in gm.catalogue.items():
+            self.__strict_insert(name, gm.make_plotly(g))
+
     def metrics(self, values: dict, prefix='', only_if_true=True):
         if not only_if_true: return
-
         for key, x in values.items():
             self.__metric(x, prefix+key)
     

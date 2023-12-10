@@ -66,6 +66,7 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
         gm.update(model) if gm is not None else None
         log.feature_categorization(gm)
         log.splitting(gm)
+        log.graphs(gm)
         
         # there is only one commit in each Pruning LEVEL! except in-epoch logging is active
         log.commit()  # LOG PRUNING LEVEL
@@ -76,7 +77,6 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
         if config.reinit: reinit(model)
     
     log.metrics({'pparams' : pparams, 'level' : level+1, 'pborder' : pborder})
-
 
     ####################
     ### final finetuning
@@ -107,6 +107,7 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
     gm.update(model) if gm is not None else None
     log.feature_categorization(gm)
     log.splitting(gm)
-
+    log.graphs(gm)
     log.commit()
+
     save_model_or_skip(model, config, level+1)
