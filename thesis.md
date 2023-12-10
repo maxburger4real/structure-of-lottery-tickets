@@ -265,3 +265,10 @@ Found a setup where it splits again.
 Somehow the bias-as-zero initialization doesnt split so well.
 Might be interesting to check this out, what happens inside differently.
 Anyways, this is the run path to the splittery boy mxmn/concat_moons/f20n8zem
+
+
+Nice neew developments. The splitting works. Now it is just a matter of interesting experiments. 
+What is still missing is plotting the lifetimes.
+
+# TODOS
+- [ ] plot the lifetimes.
