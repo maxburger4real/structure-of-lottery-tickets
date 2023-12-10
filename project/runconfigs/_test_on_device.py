@@ -3,18 +3,18 @@ from common.config import Config
 from common.constants import *
 
 run_config = Config(
-    description='''Trying to find a configuration where it splits''',
+    description='''A Well working setup for Splitting networks.''',
 
     # dataset
     dataset=MOONS_AND_CIRCLES,
-    #dataset=MULTI_MOONS,
     n_samples = 800,
     noise = 0.1,
+    # device='mps',
 
     # initialization strategy for the weights
-    model_seed=12, #[7, 9, 11]
+    model_seed=12,
     model_class = MLP.__name__,
-    model_shape = [4, 80, 80, 2],
+    model_shape = [4, 40, 40, 2],
     init_strategy_weights = InitializationStrategy.DEFAULT,
     init_strategy_biases = InitializationStrategy.DEFAULT,
     activation=RELU,
@@ -24,7 +24,7 @@ run_config = Config(
     pipeline=IMP,
     lr=0.001,
     optimizer=ADAM,
-    epochs=3000,
+    epochs=100,
     loss_fn=BCE,
 
     # early stop
@@ -36,7 +36,7 @@ run_config = Config(
     prune_biases=True,
     prune_weights=True,
     pruning_target=50,
-    pruning_levels=20,
+    pruning_levels=2,
     reinit=True,
 
     # logging
