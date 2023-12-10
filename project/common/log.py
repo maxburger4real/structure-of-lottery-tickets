@@ -17,6 +17,13 @@ class Logger():
         wandb.log(self.logdict)
         self.logdict = {}
 
+    def summary(self, gm):
+        wandb.run.summary['split-iteration'] = gm.split_iteration
+        wandb.run.summary['degradation-iteration'] = gm.degradation_iteration
+        # if gm.split_iteration is not None
+        wandb.log({'split-iteration' : gm.split_iteration})
+        wandb.log({'degradation-iteration' : gm.degradation_iteration})
+
     def splitting(self, gm: GraphManager):
         if gm is None: return
         self.__strict_insert('untapped-potential', gm.untapped_potential)

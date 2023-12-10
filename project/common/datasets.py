@@ -2,7 +2,7 @@
 import torch
 import numpy as np
 from sklearn import datasets
-from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
 from torch.utils.data import DataLoader, TensorDataset
 from common.config import Config
 from common.constants import *
@@ -15,6 +15,8 @@ def build_dataloaders_from_config(config: Config):
     
     n_samples = config.n_samples
     noise = config.noise
+    batch_size = config.batch_size
+
     if config.dataset == MOONS_AND_CIRCLES:
         config.update({
             'task_description' : (
@@ -22,7 +24,7 @@ def build_dataloaders_from_config(config: Config):
                 ('circles', (circles_inputs, circles_outputs))
             )
         }, allow_val_change=True)
-        return __build_moons_and_circles(n_samples=n_samples, noise=noise, batch_size=config.batch_size)
+        return __build_moons_and_circles(n_samples=n_samples, noise=noise, batch_size=batch_size)
 
     if config.dataset == MULTI_MOONS:
         config.update({
@@ -31,7 +33,7 @@ def build_dataloaders_from_config(config: Config):
                 ('moons-2', (moons_inputs, moons_outputs)),
             )
         }, allow_val_change=True)
-        return __build_moons_and_moons(n_samples=n_samples, noise=noise, batch_size=config.batch_size)
+        return __build_moons_and_moons(n_samples=n_samples, noise=noise, batch_size=batch_size)
     
     if config.dataset == MULTI_CIRCLES:
         raise NotImplementedError('didnt do it yet')
@@ -43,18 +45,27 @@ def build_dataloaders_from_config(config: Config):
     if config.dataset == CIRCLES:
         return __build_circles(n_samples=n_samples, noise=noise, batch_size=config.batch_size)
 
+def __make_moons(n_samples, noise, random_state, shuffle=True, scale=True) -> tuple[np.ndarray, np.ndarray]:
+    x, y = datasets.make_moons(n_samples, noise=noise, random_state=random_state, shuffle=shuffle)
+    if scale: x = MinMaxScaler().fit_transform(x)
+    return x,y
+
+def __make_circles(n_samples, noise, random_state, shuffle=True, scale=True) -> tuple[np.ndarray, np.ndarray]:
+    x, y = datasets.make_moons(n_samples, noise=noise, random_state=random_state, shuffle=shuffle, factor=0.5)
+    if scale: x = MinMaxScaler().fit_transform(x)
+    return x,y
 
 # different datasets
 def __build_moons_and_circles(n_samples, noise, batch_size=None):
     """Deterministically sample a train and a test dataset of the same size."""
     # sample the data
     train_dataset = __concat_datasets(
-        datasets.make_moons(n_samples, noise=noise, random_state=1, shuffle=True),
-        datasets.make_circles(n_samples, noise=noise, random_state=0, shuffle=True, factor=0.5),
+        __make_moons(n_samples, noise=noise, random_state=0),
+        __make_circles(n_samples, noise=noise, random_state=1),
     )
     test_dataset = __concat_datasets(
-        datasets.make_moons(n_samples, noise=noise, random_state=3, shuffle=True),
-        datasets.make_circles(n_samples, noise=noise, random_state=2, shuffle=True, factor=0.5),
+        __make_moons(n_samples, noise=noise, random_state=2),
+        __make_circles(n_samples, noise=noise, random_state=3),
     )
 
     train_loader = __build_dataloader(*train_dataset, batch_size=batch_size)
@@ -66,12 +77,12 @@ def __build_moons_and_moons(n_samples, noise, batch_size=None):
     """Deterministically sample a train and a test dataset of the same size."""
     # sample the data
     train_dataset = __concat_datasets(
-        datasets.make_moons(n_samples, noise=noise, random_state=0, shuffle=True),
-        datasets.make_moons(n_samples, noise=noise, random_state=1, shuffle=True),
+        __make_moons(n_samples, noise=noise, random_state=0),
+        __make_moons(n_samples, noise=noise, random_state=1),
     )    
     test_dataset = __concat_datasets(
-        datasets.make_moons(n_samples, noise=noise, random_state=2, shuffle=True),
-        datasets.make_moons(n_samples, noise=noise, random_state=3, shuffle=True),
+        __make_moons(n_samples, noise=noise, random_state=2),
+        __make_moons(n_samples, noise=noise, random_state=3),
     )
 
     train_loader = __build_dataloader(*train_dataset, batch_size=batch_size)
@@ -93,8 +104,8 @@ def __build_moons(n_samples, noise, batch_size=None):
 def __build_circles(n_samples, noise, batch_size=None):
     """Deterministically sample a train and a test dataset of the same size."""
     # sample the data
-    train_dataset = datasets.make_circles(n_samples, noise=noise, random_state=1, shuffle=True, factor=0.5)
-    test_dataset = datasets.make_circles(n_samples, noise=noise, random_state=2, shuffle=True, factor=0.5)
+    train_dataset = datasets.make_circles(n_samples, noise=noise, random_state=1, shuffle=True, factor=0.3)
+    test_dataset = datasets.make_circles(n_samples, noise=noise, random_state=2, shuffle=True, factor=0.3)
 
     train_loader = __build_dataloader(*train_dataset, batch_size=batch_size)
     test_loader = __build_dataloader(*test_dataset, batch_size=batch_size)

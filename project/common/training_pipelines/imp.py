@@ -108,6 +108,6 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
     log.feature_categorization(gm)
     log.splitting(gm)
     log.graphs(gm)
+    log.summary(gm)
     log.commit()
-
     save_model_or_skip(model, config, level+1)
