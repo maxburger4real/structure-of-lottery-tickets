@@ -5,7 +5,7 @@ from common.constants import *
 run_config = Config(
     pipeline=VANILLA,
     loss_fn=BCE,
-    dataset=MOONS_AND_CIRCLES,
+    dataset=Datasets.MOONS_AND_CIRCLES.name,
     n_samples=600,  # very important
     noise=0.1,
         
