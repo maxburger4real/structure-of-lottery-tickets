@@ -15,8 +15,8 @@ run_config = Config(
     # 10/10
     model_shape=[2, 50, 1],
 
-    # 10/10
-    # model_shape=[2, 13, 13, 1],
+    # 8/10
+    # model_shape=[2, 16, 16, 1],
 
     init_strategy_weights = InitializationStrategy.KAIMING_NORMAL,
     init_strategy_biases = InitializationStrategy.ZERO,
@@ -34,7 +34,10 @@ run_config = Config(
     pruning_method=MAGNITUDE,
     prune_biases=False,
     prune_weights=True,
-    pruning_target=50,
+    
+    #pruning_target=50,
+    pruning_target=100,
+
     pruning_levels=10,
     reinit=True,
 
