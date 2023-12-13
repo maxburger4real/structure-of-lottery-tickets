@@ -5,21 +5,15 @@ from common.constants import *
 run_config = Config(
     pipeline=VANILLA,
     loss_fn=BCE,
-    dataset=MOONS,
-    n_samples=100,
+    dataset=MOONS_AND_CIRCLES,
+    n_samples=600,  # very important
     noise=0.1,
         
     model_class = MLP.__name__,
     activation=RELU,
-    # 10/10
-    #model_shape=[2, 50, 1],
 
-    # 5/10
-    #model_shape=[2,13,13,1],
+    model_shape=[4,100,2],
 
-    # 8/10
-    model_shape=[2,16,16,1],
-    
     init_strategy_weights = InitializationStrategy.KAIMING_NORMAL,
     init_strategy_biases = InitializationStrategy.ZERO,
     
