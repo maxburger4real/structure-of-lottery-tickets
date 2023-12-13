@@ -59,12 +59,12 @@ def __build_moons_and_circles_dl(n_samples, noise, batch_size=None):
 
     # sample the data
     train_dataset = __concat_datasets(
-        __make_moons(n, noise=noise, random_state=0),
+        __make_moons(n, noise=noise, random_state=1),
         __make_circles(n, noise=noise, random_state=1),
     )
     test_dataset = __concat_datasets(
         __make_moons(50, noise=noise, random_state=2),
-        __make_circles(50, noise=noise, random_state=3),
+        __make_circles(50, noise=noise, random_state=2),
     )
 
     train_loader = __build_dataloader(*train_dataset, batch_size=batch_size)
