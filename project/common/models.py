@@ -64,8 +64,14 @@ def __initialize_modules(modules, config: Config):
                 nn.init.normal_(module.weight, mean=config.init_mean, std=config.init_std)
 
             case InitializationStrategy.KAIMING_NORMAL:
-                nn.init.kaiming_uniform_(module.weight, mode='fan_in', nonlinearity='relu')
+                nn.init.kaiming_normal_(module.weight, mode='fan_in', nonlinearity='relu')
 
+            case InitializationStrategy.FRANKLE_XOR_TRUNC_NORMAL:
+                # from original LT paper V1, initialization for XOR problem.
+                # https://arxiv.org/pdf/1803.03635v1.pdf
+                mean, stddev = 0, 0.1
+                nn.init.trunc_normal_(module.weight, mean, stddev, a=-2*stddev, b=2*stddev)
+                
             case _:
                 print('Using Default initialization for Weights')
 

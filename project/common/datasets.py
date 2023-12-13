@@ -24,7 +24,7 @@ def build_dataloaders_from_config(config: Config):
                 ('circles', (circles_inputs, circles_outputs))
             )
         }, allow_val_change=True)
-        return __build_moons_and_circles(n_samples=n_samples, noise=noise, batch_size=batch_size)
+        return __build_moons_and_circles_dl(n_samples=n_samples, noise=noise, batch_size=batch_size)
 
     if config.dataset == MULTI_MOONS:
         config.update({
@@ -33,85 +33,89 @@ def build_dataloaders_from_config(config: Config):
                 ('moons-2', (moons_inputs, moons_outputs)),
             )
         }, allow_val_change=True)
-        return __build_moons_and_moons(n_samples=n_samples, noise=noise, batch_size=batch_size)
+        return __build_moons_and_moons_dl(n_samples=n_samples, noise=noise, batch_size=batch_size)
     
     if config.dataset == MULTI_CIRCLES:
         raise NotImplementedError('didnt do it yet')
-        return __build_moons_and_moons(n_samples=n_samples, noise=noise, batch_size=config.batch_size)
+        return __build_moons_and_moons_dl(n_samples=n_samples, noise=noise, batch_size=config.batch_size)
     
     if config.dataset == MOONS:
-        return __build_moons(n_samples=n_samples, noise=noise, batch_size=config.batch_size)
+        return __build_moons_dl(n_samples=n_samples, noise=noise, batch_size=config.batch_size)
     
     if config.dataset == CIRCLES:
-        return __build_circles(n_samples=n_samples, noise=noise, batch_size=config.batch_size)
+        return __build_circles_dl(n_samples=n_samples, noise=noise, batch_size=config.batch_size)
 
+# base dataset makers
 def __make_moons(n_samples, noise, random_state, shuffle=True, scale=True) -> tuple[np.ndarray, np.ndarray]:
     x, y = datasets.make_moons(n_samples, noise=noise, random_state=random_state, shuffle=shuffle)
     if scale: x = MinMaxScaler().fit_transform(x)
     return x,y
 
 def __make_circles(n_samples, noise, random_state, shuffle=True, scale=True) -> tuple[np.ndarray, np.ndarray]:
-    x, y = datasets.make_moons(n_samples, noise=noise, random_state=random_state, shuffle=shuffle, factor=0.5)
+    x, y = datasets.make_circles(n_samples, noise=noise, random_state=random_state, shuffle=shuffle, factor=0.35)
     if scale: x = MinMaxScaler().fit_transform(x)
     return x,y
 
 # different datasets
-def __build_moons_and_circles(n_samples, noise, batch_size=None):
+def __build_moons_and_circles_dl(n_samples, noise, batch_size=None):
     """Deterministically sample a train and a test dataset of the same size."""
+    n = int(n_samples/2)
+
     # sample the data
     train_dataset = __concat_datasets(
-        __make_moons(n_samples, noise=noise, random_state=0),
-        __make_circles(n_samples, noise=noise, random_state=1),
+        __make_moons(n, noise=noise, random_state=0),
+        __make_circles(n, noise=noise, random_state=1),
     )
     test_dataset = __concat_datasets(
-        __make_moons(n_samples, noise=noise, random_state=2),
-        __make_circles(n_samples, noise=noise, random_state=3),
+        __make_moons(50, noise=noise, random_state=2),
+        __make_circles(50, noise=noise, random_state=3),
     )
 
     train_loader = __build_dataloader(*train_dataset, batch_size=batch_size)
-    test_loader = __build_dataloader(*test_dataset, batch_size=batch_size)
+    test_loader = __build_dataloader(*test_dataset)
 
     return train_loader, test_loader
 
-def __build_moons_and_moons(n_samples, noise, batch_size=None):
+def __build_moons_and_moons_dl(n_samples, noise, batch_size=None):
     """Deterministically sample a train and a test dataset of the same size."""
     # sample the data
+    n = int(n_samples/2)
+
     train_dataset = __concat_datasets(
-        __make_moons(n_samples, noise=noise, random_state=0),
-        __make_moons(n_samples, noise=noise, random_state=1),
+        __make_moons(n, noise=noise, random_state=0),
+        __make_moons(n, noise=noise, random_state=1),
     )    
     test_dataset = __concat_datasets(
-        __make_moons(n_samples, noise=noise, random_state=2),
-        __make_moons(n_samples, noise=noise, random_state=3),
+        __make_moons(50, noise=noise, random_state=2),
+        __make_moons(50, noise=noise, random_state=3),
     )
 
     train_loader = __build_dataloader(*train_dataset, batch_size=batch_size)
-    test_loader = __build_dataloader(*test_dataset, batch_size=batch_size)
+    test_loader = __build_dataloader(*test_dataset)
 
     return train_loader, test_loader
 
-def __build_moons(n_samples, noise, batch_size=None):
+def __build_moons_dl(n_samples, noise, batch_size=None):
     """Deterministically sample a train and a test dataset of the same size."""
-    # sample the data
-    train_dataset = datasets.make_moons(n_samples, noise=noise, random_state=1, shuffle=True)
-    test_dataset = datasets.make_moons(n_samples, noise=noise, random_state=2, shuffle=True)
+    # TODO: 
+    train_dataset = __make_moons(n_samples, noise=noise, random_state=1)
+    test_dataset = __make_moons(100, noise=noise, random_state=2)
 
     train_loader = __build_dataloader(*train_dataset, batch_size=batch_size)
-    test_loader = __build_dataloader(*test_dataset, batch_size=batch_size)
+    test_loader = __build_dataloader(*test_dataset)
 
     return train_loader, test_loader
 
-def __build_circles(n_samples, noise, batch_size=None):
+def __build_circles_dl(n_samples, noise, batch_size=None):
     """Deterministically sample a train and a test dataset of the same size."""
     # sample the data
-    train_dataset = datasets.make_circles(n_samples, noise=noise, random_state=1, shuffle=True, factor=0.3)
-    test_dataset = datasets.make_circles(n_samples, noise=noise, random_state=2, shuffle=True, factor=0.3)
+    train_dataset = __make_circles(n_samples, noise=noise, random_state=1)
+    test_dataset = __make_circles(100, noise=noise, random_state=2)
 
     train_loader = __build_dataloader(*train_dataset, batch_size=batch_size)
-    test_loader = __build_dataloader(*test_dataset, batch_size=batch_size)
+    test_loader = __build_dataloader(*test_dataset)
 
     return train_loader, test_loader
-
 
 # helpers
 def __concat_datasets(*datasets):
