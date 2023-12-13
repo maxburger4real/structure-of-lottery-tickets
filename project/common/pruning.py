@@ -1,7 +1,6 @@
 import copy
 import torch
 import torch.nn.utils.prune as prune
-import numpy as np
 from common.config import Config
 from common.torch_utils import module_is_trainable
 from common.constants import MAGNITUDE, RANDOM
@@ -33,7 +32,7 @@ def build_pruning_func(model: torch.nn.Module, config: Config):
     else: raise ValueError('must specify pruning method')
 
     # convert to the pruning parameterization
-    params = _extract_pruning_params(model, config)
+    params = _extract_pruning_params(model, config.prune_weights, config.prune_biases)
     prune.global_unstructured(params, prune.Identity)
     
     def pruning_func(amount):
@@ -49,7 +48,7 @@ def build_pruning_func(model: torch.nn.Module, config: Config):
 
         return min_magnitude
     
-    return pruning_func, config.pruning_trajectory
+    return pruning_func
 
 def count_prunable_params(model):
     """Counts the number of weights and biases that are prunable with pytorch, meaning they have _mask """
@@ -67,17 +66,17 @@ def count_prunable_params(model):
 
 
 # helpers
-def _extract_pruning_params(model, config: Config):
+def _extract_pruning_params(model, prune_weights: bool, prune_biases: bool):
     """Returns the parameters which are selected for pruning based on the Config."""
 
-    if config.prune_weights is None or config.prune_biases is None : raise ValueError
+    if prune_weights is None or prune_biases is None : raise ValueError
 
     # filter out non-trainable modules
     modules = [m for m in model.modules if module_is_trainable(m)]
 
     params = []
-    if config.prune_weights: params.extend([(module, 'weight') for module in modules])
-    if config.prune_biases: params.extend([(module, 'bias') for module in modules])
+    if prune_weights: params.extend([(module, 'weight') for module in modules])
+    if prune_biases: params.extend([(module, 'bias') for module in modules])
     if len(params) == 0: raise ValueError
 
     return params

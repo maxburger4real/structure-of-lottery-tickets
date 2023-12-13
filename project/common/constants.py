@@ -20,15 +20,6 @@ InitializationStrategy = Enum(
 Datasets = Enum('Datasets', ['MOONS', 'CIRCLES', 'MOONS_AND_CIRCLES'])
 TaskCoverage = Enum('TaskCoverage', ['COMPLETE', 'PARTIAL', 'ABSENT'])
 
-# Datasets
-MOONS = 'classic two moons dataset form sklearn'
-CIRCLES = 'classic circles dataset from sklearn'
-MOONS_AND_CIRCLES = 'moons and circles concatenated classification'
-MULTI_MOONS = 'moons'
-MULTI_CIRCLES = 'circles'
-SYMBOLIC_INDEPENDENCE_REGRESSION = 'symbolic independece regression'
-
-
 # Optimizers
 ADAM = 'Adam'
 SGD = 'sgd'

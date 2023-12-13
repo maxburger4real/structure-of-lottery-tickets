@@ -31,7 +31,7 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
         if stop(val_loss.mean().item()): 
             break
 
-        if val_acc == 1: 
+        if val_acc.mean().item() == 1: 
             print('Perfection reached.')
             break
 

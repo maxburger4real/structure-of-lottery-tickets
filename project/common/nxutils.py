@@ -15,11 +15,13 @@ class GraphManager():
     '''A class that manages the state over the pruning iterations'''
     ALIVE, AUDIENCE, UNPRODUCTIVE, ZOMBIE, PRUNED = range(5)
 
-    def __init__(self, unpruned_model, shape, task_description):
+    def __init__(self, unpruned_model, shape, task_description, start_iteration):
         '''Initialize the contant values of the Network, that will remain true over pruning iterations.'''
         self.shape = shape
-        self.iteration = 0
-        self.untapped_potential = len(task_description) - 1
+        self.iteration = start_iteration
+
+        self.num_tasks = len(task_description) if task_description is not None else 1
+        self.untapped_potential = self.num_tasks - 1
         self.split_iteration = None
         self.degradation_iteration = None
 
@@ -95,7 +97,7 @@ class GraphManager():
             splits_remaining = np.sum(num_tasks_per_network - 1)
             self.untapped_potential = splits_remaining
 
-            if self.untapped_potential == 0 and self.split_iteration is None: 
+            if self.untapped_potential == 0 and self.split_iteration is None and self.num_tasks > 1: 
                 self.split_iteration = self.iteration
 
         # changed

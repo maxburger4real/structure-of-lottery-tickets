@@ -18,7 +18,7 @@ class Logger():
         wandb.log(self.logdict)
         self.logdict = {}
 
-    def summary(self, gm):
+    def summary(self, gm: GraphManager):
         wandb.run.summary['split-iteration'] = gm.split_iteration
         wandb.run.summary['degradation-iteration'] = gm.degradation_iteration
         # if gm.split_iteration is not None

@@ -17,7 +17,7 @@ def build_dataloaders_from_config(config: Config):
     noise = config.noise
     batch_size = config.batch_size
 
-    if config.dataset == MOONS_AND_CIRCLES:
+    if config.dataset == Datasets.MOONS_AND_CIRCLES.name:
         config.update({
             'task_description' : (
                 ('moons' , (moons_inputs, moons_outputs)),
@@ -35,14 +35,10 @@ def build_dataloaders_from_config(config: Config):
         }, allow_val_change=True)
         return __build_moons_and_moons_dl(n_samples=n_samples, noise=noise, batch_size=batch_size)
     
-    if config.dataset == MULTI_CIRCLES:
-        raise NotImplementedError('didnt do it yet')
-        return __build_moons_and_moons_dl(n_samples=n_samples, noise=noise, batch_size=config.batch_size)
-    
-    if config.dataset == MOONS:
+    if config.dataset == Datasets.MOONS.name:
         return __build_moons_dl(n_samples=n_samples, noise=noise, batch_size=config.batch_size)
     
-    if config.dataset == CIRCLES:
+    if config.dataset == Datasets.CIRCLES.name:
         return __build_circles_dl(n_samples=n_samples, noise=noise, batch_size=config.batch_size)
 
 # base dataset makers
