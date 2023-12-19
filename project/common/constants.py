@@ -15,9 +15,13 @@ MODE='online'
 
 InitializationStrategy = Enum(
     'InitializationStrategy', 
-    ['ZERO', 'NORMAL', 'DEFAULT', 'KAIMING_NORMAL', 'FRANKLE_XOR_TRUNC_NORMAL']
+    ['ZERO', 'NORMAL', 'DEFAULT', 'KAIMING_NORMAL','XAVIER_UNIFORM', 'XAVIER_NORMAL','FRANKLE_XOR_TRUNC_NORMAL']
 )
-Datasets = Enum('Datasets', ['MOONS', 'CIRCLES', 'MOONS_AND_CIRCLES'])
+Datasets = Enum(
+    'Datasets', 
+    ['MOONS', 'CIRCLES', 'MOONS_AND_CIRCLES', 'MOONS_AND_MOONS']
+)
+
 TaskCoverage = Enum('TaskCoverage', ['COMPLETE', 'PARTIAL', 'ABSENT'])
 
 # Optimizers
@@ -28,6 +32,7 @@ ADAMW = 'AdamW'
 # Activations
 RELU = 'relu'
 SILU = 'silu'
+SIGM = 'sigmoid'
 
 # Loss Functions
 MSE = 'mse'

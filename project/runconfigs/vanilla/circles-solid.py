@@ -17,11 +17,10 @@ run_config = Config(
     model_class = MLP.__name__,
     activation=RELU,
     # 10/10
-    #model_shape=[2, 50, 1],
+    model_shape=[2, 50, 1],
 
     # 10/10
     # model_shape=[2, 13, 13, 1],
-
 
     init_strategy_weights = InitializationStrategy.KAIMING_NORMAL,
     init_strategy_biases = InitializationStrategy.ZERO,

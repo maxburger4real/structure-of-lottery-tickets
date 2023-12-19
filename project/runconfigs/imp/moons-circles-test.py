@@ -31,6 +31,7 @@ run_config = Config(
     
     pruning_target=30,
     pruning_levels=10,
+    extension_levels=5,
     reinit=True,
 
     # logging

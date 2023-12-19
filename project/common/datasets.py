@@ -26,7 +26,7 @@ def build_dataloaders_from_config(config: Config):
         }, allow_val_change=True)
         return __build_moons_and_circles_dl(n_samples=n_samples, noise=noise, batch_size=batch_size)
 
-    if config.dataset == MULTI_MOONS:
+    if config.dataset == Datasets.MOONS_AND_MOONS.name:
         config.update({
             'task_description' : (
                 ('moons-1', (moons_inputs, moons_outputs)),

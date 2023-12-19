@@ -11,7 +11,8 @@ saved. Otherwise it can not be recreated from state_dicts.
 
 __activations_map = {
     RELU : nn.ReLU,
-    SILU : nn.SiLU
+    SILU : nn.SiLU,
+    SIGM : nn.Sigmoid
 }
 
 def build_model_from_config(config: Config):
@@ -21,67 +22,18 @@ def build_model_from_config(config: Config):
     seed = config.model_seed
     activation = __activations_map[config.activation]
 
-    if name == SimpleMLP.__name__:
-        model =  SimpleMLP(shape, activation, seed)
-        model = model.to(config.device)
-        return model
-    
-    if name == InitMLP.__name__:
-        model = InitMLP(shape=shape, activation=activation, seed=seed)
-        model = model.to(config.device)
-        return model
-    
+    # because enums are parsed to strings in config, parse back and convert to enum
+    weight_strategy = InitializationStrategy[config.init_strategy_weights.split('.')[-1]]
+    bias_strategy = InitializationStrategy[config.init_strategy_biases.split('.')[-1]]
+
     if name == MLP.__name__: 
         model = MLP(shape=shape, activation=activation, seed=seed)
-        __initialize_modules(model.modules, config)
+        model.init(weight_strategy, bias_strategy)
         model = model.to(config.device)
         return model
 
     raise ValueError('Model Unkown')
 
-def _make_linear_init_normal_relu_zero_bias(in_features: int, out_features: int):
-
-    linear = nn.Linear(in_features, out_features)
-    nn.init.normal_(linear.weight, mean=0.0, std=.5)
-    nn.init.zeros_(linear.bias)
-
-    return linear
-
-def __initialize_modules(modules, config: Config):
-    """Initialize the weights and biases according to the init strategy provided in config."""
-
-    for module in modules:
-
-        # skip everything other than linear layers
-        if not isinstance(module, nn.Linear): continue
-        
-        # because enums are parsed to strings in config, parse back and convert to enum
-        weight_init = InitializationStrategy[config.init_strategy_weights.split('.')[-1]]
-        bias_init = InitializationStrategy[config.init_strategy_biases.split('.')[-1]]
-
-        match weight_init:
-            case InitializationStrategy.NORMAL:
-                nn.init.normal_(module.weight, mean=config.init_mean, std=config.init_std)
-
-            case InitializationStrategy.KAIMING_NORMAL:
-                nn.init.kaiming_normal_(module.weight, mode='fan_in', nonlinearity='relu')
-
-            case InitializationStrategy.FRANKLE_XOR_TRUNC_NORMAL:
-                # from original LT paper V1, initialization for XOR problem.
-                # https://arxiv.org/pdf/1803.03635v1.pdf
-                mean, stddev = 0, 0.1
-                nn.init.trunc_normal_(module.weight, mean, stddev, a=-2*stddev, b=2*stddev)
-                
-            case _:
-                print('Using Default initialization for Weights')
-
-        match bias_init:
-            case InitializationStrategy.ZERO:
-                nn.init.zeros_(module.bias)
-
-            case _:
-                print('Using Default initialization for Bias')
-                
 
 class ReproducibleModel(nn.Module):
     """An abstract class that sets the seed for reproducible initialization."""
@@ -90,50 +42,41 @@ class ReproducibleModel(nn.Module):
         if seed is None: seed = SEED
         torch_utils.set_seed(seed)
 
+    def init(self, weight_strategy, bias_strategy):
+        def init_module(module):
+            if not isinstance(module, nn.Linear): return
+            match weight_strategy:
+                case InitializationStrategy.NORMAL:
+                    nn.init.normal_(module.weight, mean=0, std=0.1)
 
-class SimpleMLP(ReproducibleModel):
-    """A mini mlp for demo purposes."""
-    def __init__(self, shape: torch.Size, activation=nn.ReLU, seed=None):
-        super().__init__(seed)
+                case InitializationStrategy.XAVIER_NORMAL:
+                    nn.init.xavier_normal_(module.weight)
 
-        modules = []
-        modules.append(nn.Linear(shape[0], shape[1]))
+                case InitializationStrategy.XAVIER_UNIFORM:
+                    nn.init.xavier_uniform_(module.weight)
 
-        for i in range(1, len(shape) - 1):
-            modules.append(activation())
-            in_dim = shape[i]
-            out_dim = shape[i+1]
-            modules.append(nn.Linear(in_dim, out_dim))
+                case InitializationStrategy.KAIMING_NORMAL:
+                    nn.init.kaiming_normal_(module.weight, mode='fan_in', nonlinearity='relu')
 
-        self.modules = modules
-        self.model = nn.Sequential(*modules)
+                case InitializationStrategy.FRANKLE_XOR_TRUNC_NORMAL:
+                    # from original LT paper V1, initialization for XOR problem.
+                    # https://arxiv.org/pdf/1803.03635v1.pdf
+                    mean, stddev = 0, 0.1
+                    nn.init.trunc_normal_(module.weight, mean, stddev, a=-2*stddev, b=2*stddev)
+                    
+                case _:
+                    print('Using Default initialization for Weights')
 
-    def forward(self, x):
-        y = self.model(x)
-        return y
-    
+            match bias_strategy:
+                case InitializationStrategy.ZERO:
+                    nn.init.zeros_(module.bias)
 
-class InitMLP(ReproducibleModel):
-
-    """A MLP where initialization is explicitly set."""
-    def __init__(self, shape: torch.Size, activation=nn.ReLU, seed=None):
-        super().__init__(seed)
-
-        linear = _make_linear_init_normal_relu_zero_bias(shape[0], shape[1])
-        modules = [linear]
-
-        for i in range(1, len(shape) - 1):
-            modules.append(activation())
-            linear = _make_linear_init_normal_relu_zero_bias(shape[i], shape[i+1])
-            modules.append(linear)
-
-        self.modules = modules
-        self.model = nn.Sequential(*modules)
-
-    def forward(self, x):
-        y = self.model(x)
-        return y
-
+                case _:
+                    print('Using Default initialization for Bias')
+                
+        self.apply(init_module)
+        return self
+                 
 
 class MLP(ReproducibleModel):
     """A mini mlp for demo purposes."""
