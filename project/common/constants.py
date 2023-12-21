@@ -1,3 +1,5 @@
+from enum import Enum
+
 SEED = 64
 
 STATE_DICT = "model_state_dict"
@@ -9,9 +11,19 @@ ENTITY='mxmn'
 MODE='online'
 # MODE='disabled'
 
+
+InitializationStrategy = Enum('InitializationStrategy', ['ZERO', 'NORMAL', 'DEFAULT', 'KAIMING_NORMAL'])
+Datasets = Enum('Datasets', ['MOONS', 'CIRCLES', 'MOONS_AND_CIRCLES'])
+
 # Datasets
-CONCAT_MOONS = 'moons'
+OLD_MOONS = 'old moons'  # they still worked
+MOONS = 'classic two moons dataset form sklearn'
+CIRCLES = 'classic circles dataset from sklearn'
+MOONS_AND_CIRCLES = 'moons and circles concatenated classification'
+MULTI_MOONS = 'moons'
+MULTI_CIRCLES = 'circles'
 SYMBOLIC_INDEPENDENCE_REGRESSION = 'symbolic independece regression'
+
 
 # Optimizers
 ADAM = 'Adam'

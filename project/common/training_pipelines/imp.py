@@ -4,7 +4,7 @@ from common.config import Config
 from common.log import log_loss, log_zombies_and_comatose, log_subnet_analysis, log_descriptive_statistics, every_n
 from common.nx_utils import build_nx_graph
 from common.persistance import save_model_or_skip
-from common.pruning import build_pruning_func, build_reinit_func, _count_prunable_params
+from common.pruning import build_pruning_func, build_reinit_func, count_prunable_params
 from common.training import build_early_stopper, build_optimizer, update, evaluate
 from common.constants import *
 
@@ -13,7 +13,7 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
     # preparing for pruning and [OPTIONALLY] save model state
     prune, trajectory = build_pruning_func(model, config)
     reinit = build_reinit_func(model)
-    pparams = _count_prunable_params(model)
+    pparams = count_prunable_params(model)
     
     save_model_or_skip(model, config, f'{-config.extension_levels}_init')
 

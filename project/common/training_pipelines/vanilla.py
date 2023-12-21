@@ -1,4 +1,5 @@
 import wandb
+from tqdm import tqdm
 from common.config import Config
 from common.log import log_loss
 from common.persistance import save_model_or_skip
@@ -6,28 +7,30 @@ from common.training import build_early_stopper, build_optimizer, evaluate, upda
 from common.constants import *
 
 def run(model, train_loader, test_loader, loss_fn, config: Config):
-    # TODO: fix log_loss with commit
+
     optim = build_optimizer(model, config)
     stop = build_early_stopper(config)
 
     # log initial performance
     loss_init = evaluate(model, test_loader, loss_fn, config.device)
-    wandb.log(log_loss(loss_init, VAL_LOSS))
+    log_loss(loss_init, VAL_LOSS, commit=True)
 
     # train and evaluate
-    for _ in range(0, config.training_epochs):
+    epochs = config.training_epochs
+
+    for epoch in tqdm(range(epochs), 'Training', epochs):
         
         # update
         loss_train = update(model, train_loader, optim, loss_fn, config.device, config.l1_lambda).mean()
-        wandb.log(log_loss(loss_train, TRAIN_LOSS), commit=False)
+        log_loss(loss_train, TRAIN_LOSS)
 
         # evaluate
         loss_eval = evaluate(model, test_loader, loss_fn, config.device)
-        wandb.log(log_loss(loss_eval, VAL_LOSS))
+        log_loss(loss_eval, VAL_LOSS, commit=True)
 
         if stop(loss_eval.mean().item()): break
 
+    wandb.log({'stop': epoch})
+
     # store model
     save_model_or_skip(model, config, config.training_epochs)
-
-    return model

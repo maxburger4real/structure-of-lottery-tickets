@@ -6,6 +6,7 @@ from common.config import Config
 from common.torch_utils import module_is_trainable
 from common.constants import MAGNITUDE, RANDOM
 
+# visible
 def build_reinit_func(model: torch.nn.Module):
     """
     Returns a Closure that reinitializes the model on call.
@@ -50,6 +51,22 @@ def build_pruning_func(model: torch.nn.Module, config: Config):
     
     return pruning_func, config.pruning_trajectory
 
+def count_prunable_params(model):
+    """Counts the number of weights and biases that are prunable with pytorch, meaning they have _mask """
+    total = 0
+    for name, module in model.named_modules():
+        if isinstance(module, torch.nn.Linear):
+            for buffer_name, buffer in module.named_buffers():
+                if "weight_mask" in buffer_name:
+                    total += torch.numel(buffer)
+
+                if "bias_mask" in buffer_name:
+                    total += torch.numel(buffer)
+
+    return total
+
+
+# helpers
 def _extract_pruning_params(model, config: Config):
     """Returns the parameters which are selected for pruning based on the Config."""
 
@@ -64,26 +81,3 @@ def _extract_pruning_params(model, config: Config):
     if len(params) == 0: raise ValueError
 
     return params
-
-def count_trainable_and_prunable_params(model):
-    trainable = _count_trainable_params(model)
-    prunable = _count_prunable_params(model)
-    return trainable, prunable
-
-def _count_prunable_params(model):
-    """Counts the number of weights and biases that are prunable with pytorch, meaning they have _mask """
-    total = 0
-    for name, module in model.named_modules():
-        if isinstance(module, torch.nn.Linear):
-            for buffer_name, buffer in module.named_buffers():
-                if "weight_mask" in buffer_name:
-                    total += torch.numel(buffer)
-
-                if "bias_mask" in buffer_name:
-                    total += torch.numel(buffer)
-
-    return total
-
-def _count_trainable_params(model):
-    """Counts the number of weights and biases that require grad, hence are trainable."""
-    return sum(p.numel() for p in model.parameters() if p.requires_grad)
