@@ -22,8 +22,8 @@ class Logger():
         wandb.run.summary['split-iteration'] = gm.split_iteration
         wandb.run.summary['degradation-iteration'] = gm.degradation_iteration
         # if gm.split_iteration is not None
-        wandb.log({'split-iteration' : gm.split_iteration})
-        wandb.log({'degradation-iteration' : gm.degradation_iteration})
+        self.__strict_insert('split-iteration', gm.split_iteration)
+        self.__strict_insert('degradation-iteration', gm.degradation_iteration)
 
     def splitting(self, gm: GraphManager):
         if gm is None: return
@@ -68,7 +68,8 @@ class Logger():
         
         # single dimensional. assuming batch
         if len(x.shape) == 1:
-            raise ValueError(f'what is this {x.shape, x}')
+            self.__strict_insert(prefix, x.mean().item())
+            return
 
         # batch and task
         if len(x.shape) == 2:
