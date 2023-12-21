@@ -7,8 +7,17 @@ __pycache__/
 .DS_Store
 .vscode/
 wandb/
+<<<<<<< HEAD
 .others/
 **/*.html
 .runs/
 .images/
+=======
+others/
+.html
+.investigation/
+.gpus/
+.runs/
+.others/
+>>>>>>> f6a406d (it splits, for real)
 .poster/

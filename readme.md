@@ -1,5 +1,12 @@
 # Inside the structure of Lottery tickets
 
+
+# CHECKOUT THIS BRANCH  and RUN 
+python run_experiment.py -r configs/runs/_11_imp_moons_good.py
+
+this creates network splitting.
+
+
 ### conda - setup
 
 First, create an environment and activate it.
