@@ -16,6 +16,7 @@ InitializationStrategy = Enum('InitializationStrategy', ['ZERO', 'NORMAL', 'DEFA
 Datasets = Enum('Datasets', ['MOONS', 'CIRCLES', 'MOONS_AND_CIRCLES'])
 
 # Datasets
+OLD_MOONS = 'old moons'  # they still worked
 MOONS = 'classic two moons dataset form sklearn'
 CIRCLES = 'classic circles dataset from sklearn'
 MOONS_AND_CIRCLES = 'moons and circles concatenated classification'

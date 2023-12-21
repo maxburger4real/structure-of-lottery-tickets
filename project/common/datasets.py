@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
 from common.config import Config
 from common.constants import *
-
+from common import torch_utils
 
 # visible
 def build_dataloaders_from_config(config: Config):
@@ -15,10 +15,34 @@ def build_dataloaders_from_config(config: Config):
     n_samples = config.n_samples
     noise = config.noise
 
+    if config.dataset == OLD_MOONS:
+        torch_utils.set_seed(config.data_seed)
+
+        m_moon_sets = [datasets.make_moons(n_samples=n_samples, noise=noise) for _ in range(2)]
+        X,Y = list(zip(*m_moon_sets))
+        Y = [y.reshape(-1,1) for y in Y]
+        x_train = torch.Tensor(np.concatenate(X, axis=1))
+        y_train = torch.Tensor(np.concatenate(Y, axis=1))
+
+        m_moon_sets = [datasets.make_moons(n_samples=n_samples, noise=noise) for _ in range(2)]
+
+        X,Y = list(zip(*m_moon_sets))
+        x_test = torch.Tensor(np.concatenate(X, axis=1))
+
+        Y = [y.reshape(-1,1) for y in Y]
+        y_test = torch.Tensor(np.concatenate(Y, axis=1))
+
+        if config.batch_size is None: batch_size = n_samples
+        train_dataloader = DataLoader(TensorDataset(x_train, y_train), batch_size=batch_size, shuffle=True, num_workers=0)
+        test_dataloader = DataLoader(TensorDataset(x_test, y_test), batch_size=batch_size, shuffle=True, num_workers=0)
+
+        return train_dataloader, test_dataloader
+    
     if config.dataset == MOONS_AND_CIRCLES:
         return __build_moons_and_circles(n_samples=n_samples, noise=noise, batch_size=config.batch_size)
 
     if config.dataset == MULTI_MOONS:
+        torch_utils.set_seed(config.data_seed)
         return __build_moons_and_moons(n_samples=n_samples, noise=noise, batch_size=config.batch_size)
     
     if config.dataset == MULTI_CIRCLES:
@@ -33,6 +57,7 @@ def build_dataloaders_from_config(config: Config):
 
 
 # different datasets
+
 def __build_moons_and_circles(n_samples, noise, batch_size=None):
     """Deterministically sample a train and a test dataset of the same size."""
     # sample the data
