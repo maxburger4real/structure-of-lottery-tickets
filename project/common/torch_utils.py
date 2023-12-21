@@ -6,6 +6,8 @@ from torch.nn.utils.prune import _compute_nparams_toprune
 def get_pytorch_device():
     if torch.backends.mps.is_available():
         device = torch.device("mps")
+    elif torch.cuda.is_available():
+        device = torch.device("cuda")
     else:
         device = torch.device("cpu")
     return device

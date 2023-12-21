@@ -28,7 +28,7 @@ def evaluate(model, loader, loss_fn, device, accuracy=True):
             x,y = x.to(device), y.to(device)
 
             pred  = model(x)
-            batch_loss = loss_fn(pred, y).mean(axis=0).numpy()
+            batch_loss = loss_fn(pred, y).mean(axis=0).cpu().numpy()
             batch_acc = calc_accuracy(pred.detach().cpu(), y.detach().cpu())
             assert batch_acc.shape == batch_loss.shape, 'Metrics must have the same size'
 

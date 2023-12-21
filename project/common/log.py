@@ -1,10 +1,92 @@
 import wandb
 import numpy as np
-from common.nx_utils import neuron_analysis, subnet_analysis, _get_w_and_b
+from common.nx_utils import neuron_analysis, _get_w_and_b
 from common.config import Config
+from common.nxutils import GraphManager
 from common.constants import *
 
-# available as log.loss() , log.subnetworks(). looks pretty
+class Logger():
+    '''This class handles logging with Wandb and is strict with overriding. It raises an Exception.'''
+    def __init__(self):
+        self.log_graphs = False
+        self.logdict = {}
+
+    def commit(self):
+        '''Commit to wandb, but only if there is something to commit.'''
+        if not self.logdict: return
+        wandb.log(self.logdict)
+        self.logdict = {}
+
+    def splitting(self, gm: GraphManager):
+        if gm is None: return
+        self.__strict_insert('untapped-potential', gm.untapped_potential)
+    
+    def graphs(self, gm: GraphManager):
+        if gm is None: return
+        if len(gm.catalogue) > 1: self.log_graphs =  True  # only log 2 or more.
+        if not self.log_graphs: return
+        for name, g in gm.catalogue.items():
+            self.__strict_insert(name, gm.make_plotly(g))
+
+    def metrics(self, values: dict, prefix='', only_if_true=True):
+        if not only_if_true: return
+        for key, x in values.items():
+            self.__metric(x, prefix+key)
+    
+    def feature_categorization(self, gm: GraphManager):
+        if gm is None: return
+        total = len(gm.lifecycles)
+        values = {
+            'num-alive' : len(gm.alive_params_list),
+            'num-zombie' : len(gm.zombie_params_list),
+            'num-audience' : len(gm.audience_params_list),
+            'num-unproductive' : len(gm.unproductive_params_list),
+        }
+
+        for name, value in values.items():
+            self.__strict_insert(name + '-abs', value)
+            self.__strict_insert(name + '-rel', value / total)
+    
+    def __metric(self, x : np.ndarray, prefix: str):
+
+        if not isinstance(x, np.ndarray):
+            self.__strict_insert(prefix, x)
+            return 
+        
+        # single value in array
+        if x.shape == (1,):
+            self.__strict_insert(prefix, x.item())
+            return 
+        
+        # single dimensional. assuming batch
+        if len(x.shape) == 1:
+            raise ValueError(f'what is this {x.shape, x}')
+
+        # batch and task
+        if len(x.shape) == 2:
+            batch_size, num_tasks = x.shape
+            batch_metric = x.mean(axis=0)
+
+            self.__strict_insert(prefix, batch_metric.mean())
+
+            if num_tasks < 2: return 
+                
+            for i, task_metric in enumerate(batch_metric, start=1):
+                key = f'{prefix}-{i}'
+                self.__strict_insert(key, task_metric.item())
+            return 
+        
+        raise ValueError('This is not planned.')
+
+    def __strict_insert(self, key, value):
+        if key in self.logdict:
+            raise ValueError('Cannot Override Key in strict logdict.')
+        self.logdict[key] = value
+
+
+def lifetime(gm: GraphManager):
+    raise
+
 def descriptive_statistics(model, at_init=False, prefix='descriptive'):
     weights, biases = _get_w_and_b(model)
 
@@ -35,31 +117,6 @@ def descriptive_statistics(model, at_init=False, prefix='descriptive'):
                 f'{prefix} L{l}-median(abs({name}))' : median,
                 f'{prefix} L{l}-mean(abs({name}))' : mean,
             }, commit=False)
-
-def scalar_metric(value, prefix, commit=False):
-    '''Log a singular scalar value.'''
-
-    if isinstance(value, np.ndarray):
-        value = value.item()
-
-    wandb.log({prefix:value}, commit=commit)
-
-def taskwise_metric(metric : np.ndarray, prefix, commit=False):
-    """log loss that takes care of logging the tasks sepertely."""
-    
-    batch_size, num_tasks = metric.shape
-    batch_metric = metric.mean(axis=0)
-    d = {prefix : batch_metric.mean()}
-
-    if num_tasks < 2:
-        wandb.log(d, commit=commit)
-        return
-
-    for i, task_metric in enumerate(batch_metric, start=1):
-        key = f'{prefix}-{i}'
-        d[key] = task_metric.item()
-
-    wandb.log(d, commit=commit)
 
 def zombies_and_comatose(G, config: Config):
     """
@@ -98,59 +155,6 @@ def zombies_and_comatose(G, config: Config):
             f'comatose-bias-{i}' : data[BIAS],
             f'comatose-in-{i}' : data['in']
         }, commit=False)
-
-def subnetworks(G, config: Config, ignore_fragments=True, log_detailed=True):
-    """Log everything about subnetworks."""
-    subnet_report = subnet_analysis(G, config)
-
-    complete_subnetworks = 0
-    partial_subnetworks = 0
-    fragment_subnetworks = 0
-    zombie_subnetworks = 0
-
-    for net in subnet_report:
-        ic = net['input']['complete']
-        ip = net['input']['incomplete']
-        oc = net['output']['complete']
-        op = net['output']['incomplete']
-        
-        # no outputs --> fragment
-        if not any([oc, op]): fragment_subnetworks += 1
-        # no inputs but outputs --> zombie
-        elif not any([ic, ip]): zombie_subnetworks += 1
-        # complete inputs and outputs and they are the same --> complete
-        elif all([ic, oc]) and ic == oc: complete_subnetworks += 1
-        # has outputs and inputs, but not complete ones
-        else:  partial_subnetworks += 1
-
-        if not log_detailed: continue
-
-        # make name such that it looks like this
-        # c-12-12-c for complete inputs complete outputs for tasks 1 and 2
-        # problems arise when more than 9 tasks.
-        name = ''
-        for prefix, features in [('c' ,ic),('p' ,ip)]:
-            if len(features) == 0: continue
-            name += prefix + '-' +  ''.join(map(str,features))
-        name += "-"
-        for prefix, features in [('c' ,oc),('p' ,op)]:
-            if len(features) == 0: continue
-            name += ''.join(map(str,features)) + '-' + prefix
-
-        is_fragment = (name == "-")
-
-        if is_fragment and ignore_fragments: continue
-
-        name = 'fragment' if is_fragment else name 
-        metric_name = 'sub_' + name
-        wandb.log({metric_name : net['num_weights']}, commit=False)
-
-    wandb.log({    
-        'complete_subnetworks' : complete_subnetworks,
-        'partial_subnetworks' : partial_subnetworks,
-        'fragment_subnetworks' : fragment_subnetworks,
-        'zombie_subnetworks' : zombie_subnetworks,
-    }, commit=False)
 
 def returns_true_every_nth_time(n, and_at_0=False):
 

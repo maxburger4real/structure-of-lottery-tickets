@@ -8,8 +8,9 @@ import networkx as nx
 import numpy as np
 from typing import List, Dict, Tuple, Set
 import matplotlib.pyplot as plt
-
+import plotly.graph_objects as go
 from common.constants import *
+
 
 class GraphManager():
     '''A class that manages the state over the pruning iterations'''
@@ -19,9 +20,13 @@ class GraphManager():
         '''Initialize the contant values of the Network, that will remain true over pruning iterations.'''
         self.shape = shape
         self.iteration = 0
+        self.untapped_potential = len(task_description) - 1
+
         self.graveyard = {}  # the pruned parameters are here
 
         self.G = build_graph_from_model(unpruned_model, shape)
+        self.pos = nx.multipartite_layout(self.G, LAYER)
+
         self.input_layer, self.output_layer = _find_min_max_attribute(self.G, LAYER)
 
         # retreive the ids of the input and output features from G
@@ -37,6 +42,8 @@ class GraphManager():
         params: Set = set().union(biases, weights)
 
         self.lifecycles = {k:{'current_state' : self.ALIVE, 'lifecycle': [0,0,0,0]} for k in params}
+        
+        self.catalogue: Dict[str, nx.Graph] = {} # 'name' : nx.Graph
 
     def update(self, model):
         self.G = build_graph_from_model(model, self.shape)
@@ -45,20 +52,19 @@ class GraphManager():
         subnetworks = split_into_subnetworks(self.G)
 
         # sort the networks by productivity (productive means has output connections)
-        productive_subnetworks, fragments = sort_by_productivity(
+        productive_subnetworks, self.fragments = sort_by_productivity(
             subnetworks, self.out_features
         )
 
         # fragments are seperate graphs that contain parameters
         fragment_params = []
-        for g in fragments:
+        for g in self.fragments:
             params = _filter_pruned_params(g)
             fragment_params.extend(params)
 
         # sort all params into the following categories
         unproductive_params, zombie_params, alive_params, audience_params = [], [], [], []
         for g in productive_subnetworks:
-            
             # sort the parameters into the buckets of states
             alive, audience, unproductive, zombies = sort_network_parameters(g, self.in_features, self.out_features)
             alive_params.extend(alive)
@@ -66,26 +72,66 @@ class GraphManager():
             unproductive_params.extend(unproductive)
             zombie_params.extend(zombies)
 
-        unproductive.extend(fragment_params)
+        unproductive_params.extend(fragment_params)
 
-        print(f'#subnets : {len(productive_subnetworks)}')
-        tX = task_matrix(productive_subnetworks, self.task_description)
-
-        potential = np.sum(tX) / len(self.task_description)
-        print(tX)
-
-        full_potential = np.isclose(potential, 1)
-        print(f'potential : {potential}, full={full_potential}')
-
-        # mitigate floating point errors
-
+        self.__update_task_matrix(productive_subnetworks)
+        self.__update_catalogue(productive_subnetworks)
         self.__update_lifecycle(alive_params, audience_params, unproductive_params, zombie_params)
                 
         self.iteration += 1
 
+    def __update_task_matrix(self, subnetworks):
+        self.task_matrix = task_matrix(subnetworks, self.task_description)
+
+        potential = np.sum(self.task_matrix) / len(self.task_description)
+
+        # has full potential        
+        if np.isclose(potential, 1):
+            assert all(i.is_integer() for i in self.task_matrix.flatten()), f'values must be integers. got {self.task_matrix}'
+            self.task_matrix = self.task_matrix.astype(int)
+
+            # number of values larger than 1
+            num_tasks_per_network = np.sum(self.task_matrix, axis=1)
+            splits_remaining = np.sum(num_tasks_per_network - 1)
+
+            self.untapped_potential = splits_remaining
+
+        else:
+            self.untapped_potential = potential - 1
+
+    def __update_catalogue(self, subnetworks):
+        
+        self.catalogue = {}
+        for i, g in enumerate(subnetworks):
+            name = ''
+            network_tasks = self.task_matrix[i]
+            for j, (task_name, _) in enumerate(self.task_description):
+                task = network_tasks[j]
+                if task == 0 : continue
+                if name != '': name += '-' 
+                name += f'{task_name}'
+
+            self.catalogue[name] = g
+
     def print_info(self):
         print(f'unproductive :{len(self.unproductive_params_list)} {self.unproductive_params_list}')
         print(f'zomb :{len(self.zombie_params_list)} {self.zombie_params_list}')
+    
+    def make_plotly(self, G: nx.Graph):
+        edge_traces = self.__make_edge_traces(G)
+        node_trace = self.__make_node_trace(G)
+
+        fig = go.Figure(
+            data=edge_traces + [node_trace],
+            layout=go.Layout(
+                showlegend=False,
+                hovermode='closest',
+                margin=dict(b=0,l=0,r=0,t=0),
+                xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
+            )
+        
+        return fig
 
     def plot(self):
         '''For debugging purposes. Plots the Neural Network graph.
@@ -94,27 +140,32 @@ class GraphManager():
         - red   : zombie
         - blue  : unproductive
         '''
-        node_colors = []
-        for feature in self.G.nodes():
-            if feature in self.unproductive_params_list: node_colors.append('blue')
-            elif feature in self.audience_params_list: node_colors.append('pink')
-            elif feature in self.zombie_params_list: node_colors.append('red')
-            elif feature in self.alive_params_list: node_colors.append('green')  # Default color for other nodes
-            elif feature in self.pruned_params_list: node_colors.append('black')  # Default color for other nodes
-            else: node_colors.append('yellow')  # Default color for other nodes
-
-        edge_colors = []
-        for weight in self.G.edges():
-            if weight in self.unproductive_params_list: edge_colors.append('blue')
-            elif weight in self.zombie_params_list: edge_colors.append('red')
-            elif weight in self.audience_params_list: edge_colors.append('pink')
-            elif weight in self.alive_params_list: edge_colors.append('green')  # Default color for other nodes
-            elif weight in self.pruned_params_list: edge_colors.append('black')  # Default color for other nodes
-            else: edge_colors.append('yellow')  # Default color for other nodes
-
+        node_colors = self.get_node_colors()
+        edge_colors = self.get_edge_colors()
         pos=nx.multipartite_layout(self.G, LAYER)
-        nx.draw(self.G, pos, with_labels=True, node_color=node_colors, edge_color=edge_colors)
-        plt.show()
+
+        fig, ax = plt.subplots(figsize=(15,12))
+        nodes = nx.draw_networkx_nodes(
+            self.G, 
+            pos=pos, 
+            # node_size=0.5,
+            #node_color=node_colors
+        )
+        nx.draw_networkx_edges(
+            self.G, 
+            pos=pos, 
+            width=0.5,
+            edge_color=edge_colors
+        )
+
+        plt.colorbar(nodes)
+
+        # nx.draw(self.G, pos, with_labels=True, node_color=node_colors, edge_color=edge_colors)
+        fig = plt.gcf()
+
+        return fig
+        
+        # plt.show()
 
     def __update_lifecycle(self, alive, audience, unproductive, zombie):
         # TODO: for testing
@@ -147,6 +198,61 @@ class GraphManager():
 
         assert l_before == l_after
 
+    def __make_node_trace(self, G):
+        node_x = []
+        node_y = []
+        colors = []
+        for node in G.nodes():
+            x, y = self.pos[node]
+            node_x.append(x)
+            node_y.append(y)
+            colors.append(self.__get_color(node))
+
+        node_trace = go.Scatter(
+            x=node_x, y=node_y,
+            mode='markers',
+            hoverinfo='text',
+            marker=dict(
+                showscale=True,
+                colorscale='YlGnBu',
+                size=10,
+                color=colors,
+                line_width=2
+                )
+            )
+        return node_trace
+            
+    def __make_edge_traces(self, G):
+        edge_x = []
+        edge_y = []
+        for edge in G.edges():
+            x0, y0 = self.pos[edge[0]]
+            x1, y1 = self.pos[edge[1]]
+            edge_x.extend([x0, x1, None])
+            edge_y.extend([y0, y1, None])
+    
+        edge_traces = [] 
+        for edge in G.edges():
+            x0, y0 = self.pos[edge[0]]
+            x1, y1 = self.pos[edge[1]]
+            color = self.__get_color(edge)
+            edge_trace = go.Scatter(
+                x=[x0, x1, None], y=[y0, y1, None],
+                line=dict(width=0.5, color=color),
+                hoverinfo='none',
+                mode='lines')
+            edge_traces.append(edge_trace)
+
+        return edge_traces 
+        
+    def __get_color(self, value):
+        if value in self.unproductive_params_list: return 'blue'
+        elif value in self.zombie_params_list: return 'red'
+        elif value in self.audience_params_list: return 'pink'
+        elif value in self.alive_params_list: return 'green'  # Default color for other nodes
+        elif value in self.pruned_params_list: return 'black'  # Default color for other nodes
+        else: return 'yellow'  # Default color for other nodes
+        
     @property
     def unproductive_params_list(self):
         return [k for k,v in self.lifecycles.items() if v['current_state'] == self.UNPRODUCTIVE]
@@ -167,11 +273,11 @@ class GraphManager():
 def task_matrix(subnetworks :List[nx.DiGraph], task_description):
     
     L = len(task_description)
-    X = np.zeros(shape=(L,L))
-    #X_out = np.zeros_like(X_in)
-
+    N = len(subnetworks)
+    X = np.ones(shape=(N,L)) * np.inf  # Just to be sure that it is always overwritten.
+    
     for i, g in enumerate(subnetworks):
-        for j, (name, (in_features, out_features)) in enumerate(task_description.items()):
+        for j, (name, (in_features, out_features)) in enumerate(task_description):
 
             # find the features contained in the subnetwork
             in_features_in_subnetwork = set(g.nodes()).intersection(in_features)
@@ -183,7 +289,6 @@ def task_matrix(subnetworks :List[nx.DiGraph], task_description):
             percentage_num_in_out_pairs = num_in_out_pairs / (len(in_features)*len(out_features))
 
             X[i,j] = percentage_num_in_out_pairs
-            #X_out[i,j] = ratio_out_features
 
     return X
 
@@ -284,14 +389,14 @@ def map_tasks_to_features(
     task_description: Tuple, 
     in_features: List, 
     out_features: List
-) -> Dict:
+) -> List[Tuple[str, Tuple[int, int]]]:
     '''Map the provided task description to the feature ids of the network.'''
     # Single Task
     if task_description is None:
-        return {'main' : (in_features, out_features)}
+        return [('main', (in_features, out_features))]
     
     # Multiple tasks
-    ret = {}
+    ret = []
 
     in_features_generator = (x for x in in_features)
     out_features_generator = (x for x in out_features)
@@ -301,7 +406,7 @@ def map_tasks_to_features(
 
         task_in_features = [next(in_features_generator) for _ in range(num_in)]
         task_out_features = [next(out_features_generator) for _ in range(num_out)]
-        ret[name] = (task_in_features, task_out_features)
+        ret.append((name, (task_in_features, task_out_features)))
 
     return ret
 
@@ -353,8 +458,6 @@ def get_alive_subnetwork(G: nx.DiGraph, in_features) -> Tuple[nx.DiGraph, List, 
     if not nodes and not edges:
         return G_alive, [], [], []
     
-    print('not all nodes in this graph are alive')
-
     # get all unpruned parameters of those zombies
     # zombie_nodes, zombie_edges = _filter_pruned_params(G, nodes, edges, merge=False)
 

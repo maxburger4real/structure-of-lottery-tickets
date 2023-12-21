@@ -3,7 +3,7 @@ from common.config import Config
 from common.constants import *
 
 run_config = Config(
-    description='''Single Task Testing the old init. how do the weights change over time ?''',
+    description='''Trying to find a configuration where it splits''',
 
     # dataset
     dataset=MOONS_AND_CIRCLES,
@@ -13,29 +13,29 @@ run_config = Config(
     # initialization strategy for the weights
     model_seed=12, #[7, 9, 11]
     model_class = MLP.__name__,
-    model_shape = [4, 40, 40, 2],
+    model_shape = [4, 80, 80, 2],
     init_strategy_weights = InitializationStrategy.DEFAULT,
-    init_strategy_biases = InitializationStrategy.ZERO,
+    init_strategy_biases = InitializationStrategy.DEFAULT,
     activation=RELU,
-    persist=False,
+    persist=True,
 
     # training
     pipeline=IMP,
     lr=0.001,
     optimizer=ADAM,
-    epochs=100,
+    epochs=3000,
     loss_fn=BCE,
 
     # early stop
     early_stop_patience=10,
-    early_stop_delta=0.001,
+    # early_stop_delta=0.001,
 
     # pruning
     pruning_method=MAGNITUDE,
     prune_biases=True,
     prune_weights=True,
-    pruning_target=100,
-    pruning_levels=5,
+    pruning_target=50,
+    pruning_levels=20,
     reinit=True,
 
     # logging
