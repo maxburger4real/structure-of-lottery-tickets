@@ -23,8 +23,8 @@ def build_model_from_config(config: Config):
     activation = __activations_map[config.activation]
 
     # because enums are parsed to strings in config, parse back and convert to enum
-    weight_strategy = InitializationStrategy[config.init_strategy_weights.split('.')[-1]]
-    bias_strategy = InitializationStrategy[config.init_strategy_biases.split('.')[-1]]
+    weight_strategy = InitializationStrategy[config.init_strategy_weights]
+    bias_strategy = InitializationStrategy[config.init_strategy_biases]
 
     if name == MLP.__name__: 
         model = MLP(shape=shape, activation=activation, seed=seed)

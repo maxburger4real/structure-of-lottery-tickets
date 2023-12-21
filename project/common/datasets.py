@@ -6,6 +6,7 @@ from sklearn.preprocessing import MinMaxScaler
 from torch.utils.data import DataLoader, TensorDataset
 from common.config import Config
 from common.constants import *
+from common import torch_utils
 
 circles_inputs = moons_inputs = 2
 circles_outputs = moons_outputs = 1
@@ -17,6 +18,37 @@ def build_dataloaders_from_config(config: Config):
     noise = config.noise
     batch_size = config.batch_size
 
+    if config.dataset == Datasets.OLD_MOONS.name:
+        
+        config.update({
+            'task_description' : (
+                ('moons-1', (moons_inputs, moons_outputs)),
+                ('moons-2', (moons_inputs, moons_outputs)),
+            )
+        }, allow_val_change=True)
+
+        torch_utils.set_seed(config.data_seed)
+
+        m_moon_sets = [datasets.make_moons(n_samples=n_samples, noise=noise) for _ in range(2)]
+        X,Y = list(zip(*m_moon_sets))
+        Y = [y.reshape(-1,1) for y in Y]
+        x_train = torch.Tensor(np.concatenate(X, axis=1))
+        y_train = torch.Tensor(np.concatenate(Y, axis=1))
+
+        m_moon_sets = [datasets.make_moons(n_samples=n_samples, noise=noise) for _ in range(2)]
+
+        X,Y = list(zip(*m_moon_sets))
+        x_test = torch.Tensor(np.concatenate(X, axis=1))
+
+        Y = [y.reshape(-1,1) for y in Y]
+        y_test = torch.Tensor(np.concatenate(Y, axis=1))
+
+        if config.batch_size is None: batch_size = n_samples
+        train_dataloader = DataLoader(TensorDataset(x_train, y_train), batch_size=batch_size, shuffle=True, num_workers=0)
+        test_dataloader = DataLoader(TensorDataset(x_test, y_test), batch_size=batch_size, shuffle=True, num_workers=0)
+
+        return train_dataloader, test_dataloader
+    
     if config.dataset == Datasets.MOONS_AND_CIRCLES.name:
         config.update({
             'task_description' : (

@@ -16,7 +16,7 @@ class Config:
     epochs : int
     model_shape : list[int]
     model_seed : int
-    # data_seed : int
+    data_seed : int
 
     # DEFAULTED CONFIGS
     init_strategy_biases : InitializationStrategy = None

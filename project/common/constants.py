@@ -6,22 +6,17 @@ STATE_DICT = "model_state_dict"
 HPARAMS_FILE = 'hparams.json'
 
 # wandb
-#PROJECT='concat_moons'
-PROJECT='thesis' #'init-thesis'
+PROJECT='concat_moons'
+# PROJECT='thesis' #'init-thesis'
 ENTITY='mxmn'
 MODE='online'
 # MODE='disabled'
-
 
 InitializationStrategy = Enum(
     'InitializationStrategy', 
     ['ZERO', 'NORMAL', 'DEFAULT', 'KAIMING_NORMAL','XAVIER_UNIFORM', 'XAVIER_NORMAL','FRANKLE_XOR_TRUNC_NORMAL']
 )
-Datasets = Enum(
-    'Datasets', 
-    ['MOONS', 'CIRCLES', 'MOONS_AND_CIRCLES', 'MOONS_AND_MOONS']
-)
-
+Datasets = Enum('Datasets', ['OLD_MOONS', 'MOONS', 'CIRCLES', 'MOONS_AND_CIRCLES'])
 TaskCoverage = Enum('TaskCoverage', ['COMPLETE', 'PARTIAL', 'ABSENT'])
 
 # Optimizers
