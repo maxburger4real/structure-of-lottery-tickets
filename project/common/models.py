@@ -35,11 +35,11 @@ def build_model_from_config(config: Config):
     raise ValueError('Model Unkown')
 
 
-class ReproducibleModel(nn.Module):
+class BaseModel(nn.Module):
     """An abstract class that sets the seed for reproducible initialization."""
     def __init__(self, seed=None):
         super().__init__()
-        if seed is None: seed = SEED
+        if seed is None: seed = 0
         torch_utils.set_seed(seed)
 
     def init(self, weight_strategy, bias_strategy):
@@ -73,13 +73,13 @@ class ReproducibleModel(nn.Module):
 
                 case _:
                     print('Using Default initialization for Bias')
-                
+     
         self.apply(init_module)
         return self
-                 
 
-class MLP(ReproducibleModel):
-    """A mini mlp for demo purposes."""
+
+class MLP(BaseModel):
+    """Versatile MLP."""
     def __init__(
             self, 
             shape: torch.Size,
@@ -99,8 +99,9 @@ class MLP(ReproducibleModel):
 
         self.modules = modules
         self.model = nn.Sequential(*modules)
+        self.layers = [m for m in self.modules if torch_utils.module_is_trainable(m)]
+
 
     def forward(self, x):
         y = self.model(x)
         return y
-    

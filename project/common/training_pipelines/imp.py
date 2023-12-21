@@ -97,8 +97,6 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
         )
         #log.commit()  # TODO: this breaks logging of the last metrics correctly.
 
-        if stopper(mean_eval_loss): break
-
     log.metrics({TRAIN_LOSS : train_loss, VAL_LOSS : val_loss, ACCURACY : val_acc})
     # log.descriptive_statistics(model)
 

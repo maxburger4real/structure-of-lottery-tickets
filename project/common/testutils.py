@@ -48,7 +48,7 @@ def disconnected_weights(task_size, num_tasks):
 def make_splitable_model(model, num_tasks, tile_offset=0.1):
     '''tile_offset is 0, the model is already split in the beginning.'''
     with torch.no_grad():
-        for m in model.modules:
+        for m in model.layers:
             if not isinstance(m, torch.nn.Linear): continue
             _out = m.weight.shape[0] / num_tasks
             _in = m.weight.shape[1] / num_tasks

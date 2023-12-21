@@ -1,6 +1,14 @@
 from enum import Enum
 
-SEED = 64
+bias = 'bias'
+weight='weight'
+layer='layer'
+state='state'
+
+ParamState = Enum(
+    'ParamState', 
+    ['active', 'inactive', 'zombious', 'zombie_downstream', 'pruned']
+)
 
 STATE_DICT = "model_state_dict"
 HPARAMS_FILE = 'hparams.json'
