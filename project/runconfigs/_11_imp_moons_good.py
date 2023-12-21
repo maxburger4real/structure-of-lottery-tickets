@@ -15,13 +15,15 @@ run_config = Config(
     model_shape=[m*2, 40, 40, m],
     model_class = SimpleMLP.__name__,
 
+    # noise = 0.1
+
     # training
     lr=0.001,
     optimizer=ADAM,
     training_epochs= 3000,
 
     # seeds
-    model_seed=5, # good seeds : 2
+    model_seed=7, # good seeds : 2
     data_seed=0,
 
     persist=False,
@@ -30,7 +32,9 @@ run_config = Config(
     early_stopping=True,
     early_stop_patience=10,
     early_stop_delta=0.0,
-    loss_cutoff=0.01,  # yielded good results
+
+    # yielded good results
+    loss_cutoff=0.01,  
 
     # pruning
     pruning_method=MAGNITUDE,
