@@ -67,6 +67,7 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
         
         # there is only one commit in each Pruning LEVEL! except in-epoch logging is active
         log.commit()  # LOG PRUNING LEVEL
+        if gm.untapped_potential < 0: break
 
         # prune the model and reinit
         pborder = prune(pruning_amount)
