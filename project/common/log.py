@@ -31,10 +31,9 @@ class Logger():
     
     def graphs(self, gm: GraphManager):
         if gm is None: return
-        # if len(gm.catalogue) > 1: self.log_graphs =  True  # only log 2 or more.
         if not self.log_graphs: return
         for name, g in gm.catalogue.items():
-            self.__strict_insert(name, gm.make_plotly(g))
+            self.__strict_insert(name, gm.fig(g))
 
     def metrics(self, values: dict, prefix='', only_if_true=True):
         if not only_if_true: return
@@ -43,18 +42,22 @@ class Logger():
     
     def feature_categorization(self, gm: GraphManager):
         if gm is None: return
-        total = len(gm.lifecycles)
-        values = {
-            'num-alive' : len(gm.alive_params_list),
-            'num-zombie' : len(gm.zombie_params_list),
-            'num-audience' : len(gm.audience_params_list),
-            'num-unproductive' : len(gm.unproductive_params_list),
-        }
 
-        for name, value in values.items():
-            self.__strict_insert(name + '-abs', value)
-            self.__strict_insert(name + '-rel', value / total)
-    
+        total_nodes = sum([value for key, value in gm.node_statistics.items() if key != ParamState.pruned])
+        total_edges = sum([value for key, value in gm.edge_statistics.items() if key != ParamState.pruned])
+        
+        for state in ParamState:
+            num_nodes = gm.node_statistics[state]
+            num_edges = gm.edge_statistics[state]
+            self.__strict_insert(state.name + '-features' + '-abs', num_nodes)
+            self.__strict_insert(state.name + '-features' + '-rel', num_nodes / total_nodes)
+
+            self.__strict_insert(state.name + '-weights' + '-abs', num_edges)
+            self.__strict_insert(state.name + '-weights' + '-rel', num_edges / total_edges)
+
+            self.__strict_insert(state.name + '-rel', (num_edges + num_nodes) / (total_edges + total_nodes))
+            self.__strict_insert(state.name + '-abs', num_edges + num_nodes)
+
     def __metric(self, x : np.ndarray, prefix: str):
 
         if not isinstance(x, np.ndarray):
@@ -96,10 +99,6 @@ class Logger():
             raise ValueError('Cannot Override Key in strict logdict.')
         self.logdict[key] = value
 
-
-def lifetime(gm: GraphManager):
-    raise
-
 def descriptive_statistics(model, at_init=False, prefix='descriptive'):
     weights, biases = _get_w_and_b(model)
 
@@ -130,44 +129,6 @@ def descriptive_statistics(model, at_init=False, prefix='descriptive'):
                 f'{prefix} L{l}-median(abs({name}))' : median,
                 f'{prefix} L{l}-mean(abs({name}))' : mean,
             }, commit=False)
-
-def zombies_and_comatose(G, config: Config):
-    """
-    TODO:
-    - problem: there are too many metrics that are tracked
-    - it is unnecessary to track a metric for every single comatose or zombie neuron.
-    - i dont care about it
-    - what do i car about?
-    - how many comatose/zombies are there in total
-    - min-max-mean-median of their bias
-    - lifespan of them
-    - how long do they survive? -> histogram
-    - how long do they survive when they have a positive bias vs 0 bias
-    - how long do they survive depending on their remaining inputs or outputs
-
-    Histogram of zombies/comatose by number of in/out connections
-    Histogram of zombies based on how long they already exist
-    Histogram
-    """
-    zombies, comatose = neuron_analysis(G, config)
-    wandb.log({
-        'zombies' : len(zombies), 
-        'comatose' : len(comatose)
-        }, commit=False)
-    
-    for i, data in G.subgraph(zombies).nodes(data=True):
-        wandb.log({
-            f'zombie-neuron-{i}': i,
-            f'zombie-bias-{i}' : data[BIAS],
-            f'zombie-out-{i}' : data['out']
-        }, commit=False)
-
-    for i, data in G.subgraph(comatose).nodes(data=True):
-        wandb.log({
-            f'comatose-neuron-{i}': i,
-            f'comatose-bias-{i}' : data[BIAS],
-            f'comatose-in-{i}' : data['in']
-        }, commit=False)
 
 def returns_true_every_nth_time(n, and_at_0=False):
 
