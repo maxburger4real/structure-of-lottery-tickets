@@ -2,32 +2,26 @@ from common.models import InitMLP
 from common.config import Config
 from common.constants import *
 
-m = 2
 
 run_config = Config(
     pipeline=IMP,
     activation=RELU,
     loss_fn= BCE,
-    dataset=MULTI_MOONS,
-    num_concat_datasets=m,
+    dataset=MOONS_AND_CIRCLES,
     n_samples=800,
-    model_shape=[2*m, 40, 40, 1*m],
+    model_shape=[4, 40, 40, 2],
     model_class = InitMLP.__name__,
 
     # training
     lr=0.1,
     optimizer=ADAM,
     epochs=100,
-    log_every_n_epochs = 10,  # insert int to log every n epochs
 
     # seeds
     model_seed=42,
-    data_seed=0,
-
     persist=False,
 
     # early stop
-    early_stopping=True,
     early_stop_patience=20,
     early_stop_delta=0.0,
 
@@ -40,4 +34,6 @@ run_config = Config(
     pruning_levels=10,
     pruning_method=MAGNITUDE,
     reinit=True,
+
+    log_graph_statistics=True,
 )

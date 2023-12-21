@@ -226,10 +226,10 @@ def calc_extended_model_shapes(
 
 def update_pruning_config(config: Config):
     '''        
-    # this function updates
-    #  * model_shape  - > for building the model
-    #  * pruning_rate  -> just fyi 
-    #  * pruning_trajectory  -> single point of truth
+    this function updates
+     * model_shape  - > for building the model
+     * pruning_rate  -> just fyi 
+     * pruning_trajectory  -> single point of truth
     '''
     update_dict = {}
     params_before_pruning = calc_params_from_shape(
@@ -278,8 +278,8 @@ def update_pruning_config(config: Config):
     pruning_trajectory = -np.diff(param_trajectory)
     update_dict['pruning_rate'] = pruning_rate
     update_dict['params_before_pruning'] = params_before_pruning
-    update_dict['param_trajectory'] = param_trajectory
-    update_dict['pruning_trajectory'] = pruning_trajectory
+    update_dict['param_trajectory'] = list(param_trajectory)
+    update_dict['pruning_trajectory'] = list(pruning_trajectory)
 
     config.update(update_dict, allow_val_change=True)
 

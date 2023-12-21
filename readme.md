@@ -30,3 +30,14 @@ to export the environment, use:
 
 ### remote 
 https://github.com/maxburger4real/structure-of-lottery-tickets
+
+
+On the GPU server:
+Confgire the shell like they write in the readme. Source to the userenv.
+Then conda is available 
+Create a conda environment
+
+    conda create --preifx=venv python=3.11
+
+# Do it with VSCode Remote Extension
+Add remote host 

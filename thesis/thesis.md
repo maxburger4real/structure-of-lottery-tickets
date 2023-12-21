@@ -88,7 +88,7 @@ New experiment, broader hidden size.
 What do I expect ? 
 
 Comatose Neurons seem to follow a pattern like existence. First a peak, as the randomly dying neurons click out. Then they start to disappear fast. Then, the features that are deleted on purpose 
-![Alt text](.images/image-1.png)
+![Alt text](images/comatose.png)
 
 This graph looks very cool  and is actually interesting.
 It looks like the peak is relative between beginning and end.
@@ -164,7 +164,7 @@ Final Boss:
 
 ## interesting finding! 
 comatose neurons biases are often pruned, before they are deleted
-![comatose neuron biases are pruned before the neuron is detached.](.images/image-2.png)
+![comatose neuron biases are pruned before the neuron is detached.](images/comatose-bias.png)
 
 Why is that?
 - the avg magnitude grows faster than the biases which dont change anymore in comatose neurons.
@@ -235,7 +235,7 @@ Since zombies have no connection to the input, their preactivation must come fro
 When this happens, these zombies are actually unproductive parameters and behave exactly the same way.
 
 The most interesting zombies are the productive ones.
-![Alt text](image.png)
+![Alt text](images/blackboard-2.png)
 
 
 ALL parameters can be put into 1 of 5 states:
@@ -254,7 +254,7 @@ One can track the state of each parameter as a 5-Tuple, that contains the number
 some next steps. To check the path from the network towards splitting into 2. 
 Idea: Take the number of tasks and create a matrix of that size TxT. If all tasks are split perfectly as the should be, this matrix should look like the identity matrix. 
 
-![Alt text](image-1.png)
+![Alt text](images/blackboard-1.png)
 
 
 This is done now. A simple metric for now is as follows.
@@ -282,3 +282,14 @@ This method gives a quantitative and systematic way to monitor the convergence o
 ```
 
 ![Alt text](image-1.png)
+Found a setup where it splits again.
+Somehow the bias-as-zero initialization doesnt split so well.
+Might be interesting to check this out, what happens inside differently.
+Anyways, this is the run path to the splittery boy mxmn/concat_moons/f20n8zem
+
+
+Nice neew developments. The splitting works. Now it is just a matter of interesting experiments. 
+What is still missing is plotting the lifetimes.
+
+# TODOS
+- [ ] plot the lifetimes.
