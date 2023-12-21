@@ -38,6 +38,10 @@ BCE = 'bce'
 MAGNITUDE = 'magnitude'
 RANDOM = 'random'
 
+# Pruning scopes
+GLOBAL = 'global'
+LAYERWISE = 'layerwise'
+
 # Training Pipelines
 VANILLA = 'vanilla'
 IMP = 'imp'

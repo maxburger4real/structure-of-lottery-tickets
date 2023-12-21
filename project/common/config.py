@@ -55,6 +55,7 @@ class Config:
     
     # Pruning
     pruning_method : str = None  # RANDOM or MAGNITUDE
+    pruning_scope : str = None  # GLOBAL or LAYERWISE
     extension_levels: int = 0 # how many 
     pruning_levels : int = None  # number of times pruning is applied
     pruning_rate   : float = None  # if pruning target is specified, pruning rate is overwritten

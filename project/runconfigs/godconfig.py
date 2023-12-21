@@ -38,6 +38,7 @@ run_config = Config(
 
     # pruning
     pruning_method=MAGNITUDE,
+    pruning_scope=GLOBAL,
     prune_biases=True,
     prune_weights=True,
     pruning_target=50,
