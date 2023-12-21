@@ -53,6 +53,7 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
             # log.descriptive_statistics(model, prefix=f'epochwise-descriptive')
 
 
+            if config.loss_cutoff is not None and val_loss.mean().item() < config.loss_cutoff: break
             if stopper(mean_eval_loss): break
 
         save_model_or_skip(model, config, level)
