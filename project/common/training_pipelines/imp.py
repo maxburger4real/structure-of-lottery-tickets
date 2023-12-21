@@ -53,6 +53,7 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
                     f'epochwise-accuracy' : mean_eval_acc
                 })
 
+            if config.loss_cutoff is not None and loss_eval.mean().item() < config.loss_cutoff: break
             if stopper(mean_eval_loss): break
 
         save_model_or_skip(model, config, level)

@@ -23,8 +23,8 @@ run_config = Config(
     # training
     lr=0.001,
     optimizer=ADAM,
-    training_epochs= 3000,
-
+    epochs= 3000,
+    
     # seeds
     model_seed=7, # good seeds : 2
     data_seed=0,  # split old but not new
@@ -34,7 +34,6 @@ run_config = Config(
     persist=False,
 
     # early stop
-    early_stopping=True,
     early_stop_patience=10,
     early_stop_delta=0.0,
 
