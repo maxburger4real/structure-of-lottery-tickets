@@ -15,7 +15,7 @@ run_config = Config(
     # training
     lr=0.002,
     optimizer=ADAMW,
-    training_epochs=2000,
+    epochs=2000,
 
     # seeds
     model_seed=0,

@@ -19,10 +19,10 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
     weight_factor = 1. if LOCAL else 0.
     
     # log initial performance
-    eval_loss_init = evaluate(model, test_loader, loss_fn, config.device).mean().item()
+    eval_loss_init, acc = evaluate(model, test_loader, loss_fn, config.device).mean().item()
     wandb.log({VAL_LOSS : eval_loss_init})
     
-    steps=config.training_epochs
+    steps=config.epochs
     for step in range(steps):
 
         # crank up lambda after first quarter of training
@@ -46,7 +46,7 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
 
         # evaluate forward
         model.eval()
-        eval_loss = evaluate(model, test_loader, loss_fn, config.device).mean().item()
+        eval_loss, acc = evaluate(model, test_loader, loss_fn, config.device).mean().item()
         wandb.log({VAL_LOSS : eval_loss, TRAIN_LOSS : np.array(losses).mean()})
 
         if (step+1) % swap_log == 0:
@@ -56,7 +56,7 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
     
     if config.bimt_prune is not None:
         model.thresholding(config.bimt_prune)
-        eval_loss = evaluate(model, test_loader, loss_fn, config.device).mean().item()
+        eval_loss, acc = evaluate(model, test_loader, loss_fn, config.device).mean().item()
         wandb.log({VAL_LOSS : eval_loss})
         save_model_or_skip(model, config, steps+1)
 

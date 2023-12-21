@@ -8,16 +8,16 @@ run_config = Config(
     pipeline=IMP,
     activation=RELU,
     loss_fn= BCE,
-    dataset=CONCAT_MOONS,
+    dataset=MULTI_MOONS,
     num_concat_datasets=m,
-    
+    n_samples=800,
     model_shape=[2*m, 40, 40, 1*m],
     model_class = InitMLP.__name__,
 
     # training
     lr=0.1,
     optimizer=ADAM,
-    training_epochs=100,
+    epochs=100,
     log_every_n_epochs = 10,  # insert int to log every n epochs
 
     # seeds

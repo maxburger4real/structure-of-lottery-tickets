@@ -15,7 +15,7 @@ run_config = Config(
     # training
     lr=0.002,
     optimizer=ADAM,
-    training_epochs=3000,
+    epochs=3000,
     l1_lambda=0.001,
 
     # seeds

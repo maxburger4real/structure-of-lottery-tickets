@@ -8,7 +8,7 @@ run_config = Config(
     pipeline=IMP,
     activation=RELU,
     loss_fn= BCE,
-    dataset=CONCAT_MOONS,
+    dataset=MULTI_MOONS,
     num_concat_datasets=m,
     
     model_shape=[m*2, 60, 60, m],
@@ -17,7 +17,7 @@ run_config = Config(
     # training
     lr=0.001,
     optimizer=ADAM,
-    training_epochs=3000,
+    epochs=3000,
 
     # seeds
     model_seed=5, # good seeds : 2

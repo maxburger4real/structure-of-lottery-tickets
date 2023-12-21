@@ -4,7 +4,8 @@ from common.nx_utils import neuron_analysis, subnet_analysis, _get_w_and_b
 from common.config import Config
 from common.constants import *
 
-def log_descriptive_statistics(model, at_init=False, prefix='descriptive'):
+# available as log.loss() , log.subnetworks(). looks pretty
+def descriptive_statistics(model, at_init=False, prefix='descriptive'):
     weights, biases = _get_w_and_b(model)
 
     for l, (w, b) in enumerate(zip(weights, biases, strict=True)):
@@ -35,28 +36,32 @@ def log_descriptive_statistics(model, at_init=False, prefix='descriptive'):
                 f'{prefix} L{l}-mean(abs({name}))' : mean,
             }, commit=False)
 
-def log_loss(loss : np.ndarray, prefix, commit=False):
+def scalar_metric(value, prefix, commit=False):
+    '''Log a singular scalar value.'''
+
+    if isinstance(value, np.ndarray):
+        value = value.item()
+
+    wandb.log({prefix:value}, commit=commit)
+
+def taskwise_metric(metric : np.ndarray, prefix, commit=False):
     """log loss that takes care of logging the tasks sepertely."""
+    
+    batch_size, num_tasks = metric.shape
+    batch_metric = metric.mean(axis=0)
+    d = {prefix : batch_metric.mean()}
 
-    dims = len(loss.shape)
-    if dims == 0:
-        d = {prefix: loss.item()}
-    elif 0 < dims < 3:
-        d =  {prefix: loss.mean().item()}
-    elif dims == 3:
-        metrics = {prefix: loss.mean().item()}
+    if num_tasks < 2:
+        wandb.log(d, commit=commit)
+        return
 
-        # assumption: last dimension is task dimension
-        all_axis_but_the_last_one = tuple(range(dims-1))
-        taskwise_loss = loss.mean(axis=all_axis_but_the_last_one)
-        for i, l in enumerate(taskwise_loss):
-            metrics[prefix + '_' + str(i)] = l.item()
-
-        d = metrics
+    for i, task_metric in enumerate(batch_metric, start=1):
+        key = f'{prefix}-{i}'
+        d[key] = task_metric.item()
 
     wandb.log(d, commit=commit)
 
-def log_zombies_and_comatose(G, config):
+def zombies_and_comatose(G, config: Config):
     """
     TODO:
     - problem: there are too many metrics that are tracked
@@ -94,7 +99,7 @@ def log_zombies_and_comatose(G, config):
             f'comatose-in-{i}' : data['in']
         }, commit=False)
 
-def log_subnet_analysis(G, config, ignore_fragments=True, log_detailed=True):
+def subnetworks(G, config: Config, ignore_fragments=True, log_detailed=True):
     """Log everything about subnetworks."""
     subnet_report = subnet_analysis(G, config)
 
@@ -147,7 +152,7 @@ def log_subnet_analysis(G, config, ignore_fragments=True, log_detailed=True):
         'zombie_subnetworks' : zombie_subnetworks,
     }, commit=False)
 
-def every_n(n):
+def returns_true_every_nth_time(n, and_at_0=False):
 
     if n is None or n <= 0:
         return lambda : False
@@ -155,7 +160,8 @@ def every_n(n):
     N = range(n)
 
     def generator():
-        yield True
+        if and_at_0:
+            yield True
         while True:
             for _ in N:
                 yield False
@@ -166,38 +172,3 @@ def every_n(n):
         return next(g)
 
     return closure
-
-def deprecated_log_param_aggregate_statistics(G, config: Config, commit=False):
-    """Log statistics of weights and bias matrices.
-    """
-
-    # go over every layer in the nn
-    for l in range(len(config.model_shape)):
-        parameters = {}
-
-        w = []
-        for u, v, data in G.edges(data=True):
-            input_node = G.nodes()[u]
-            if input_node[LAYER]==l:
-                w.append(data[WEIGHT])
-        parameters['w'] = w
-
-        if l != 0:
-            b = []
-            for _, data in G.nodes(data=True):
-                if data[LAYER] == l:
-                    b.append(data[BIAS])
-            parameters['b'] = b
-
-        for name, p in parameters.items():
-            p = np.array(p)
-            zeros = np.sum(p == 0)
-            total = p.size
-            wandb.log({
-                f'L{l}-size({name}<0)' : np.sum( p < 0),
-                f'L{l}-size({name}>0)' : np.sum( p > 0),
-                f'L{l}-size({name}==0)' : zeros,
-                f'L{l}-mean({name})' : np.mean(p),
-                f'L{l}-mean(abs({name}))' : np.mean(np.abs(p)),
-                f'L{l}-spratio({name})' : 0 if zeros == 0 else zeros / total
-            }, commit=commit)

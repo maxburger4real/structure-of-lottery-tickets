@@ -1,23 +1,41 @@
 import torch
 import numpy as np
 from torch import optim
+from sklearn.metrics import accuracy_score
+
 from common.config import Config
 from common.constants import *
 
-def evaluate(model, loader, loss_fn, device):
+def calc_accuracy(logits, y):
+    '''Calculate Accuracy from logits and labels.'''
+    pred = (logits > 0).int()
+    assert pred.shape == y.shape, 'True labels must habe same shape as predictions.'
+    accs = []
+    for i in range(y.shape[1]):
+        y_true = y[:,i]
+        y_pred = pred[:,i]
+        acc = accuracy_score(y_true, y_pred)
+        accs.append(acc)
+    return np.array(accs, dtype=np.float32)
+
+def evaluate(model, loader, loss_fn, device, accuracy=True):
     """Evaluate the model and return a numpy array of losses for each batch."""
 
     model.eval()
-    losses = []
+    accs, losses = [],[]
     with torch.no_grad():
         for _, (x, y) in enumerate(loader):
             x,y = x.to(device), y.to(device)
 
             pred  = model(x)
-            loss = loss_fn(pred, y)
-            losses.append(loss.detach().cpu().numpy())
+            batch_loss = loss_fn(pred, y).mean(axis=0).numpy()
+            batch_acc = calc_accuracy(pred.detach().cpu(), y.detach().cpu())
+            assert batch_acc.shape == batch_loss.shape, 'Metrics must have the same size'
 
-    return np.array(losses)
+            accs.append(batch_acc)
+            losses.append(batch_loss)
+
+    return np.array(losses), np.array(accs)
 
 def update(model, loader, optim, loss_fn, device, lambda_l1=None):
     """
@@ -54,9 +72,9 @@ def train_and_evaluate(model, train_loader, test_loader, optim, loss_fn, config:
     stop = build_early_stopper(config)
 
     # train for epochs
-    for _ in range(0, config.training_epochs):
+    for _ in range(0, config.epochs):
         loss_train = update(model, train_loader, optim, loss_fn, config.device, config.l1_lambda).mean()
-        loss_eval = evaluate(model, test_loader, loss_fn, config.device).mean().item()
+        loss_eval, acc = evaluate(model, test_loader, loss_fn, config.device).mean().item()
 
         train_losses += [loss_train]
         eval_losses += [loss_eval]
@@ -105,34 +123,49 @@ def build_loss_from_config(config: Config):
 
 def build_early_stopper(config: Config):
     """Returns a callable object that decides if to early stop."""
-    if config.early_stopping:
-        return EarlyStopper(
-            patience=config.early_stop_patience,
-            min_delta=config.early_stop_delta
-        )
+    return EarlyStopper(
+        patience=config.early_stop_patience,
+        min_delta=config.early_stop_delta
+    )
 
-    # MOCK earlystopper
-    def neverstop(*args):
-        return False
-    
-    return neverstop
-        
 
 class EarlyStopper:
-    """from https://stackoverflow.com/a/73704579"""
-    def __init__(self, patience=1, min_delta=0):
+    """from https://stackoverflow.com/a/73704579 assuming the loss is always larger than 0.
+    - positive min_delta can be used to define, 
+        how big a loss increase must be to count as such
+    - negative min_delta can be used to define, 
+        how big an improvement must be, 
+        to not count as a loss increase
+    """
+
+    def __init__(self, patience=None, min_delta=0, loss_cutoff=None):
+        self.counter = 0
         self.patience = patience
         self.min_delta = min_delta
-        self.counter = 0
-        self.min_validation_loss = float('inf')
+        self.loss_cutoff = loss_cutoff
+        self.min_loss = float('inf')
 
-    def __call__(self, validation_loss):
-        if validation_loss < self.min_validation_loss:
-            self.min_validation_loss = validation_loss
-            self.counter = 0
-            
-        elif validation_loss > (self.min_validation_loss + self.min_delta):
-            self.counter += 1
-            if self.counter >= self.patience:
+    def __call__(self, loss):
+
+        if self.loss_cutoff is not None: 
+            if loss < self.loss_cutoff:
                 return True
+
+        loss_decreased = loss < self.min_loss
+        loss_increased = loss > (self.min_loss + self.min_delta)
+
+        if loss_decreased:
+            self.min_loss = loss
+            self.counter = 0
+
+        if self.patience is None: return False
+
+        elif loss_increased:
+            self.counter += 1
+            loss_increased_too_often = (self.counter >= self.patience)
+            
+            if loss_increased_too_often:
+                return True
+        
+        
         return False
