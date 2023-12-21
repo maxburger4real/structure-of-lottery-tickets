@@ -1,18 +1,17 @@
 import numpy as np
 from sympy import symbols, Eq, solve
+from typing import List, Tuple
 from common.config import Config
 
 def calc_params_from_shape(
-    shape, 
-    prune_weights=True, 
-    prune_biases=True
+    shape, prune_weights=True, prune_biases=True
 ):
+    '''Return the number of prunable parameters based on model shape.'''
     if not prune_weights and not prune_biases:
         return 0
         
     params = 0
     for i in range(len(shape) - 1):
-        
         if prune_weights: 
             w = shape[i] * shape[i+1]
             params += w
@@ -107,13 +106,20 @@ def calc_extension_trajectory(
     return hidden_dims
 
 def calc_pruning_rate(
-    params_before_pruning: int,
-    params_after_pruning : int,
+    pparams: int,
+    pruning_rate: float,
+    pruning_target : int,
     pruning_levels: int
 ):
+    if pruning_rate is not None:
+        return pruning_rate
+    
+    if pruning_levels == 0 or pruning_target is None:
+        raise ValueError('if pruning rate is calculated implicitly, must have prunint levels and pruning target') 
+    
     """Calculate the pruning."""
 
-    x = params_after_pruning / params_before_pruning
+    x = pruning_target / pparams
 
     if pruning_levels == 0: return 0
 
@@ -128,7 +134,7 @@ def build_param_trajectory(
     params_before_pruning: int, 
     pruning_levels: int,
     pruning_rate: float, 
-):
+) -> List[int]:
     t = np.arange(0, pruning_levels+1)
 
     # rate of parameters remaining at each iteration
@@ -140,7 +146,7 @@ def build_param_trajectory(
     # number of parameters remaining (discrete, nice)
     param_trajectory = np.rint(absolute_trajectory).astype(int)
 
-    return param_trajectory
+    return list(param_trajectory)
 
 def solve_for_hidden_size(
     model_shape,
@@ -149,7 +155,7 @@ def solve_for_hidden_size(
     params_before_pruning: int,
     prune_weights: bool = True,
     prune_biases: bool = True,
-):
+) -> int:
     """Solve for the hidden_size of 
     a network after extending for any number of iterations.
     """
@@ -199,7 +205,7 @@ def calc_extended_model_shapes(
     model_shape: list[int],
     prune_weights: bool = True,
     prune_biases: bool = True,
-) -> list[list[int]]:
+) -> Tuple[List[int], List[int]]:
     
     if not prune_weights and not prune_biases:
         return model_shape
@@ -208,6 +214,7 @@ def calc_extended_model_shapes(
     num_hidden = len(h)
 
     extended_shapes = []
+    extended_params = []
     for i in range(1, 1+ extension_levels):
 
         hidden_size = solve_for_hidden_size(
@@ -222,7 +229,10 @@ def calc_extended_model_shapes(
         ext_model_shape = [in_dim] + num_hidden * [hidden_size] + [out_dim]
         extended_shapes.append(ext_model_shape)
 
-    return extended_shapes
+        pparams = calc_params_from_shape(ext_model_shape, prune_weights, prune_biases)
+        extended_params.append(pparams)
+    
+    return extended_shapes, extended_params
 
 def update_pruning_config(config: Config):
     '''        
@@ -231,55 +241,40 @@ def update_pruning_config(config: Config):
      * pruning_rate  -> just fyi 
      * pruning_trajectory  -> single point of truth
     '''
-    update_dict = {}
-    params_before_pruning = calc_params_from_shape(
-        config.model_shape, 
-        config.prune_weights, 
-        config.prune_biases
+    pparams = calc_params_from_shape(
+        config.model_shape, config.prune_weights, config.prune_biases
     )
 
-    pruning_rate = calc_pruning_rate(
-        params_before_pruning, 
-        config.pruning_target,
-        config.pruning_levels
+    pr = calc_pruning_rate( 
+        pparams, config.pruning_rate, config.pruning_target, config.pruning_levels
     )
 
     param_trajectory = build_param_trajectory(
-        params_before_pruning, 
-        config.pruning_levels, 
-        pruning_rate
+        pparams, config.pruning_levels, pr
     )
 
-    if config.extension_levels > 0:
-        extended_shapes = calc_extended_model_shapes(
-            params_before_pruning,
-            pruning_rate,
-            config.extension_levels,
-            config.model_shape,
-            config.prune_weights,
-            config.prune_biases
-        )
+    extended_shapes, extended_pparams = calc_extended_model_shapes(
+        pparams, pr,
+        config.extension_levels,
+        config.model_shape,
+        config.prune_weights,
+        config.prune_biases
+    )
 
-        extended_trajectory = []
-        for shape in reversed(extended_shapes):
-            params = calc_params_from_shape(
-                shape, 
-                config.prune_weights, 
-                config.prune_biases
-            )
-            extended_trajectory.append(params)
-        
+    param_trajectory = list(reversed(extended_pparams)) + param_trajectory
+    pruning_trajectory = list(-np.diff(param_trajectory))
+
+    update_dict = {
+        'pruning_rate':pr,
+        'params_before_pruning':pparams,
+        'param_trajectory':param_trajectory,
+        'pruning_trajectory':pruning_trajectory,
+    }
+
+    if extended_shapes:
         # add extension before parma trajectory (order decreasing)
-        param_trajectory = np.concatenate([np.array(extended_trajectory), param_trajectory])
-        updated_model_shape = extended_shapes[-1]
-        update_dict['model_shape'] = updated_model_shape
+        update_dict['model_shape'] = extended_shapes[-1]
         update_dict['base_model_shape'] = config.model_shape
-
-    pruning_trajectory = -np.diff(param_trajectory)
-    update_dict['pruning_rate'] = pruning_rate
-    update_dict['params_before_pruning'] = params_before_pruning
-    update_dict['param_trajectory'] = list(param_trajectory)
-    update_dict['pruning_trajectory'] = list(pruning_trajectory)
 
     config.update(update_dict, allow_val_change=True)
 

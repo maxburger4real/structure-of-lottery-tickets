@@ -15,11 +15,15 @@ class GraphManager():
     '''A class that manages the state over the pruning iterations'''
     ALIVE, AUDIENCE, UNPRODUCTIVE, ZOMBIE, PRUNED = range(5)
 
-    def __init__(self, unpruned_model, shape, task_description):
+    def __init__(self, unpruned_model, shape, task_description, start_iteration):
         '''Initialize the contant values of the Network, that will remain true over pruning iterations.'''
         self.shape = shape
-        self.iteration = 0
-        self.untapped_potential = len(task_description) - 1
+        self.iteration = start_iteration
+
+        self.num_tasks = len(task_description) if task_description is not None else 1
+        self.untapped_potential = self.num_tasks - 1
+        self.split_iteration = None
+        self.degradation_iteration = None
 
         self.graveyard = {}  # the pruned parameters are here
 
@@ -45,6 +49,7 @@ class GraphManager():
         self.catalogue: Dict[str, nx.Graph] = {} # 'name' : nx.Graph
 
     def update(self, model):
+        self.iteration += 1
         self.G = build_graph_from_model(model, self.shape)
 
         # split the network into subnetworks
@@ -77,8 +82,6 @@ class GraphManager():
         self.__update_catalogue(productive_subnetworks)
         self.__update_lifecycle(alive_params, audience_params, unproductive_params, zombie_params)
                 
-        self.iteration += 1
-
     def __update_task_matrix(self, subnetworks):
         self.task_matrix = task_matrix(subnetworks, self.task_description)
 
@@ -92,10 +95,15 @@ class GraphManager():
             # number of values larger than 1
             num_tasks_per_network = np.sum(self.task_matrix, axis=1)
             splits_remaining = np.sum(num_tasks_per_network - 1)
-
             self.untapped_potential = splits_remaining
 
-        else:
+            if self.untapped_potential == 0 and self.split_iteration is None and self.num_tasks > 1: 
+                self.split_iteration = self.iteration
+
+        # changed
+        elif self.untapped_potential != potential - 1 :
+            if self.degradation_iteration is None:
+                self.degradation_iteration = self.iteration
             self.untapped_potential = potential - 1
 
     def __update_catalogue(self, subnetworks):
@@ -151,7 +159,7 @@ class GraphManager():
                 self.lifecycles[p]['current_state'] = self.UNPRODUCTIVE
             elif p not in self.in_features:
                 self.graveyard[p] = {
-                    'survived_iterations': self.iteration,
+                    'survived_iterations': self.iteration-1,
                     'lifecycle':self.lifecycles[p]['lifecycle']
                 }
                 del self.lifecycles[p]

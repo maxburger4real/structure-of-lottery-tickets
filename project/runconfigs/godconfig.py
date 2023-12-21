@@ -1,22 +1,18 @@
-from common.models import SimpleMLP
+from common.models import MLP
 from common.config import Config
 from common.constants import *
 
 m = 2
 
 run_config = Config(
-    description='''This is the winning formula. The netowrk splits before the performance degrades.''',
+    description='''God Formula.''',
     pipeline=IMP,
     activation=RELU,
-    loss_fn= BCE,
-    
-    dataset=OLD_MOONS,  # works reliably
-    #dataset=MULTI_MOONS,  # works reliably
-
-    num_concat_datasets=m,
+    loss_fn= BCE,    
+    dataset=Datasets.OLD_MOONS.name,  # works reliably
     
     model_shape=[m*2, 40, 40, m],
-    model_class = SimpleMLP.__name__,
+    model_class = MLP.__name__,
 
     # noise = 0.1
 
@@ -49,8 +45,8 @@ run_config = Config(
     reinit=True,
 
     # newly added 
-    init_strategy_weights = None,
-    init_strategy_biases = None,
+    init_strategy_weights = InitializationStrategy.DEFAULT.name,
+    init_strategy_biases = InitializationStrategy.DEFAULT.name,
     n_samples=1000,
     #noise=0.0,
     noise=0.0,

@@ -1,16 +1,14 @@
-"""72 Runs"""
 from common.constants import *
 
-extension_levels = list(range(0,5))
-extension_levels = list(range(5,10))
-seeds = [0, 1, 2]
-seeds = [123]
-
+seeds = [0, 1, 2, 3]
+targets = [20,30,50]
+datasets = [MOONS, CIRCLES]
 sweep_config = {
     'method': 'grid', 
     'name': 'different network sizes',
     'parameters':{
-        "extension_levels" : { "values": extension_levels },
+        "dataset" : { "values": datasets },
+        "pruning_target" : { "values": targets },
         "model_seed":  { "values": seeds },
     }
 }

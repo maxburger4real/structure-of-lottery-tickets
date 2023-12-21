@@ -1,12 +1,9 @@
 """Simply run the configuration with multiple seeds to see stability."""
 
-seeds = [
-    0,
-    1,
-    2,
-    3,
-    #4,5,6,7,
-]
+seeds = list(range(10,15))
+seeds = list(range(10))
+seeds = list(range(100,110))
+seeds = [42,17,444]
 
 sweep_config = {
     'method': 'grid', 

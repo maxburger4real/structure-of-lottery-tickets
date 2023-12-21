@@ -6,25 +6,18 @@ STATE_DICT = "model_state_dict"
 HPARAMS_FILE = 'hparams.json'
 
 # wandb
-PROJECT='concat_moons' #'init-thesis'
+PROJECT='concat_moons'
+# PROJECT='thesis' #'init-thesis'
 ENTITY='mxmn'
 MODE='online'
 # MODE='disabled'
 
-
-InitializationStrategy = Enum('InitializationStrategy', ['ZERO', 'NORMAL', 'DEFAULT', 'KAIMING_NORMAL'])
-Datasets = Enum('Datasets', ['MOONS', 'CIRCLES', 'MOONS_AND_CIRCLES'])
+InitializationStrategy = Enum(
+    'InitializationStrategy', 
+    ['ZERO', 'NORMAL', 'DEFAULT', 'KAIMING_NORMAL','XAVIER_UNIFORM', 'XAVIER_NORMAL','FRANKLE_XOR_TRUNC_NORMAL']
+)
+Datasets = Enum('Datasets', ['OLD_MOONS', 'MOONS', 'CIRCLES', 'MOONS_AND_CIRCLES'])
 TaskCoverage = Enum('TaskCoverage', ['COMPLETE', 'PARTIAL', 'ABSENT'])
-
-# Datasets
-OLD_MOONS = 'old moons'  # they still worked
-MOONS = 'classic two moons dataset form sklearn'
-CIRCLES = 'classic circles dataset from sklearn'
-MOONS_AND_CIRCLES = 'moons and circles concatenated classification'
-MULTI_MOONS = 'moons'
-MULTI_CIRCLES = 'circles'
-SYMBOLIC_INDEPENDENCE_REGRESSION = 'symbolic independece regression'
-
 
 # Optimizers
 ADAM = 'Adam'
@@ -34,6 +27,7 @@ ADAMW = 'AdamW'
 # Activations
 RELU = 'relu'
 SILU = 'silu'
+SIGM = 'sigmoid'
 
 # Loss Functions
 MSE = 'mse'
