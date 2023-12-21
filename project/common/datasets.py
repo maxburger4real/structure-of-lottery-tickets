@@ -8,14 +8,24 @@ from common.config import Config
 from common.constants import *
 from common import torch_utils
 
+circles_inputs = moons_inputs = 2
+circles_outputs = moons_outputs = 1
+
 # visible
 def build_dataloaders_from_config(config: Config):
-    # TODO: remove magic numbers. maybe integrate into config. but it must be reproducible
     
     n_samples = config.n_samples
     noise = config.noise
 
     if config.dataset == OLD_MOONS:
+        
+        config.update({
+            'task_description' : (
+                ('moons-1', (moons_inputs, moons_outputs)),
+                ('moons-2', (moons_inputs, moons_outputs)),
+            )
+        }, allow_val_change=True)
+
         torch_utils.set_seed(config.data_seed)
 
         m_moon_sets = [datasets.make_moons(n_samples=n_samples, noise=noise) for _ in range(2)]
@@ -39,9 +49,21 @@ def build_dataloaders_from_config(config: Config):
         return train_dataloader, test_dataloader
     
     if config.dataset == MOONS_AND_CIRCLES:
+        config.update({
+            'task_description' : (
+                ('moons' , (moons_inputs, moons_outputs)),
+                ('circles', (circles_inputs, circles_outputs))
+            )
+        }, allow_val_change=True)
         return __build_moons_and_circles(n_samples=n_samples, noise=noise, batch_size=config.batch_size)
 
     if config.dataset == MULTI_MOONS:
+        config.update({
+            'task_description' : (
+                ('moons-1', (moons_inputs, moons_outputs)),
+                ('moons-2', (moons_inputs, moons_outputs)),
+            )
+        }, allow_val_change=True)
         torch_utils.set_seed(config.data_seed)
         return __build_moons_and_moons(n_samples=n_samples, noise=noise, batch_size=config.batch_size)
     
@@ -62,12 +84,12 @@ def __build_moons_and_circles(n_samples, noise, batch_size=None):
     """Deterministically sample a train and a test dataset of the same size."""
     # sample the data
     train_dataset = __concat_datasets(
-        datasets.make_circles(n_samples, noise=noise, random_state=0, shuffle=True, factor=0.5),
         datasets.make_moons(n_samples, noise=noise, random_state=1, shuffle=True),
-    )    
+        datasets.make_circles(n_samples, noise=noise, random_state=0, shuffle=True, factor=0.5),
+    )
     test_dataset = __concat_datasets(
-        datasets.make_circles(n_samples, noise=noise, random_state=2, shuffle=True, factor=0.5),
         datasets.make_moons(n_samples, noise=noise, random_state=3, shuffle=True),
+        datasets.make_circles(n_samples, noise=noise, random_state=2, shuffle=True, factor=0.5),
     )
 
     train_loader = __build_dataloader(*train_dataset, batch_size=batch_size)

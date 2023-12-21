@@ -14,6 +14,7 @@ MODE='online'
 
 InitializationStrategy = Enum('InitializationStrategy', ['ZERO', 'NORMAL', 'DEFAULT', 'KAIMING_NORMAL'])
 Datasets = Enum('Datasets', ['MOONS', 'CIRCLES', 'MOONS_AND_CIRCLES'])
+TaskCoverage = Enum('TaskCoverage', ['COMPLETE', 'PARTIAL', 'ABSENT'])
 
 # Datasets
 OLD_MOONS = 'old moons'  # they still worked
