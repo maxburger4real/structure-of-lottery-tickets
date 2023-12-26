@@ -19,6 +19,8 @@ class Config:
     data_seed : int
 
     # DEFAULTED CONFIGS
+    scaler: str = None
+    factor: float = 0.35
     init_strategy_biases : InitializationStrategy = None
     init_strategy_weights : InitializationStrategy = None
     init_mean : float = None

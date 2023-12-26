@@ -2,7 +2,7 @@
 import torch
 import numpy as np
 from sklearn import datasets
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from torch.utils.data import DataLoader, TensorDataset
 from common.config import Config
 from common.constants import *
@@ -13,13 +13,124 @@ circles_outputs = moons_outputs = 1
 val_set_size = 200
 
 # visible
+def concat_datasets(list_of_datasets):
+    list_of_x, list_of_y = list(zip(*list_of_datasets))
+    
+    x = torch.Tensor(np.concatenate(list_of_x, axis=1))
+
+    list_of_y_unsqueezed = [y.reshape(-1,1) for y in list_of_y]
+    y = torch.Tensor(np.concatenate(list_of_y_unsqueezed, axis=1))
+
+    return x, y
+
+def scale(x_train, x_test, Scaler):
+    """Scale the dataset featurewise."""
+    if Scaler is None:
+        return x_train, x_test
+    
+    if Scaler == MinMaxZeroMean: 
+        scaler = MinMaxScaler(feature_range=(-1,1))
+    elif Scaler == MinMaxZeroOne:
+        scaler = MinMaxScaler(feature_range=(0,1))
+    elif Scaler == StandardUnitVariance:
+        scaler = StandardScaler()
+
+    scaler = scaler.fit(x_train)
+    x_train = torch.from_numpy(scaler.transform(x_train)).float()
+    x_test = torch.from_numpy(scaler.transform(x_test)).float()
+    return x_train, x_test
+
+def __make_old_moons(n_samples, noise, seed, Scaler):
+    
+    description = (
+        ('moons-1', (moons_inputs, moons_outputs)),
+        ('moons-2', (moons_inputs, moons_outputs)),
+    )
+
+    torch_utils.set_seed(seed)
+
+    train_datasets = [datasets.make_moons(n_samples, noise=noise) for _ in range(2)]
+    x_train, y_train = concat_datasets(train_datasets)
+
+    test_datasets = [datasets.make_moons(n_samples, noise=noise) for _ in range(2)]
+    x_test, y_test = concat_datasets(test_datasets)
+    
+    x_train, x_test = scale(x_train, x_test, Scaler)
+ 
+    return x_train, y_train, x_test, y_test, description
+
+def __make_flip_moons(n_samples, noise, seed, Scaler):
+
+    description = (
+        ('moons', (moons_inputs, moons_outputs)),
+        ('snoom', (moons_inputs, moons_outputs)),
+    )
+
+    torch_utils.set_seed(seed)
+
+    moons = datasets.make_moons(n_samples, noise=noise)
+    moons_x, moons_y = datasets.make_moons(n_samples, noise=noise)
+    snoom_x, snoom_y = np.flip(moons_x), np.flip(moons_y)
+    x_train, y_train = concat_datasets([moons,(snoom_x, snoom_y)])
+
+    test_moons = datasets.make_moons(n_samples, noise=noise)
+    test_moons_x, test_moons_y = datasets.make_moons(n_samples, noise=noise)
+    test_snoom_x, test_snoom_y = np.flip(test_moons_x), np.flip(test_moons_y)
+    x_test, y_test = concat_datasets([test_moons,(test_snoom_x, test_snoom_y)])    
+    
+    x_train, x_test = scale(x_train, x_test, Scaler)
+ 
+    return x_train, y_train, x_test, y_test, description
+
+def __make_circles_and_moons(n_samples, noise, seed, factor, Scaler):
+    description = (
+        ('circles', (circles_inputs, circles_outputs)),
+        ('moons', (moons_inputs, moons_outputs)),
+    )
+
+    torch_utils.set_seed(seed)
+
+    circles = datasets.make_circles(n_samples, noise=noise, factor=factor)
+    moons = datasets.make_moons(n_samples, noise=noise)
+    x_train, y_train = concat_datasets([circles, moons])
+
+    test_circles = datasets.make_circles(n_samples, noise=noise, factor=factor)
+    test_moons = datasets.make_moons(n_samples, noise=noise)
+    x_test, y_test = concat_datasets([test_circles, test_moons])
+
+    x_train, x_test = scale(x_train, x_test, Scaler)
+ 
+    return x_train, y_train, x_test, y_test, description
+
+
 def build_dataloaders_from_config(config: Config):
     
     n_samples = config.n_samples
     noise = config.noise
+    seed = config.data_seed
+    batch_size = config.batch_size if config.batch_size is not None else n_samples
+    factor = config.factor
+    
+    match config.dataset:
+        case Datasets.OLD_MOONS.name:
+            *data, description = __make_old_moons(n_samples, noise, seed, config.scaler)
+        case Datasets.FLIP_MOONS.name:
+            *data, description = __make_flip_moons(n_samples, noise, seed, config.scaler)
+        case Datasets.CIRCLES_AND_MOONS.name:
+            *data, description = __make_circles_and_moons(n_samples, noise, seed, factor, config.scaler)
+        case _:
+            raise ValueError(f'Unknown dataset {config.dataset}')
+    
+    x_train, y_train, x_test, y_test = data
+
+    train_dataloader = DataLoader(TensorDataset(x_train, y_train), batch_size=batch_size, shuffle=True, num_workers=0)
+    test_dataloader = DataLoader(TensorDataset(x_test, y_test), batch_size=batch_size)
+
+    config.update({'task_description' : description }, allow_val_change=True)
+
+    return train_dataloader, test_dataloader
 
     if config.dataset == Datasets.OLD_MOONS.name:
-        
         config.update({
             'task_description' : (
                 ('moons-1', (moons_inputs, moons_outputs)),
@@ -29,23 +140,15 @@ def build_dataloaders_from_config(config: Config):
 
         torch_utils.set_seed(config.data_seed)
 
-        m_moon_sets = [datasets.make_moons(n_samples=n_samples, noise=noise) for _ in range(2)]
-        X,Y = list(zip(*m_moon_sets))
-        Y = [y.reshape(-1,1) for y in Y]
-        x_train = torch.Tensor(np.concatenate(X, axis=1))
-        y_train = torch.Tensor(np.concatenate(Y, axis=1))
+        train_datasets = [datasets.make_moons(n_samples, noise=noise) for _ in range(2)]
+        x_train, y_train = concat_datasets(train_datasets)
 
-        m_moon_sets = [datasets.make_moons(n_samples=n_samples, noise=noise) for _ in range(2)]
-
-        X,Y = list(zip(*m_moon_sets))
-        x_test = torch.Tensor(np.concatenate(X, axis=1))
-
-        Y = [y.reshape(-1,1) for y in Y]
-        y_test = torch.Tensor(np.concatenate(Y, axis=1))
+        test_datasets = [datasets.make_moons(n_samples, noise=noise) for _ in range(2)]
+        x_test, y_test = concat_datasets(test_datasets)
 
         if config.batch_size is None: batch_size = n_samples
         train_dataloader = DataLoader(TensorDataset(x_train, y_train), batch_size=batch_size, shuffle=True, num_workers=0)
-        test_dataloader = DataLoader(TensorDataset(x_test, y_test), batch_size=batch_size, shuffle=True, num_workers=0)
+        test_dataloader = DataLoader(TensorDataset(x_test, y_test))
 
         return train_dataloader, test_dataloader
     
