@@ -19,6 +19,8 @@ class Config:
     data_seed : int
 
     # DEFAULTED CONFIGS
+    scaler: str = None
+    factor: float = 0.35
     init_strategy_biases : InitializationStrategy = None
     init_strategy_weights : InitializationStrategy = None
     init_mean : float = None
@@ -31,8 +33,10 @@ class Config:
     persist : bool = True  # wether to save the model at the checkpoints
 
     # OPTIONAL CONFIGS
-    log_every_n_epochs: int = None
-    log_graph_statistics: bool = True
+    log_every: int = None
+    log_graphs: bool = True
+    log_graphs_before_split: bool = False
+    stop_on_degradation: bool = True
 
     num_concat_datasets: int = None
     run_name : str = None

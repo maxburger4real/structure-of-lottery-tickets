@@ -1,13 +1,12 @@
 import wandb
 import numpy as np
-from common.nx_utils import neuron_analysis, _get_w_and_b
-from common.config import Config
 from common.nxutils import GraphManager
 from common.constants import *
 
 class Logger():
     '''This class handles logging with Wandb and is strict with overriding. It raises an Exception.'''
-    def __init__(self, task_description, log_graphs_before_split=False):
+    def __init__(self, gm: GraphManager, task_description, log_graphs_before_split=False):
+        self.gm = gm
         self.task_description = task_description
         self.log_graphs = log_graphs_before_split
         self.logdict = {}
@@ -18,37 +17,31 @@ class Logger():
         wandb.log(self.logdict)
         self.logdict = {}
 
-    def summary(self, gm: GraphManager):
-        wandb.run.summary['split-iteration'] = gm.split_iteration
-        wandb.run.summary['degradation-iteration'] = gm.degradation_iteration
-        # if gm.split_iteration is not None
-        self.__strict_insert('split-iteration', gm.split_iteration)
-        self.__strict_insert('degradation-iteration', gm.degradation_iteration)
+    def summary(self):
+        wandb.run.summary['split-iteration'] = self.gm.split_iteration
+        wandb.run.summary['degradation-iteration'] = self.gm.degradation_iteration
+        self.__strict_insert('split-iteration', self.gm.split_iteration)
+        self.__strict_insert('degradation-iteration', self.gm.degradation_iteration)
 
-    def splitting(self, gm: GraphManager):
-        if gm is None: return
-        self.__strict_insert('untapped-potential', gm.untapped_potential)
+    def splitting(self):
+        self.__strict_insert('untapped-potential', self.gm.untapped_potential)
     
-    def graphs(self, gm: GraphManager):
-        if gm is None: return
-        if not self.log_graphs: return
-        for name, g in gm.catalogue.items():
-            self.__strict_insert(name, gm.fig(g))
+    def graphs(self):
+        for name, g in self.gm.catalogue.items():
+            self.__strict_insert(name, self.gm.fig(g))
 
-    def metrics(self, values: dict, prefix='', only_if_true=True):
-        if not only_if_true: return
+    def metrics(self, values: dict, prefix=''):
         for key, x in values.items():
             self.__metric(x, prefix+key)
     
-    def feature_categorization(self, gm: GraphManager):
-        if gm is None: return
+    def feature_categorization(self):
 
-        total_nodes = sum([value for key, value in gm.node_statistics.items() if key != ParamState.pruned])
-        total_edges = sum([value for key, value in gm.edge_statistics.items() if key != ParamState.pruned])
+        total_nodes = sum([value for key, value in self.gm.node_statistics.items() if key != ParamState.pruned])
+        total_edges = sum([value for key, value in self.gm.edge_statistics.items() if key != ParamState.pruned])
         
         for state in ParamState:
-            num_nodes = gm.node_statistics[state]
-            num_edges = gm.edge_statistics[state]
+            num_nodes = self.gm.node_statistics[state]
+            num_edges = self.gm.edge_statistics[state]
             self.__strict_insert(state.name + '-features' + '-abs', num_nodes)
             self.__strict_insert(state.name + '-features' + '-rel', num_nodes / total_nodes)
 
@@ -98,55 +91,3 @@ class Logger():
         if key in self.logdict:
             raise ValueError('Cannot Override Key in strict logdict.')
         self.logdict[key] = value
-
-def descriptive_statistics(model, at_init=False, prefix='descriptive'):
-    weights, biases = _get_w_and_b(model)
-
-    for l, (w, b) in enumerate(zip(weights, biases, strict=True)):
-        params = dict(w=w.numpy(), b=b.numpy())
-
-        for name, p in params.items():
-            num_params = p.size
-            num_zeros = np.sum(p == 0)
-            num_nonzeros = np.sum(p != 0)
-            abs_nonzero_params = np.abs(p[p != 0])
-
-            if len(abs_nonzero_params) > 0:
-                median = np.median(abs_nonzero_params)
-                mean = np.mean(abs_nonzero_params)
-            else:
-                median, mean = 0,0
-            
-            assert num_params == num_nonzeros + num_zeros
-
-            rate_remaining = 1. if num_zeros == 0 else (num_nonzeros / num_params)
-
-            if at_init and rate_remaining != 1.0:
-                rate_remaining = 1.0
-
-            wandb.log({
-                f'{prefix} L{l}-rate-remaining({name})' : rate_remaining,
-                f'{prefix} L{l}-median(abs({name}))' : median,
-                f'{prefix} L{l}-mean(abs({name}))' : mean,
-            }, commit=False)
-
-def returns_true_every_nth_time(n, and_at_0=False):
-
-    if n is None or n <= 0:
-        return lambda : False
-
-    N = range(n)
-
-    def generator():
-        if and_at_0:
-            yield True
-        while True:
-            for _ in N:
-                yield False
-            yield True
-    g = generator()
-
-    def closure():
-        return next(g)
-
-    return closure

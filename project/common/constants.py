@@ -24,13 +24,18 @@ InitializationStrategy = Enum(
     'InitializationStrategy', 
     ['ZERO', 'NORMAL', 'DEFAULT', 'KAIMING_NORMAL','XAVIER_UNIFORM', 'XAVIER_NORMAL','FRANKLE_XOR_TRUNC_NORMAL']
 )
-Datasets = Enum('Datasets', ['OLD_MOONS', 'MOONS', 'CIRCLES', 'MOONS_AND_CIRCLES'])
+Datasets = Enum('Datasets', ['CIRCLES_AND_MOONS','FLIP_MOONS', 'OLD_MOONS', 'MOONS', 'CIRCLES', 'MOONS_AND_CIRCLES'])
 TaskCoverage = Enum('TaskCoverage', ['COMPLETE', 'PARTIAL', 'ABSENT'])
 
 # Optimizers
 ADAM = 'Adam'
 SGD = 'sgd'
 ADAMW = 'AdamW'
+
+# Scalers
+MinMaxZeroMean = 'min-max-zero-mean'
+MinMaxZeroOne = 'min-max-zero-one'
+StandardUnitVariance = 'std-unit-variance'
 
 # Activations
 RELU = 'relu'

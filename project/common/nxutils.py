@@ -18,10 +18,9 @@ import common.constants as vocab
 class GraphManager():
     '''A class that manages the state over the pruning iterations'''
 
-    def __init__(self, unpruned_model, shape, task_description, start_iteration):
+    def __init__(self, unpruned_model, shape, task_description):
         '''Initialize the contant values of the Network, that will remain true over pruning iterations.'''
         self.shape = shape
-        self.iteration = start_iteration
 
         self.num_tasks = len(task_description) if task_description is not None else 1
         self.untapped_potential = self.num_tasks - 1
@@ -41,8 +40,8 @@ class GraphManager():
 
         self.node_statistics, self.edge_statistics = statistics(self.G)
 
-    def update(self, model):
-        self.iteration += 1
+    def update(self, model, iteration):
+        self.iteration = iteration
 
         # tag the parameters based on new pruning mask
         tag_params(self.G, model, self.in_features, self.out_features)
