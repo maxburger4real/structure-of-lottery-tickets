@@ -1,18 +1,18 @@
 from common.constants import *
 
 num_hidden = 2
-shapes = [[4] + num_hidden * [h] + [2] for h in  [40, 80, 160, 320]]
-seeds = [7]
-noises = [0.1]
-scaler = [MinMaxZeroMean, MinMaxZeroOne, StandardUnitVariance]
+shapes = [[4] + num_hidden * [h] + [2] for h in  [320]]
+seeds = [7,8,9]
+scaler = [StandardUnitVariance, None]
 
 sweep_config = {
     'method': 'grid', 
-    'name': 'Network Splitting of different sizes with noise 0 and .1',
+    'name': 'Checkout if, how and when it splits vs performance with different bias init and pruning.',
     'parameters':{
         "model_shape" : { "values": shapes },
         "model_seed":  { "values": seeds },
-        "noise": {"values": noises },
-        "scaler": {"values": scaler}
+        "scaler": {"values": scaler},
+        "prune_biases": {"values": [True, False]},
+        "init_strategy_biases": {"values": [InitializationStrategy.ZERO, InitializationStrategy.DEFAULT]},
     }
 }
