@@ -1,7 +1,10 @@
+from common.constants import *
+
 num_hidden = 2
-shapes = [[4] + num_hidden * h + [2] for h in  [40, 80, 160, 320, 640]]
+shapes = [[4] + num_hidden * [h] + [2] for h in  [40, 80, 160, 320]]
 seeds = [7]
-noises = [0.0, 0.1, 0.2]
+noises = [0.1]
+scaler = [MinMaxZeroMean, MinMaxZeroOne, StandardUnitVariance]
 
 sweep_config = {
     'method': 'grid', 
@@ -9,6 +12,7 @@ sweep_config = {
     'parameters':{
         "model_shape" : { "values": shapes },
         "model_seed":  { "values": seeds },
-        "noise": {"values": noises }
+        "noise": {"values": noises },
+        "scaler": {"values": scaler}
     }
 }

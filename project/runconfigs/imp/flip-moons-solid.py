@@ -7,9 +7,9 @@ run_config = Config(
     pipeline=IMP,
     activation=RELU,
     loss_fn= BCE,    
-    dataset=Datasets.OLD_MOONS.name,  # works reliably
+    dataset=Datasets.FLIP_MOONS.name,  # works reliably
     
-    model_shape=[4, 40, 40, 2],
+    model_shape=[4, 320, 320, 2],
     model_class = MLP.__name__,
     scaler=None,
 
@@ -19,9 +19,8 @@ run_config = Config(
     epochs= 3000,
     
     # seeds
-    #model_seed=7, # good seeds : 2
-    model_seed=7, # good seeds : 2
-    data_seed=0,  # split old but not new
+    model_seed=7,
+    data_seed=0,
 
     persist=False,
 

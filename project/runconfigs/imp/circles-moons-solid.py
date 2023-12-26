@@ -3,15 +3,15 @@ from common.config import Config
 from common.constants import *
 
 run_config = Config(
-    description='''God Formula.''',
+    description='''Good performance perfect split.''',
     pipeline=IMP,
     activation=RELU,
     loss_fn= BCE,    
-    dataset=Datasets.OLD_MOONS.name,  # works reliably
+    dataset=Datasets.CIRCLES_AND_MOONS.name,  # works reliably
     
-    model_shape=[4, 40, 40, 2],
+    model_shape=[4, 320, 320, 2],
     model_class = MLP.__name__,
-    scaler=None,
+    scaler=StandardUnitVariance,
 
     # training
     lr=0.001,
@@ -19,9 +19,8 @@ run_config = Config(
     epochs= 3000,
     
     # seeds
-    #model_seed=7, # good seeds : 2
-    model_seed=7, # good seeds : 2
-    data_seed=0,  # split old but not new
+    model_seed=7,
+    data_seed=0,
 
     persist=False,
 
@@ -30,7 +29,7 @@ run_config = Config(
     early_stop_delta=0.0,
 
     # yielded good results
-    loss_cutoff=0.01,  
+    loss_cutoff=0.01,
 
     # pruning
     pruning_method=MAGNITUDE,
