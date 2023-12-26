@@ -13,7 +13,7 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
     prune = build_pruning_func(model, config)
     reinit = build_reinit_func(model)
     gm = GraphManager(model, config.model_shape, config.task_description) if config.log_graphs else None
-    log = Logger(gm, config.task_description, config.log_graphs_before_split)
+    log = Logger(gm, config.task_description)
     save_model_or_skip(model, config, f'{-config.extension_levels}_init')
     
     # log initial performance and descriptive statistics
@@ -59,7 +59,9 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
             gm.update(model, level) 
             log.feature_categorization()
             log.splitting()
-            if gm.iteration == gm.split_iteration: log.graphs()
+            if gm.iteration == gm.split_iteration: 
+                log.graphs()
+                log.metrics({'split-acc':val_acc, 'split-loss': val_loss, 'split-pparams':pparams})
             log.commit()
 
             if gm.untapped_potential < 0 and config.stop_on_degradation: 
@@ -79,7 +81,7 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
     optim = build_optimizer(model, config)
 
     for epoch in tqdm(range(config.epochs), f'Final Finetuning', config.epochs):
-
+        stopper = build_early_stopper(config)
         train_loss = update(model, train_loader, optim, loss_fn, config.device, config.l1_lambda)
         val_loss, val_acc = evaluate(model, test_loader, loss_fn, config.device)
 
@@ -89,6 +91,8 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
                 values={TRAIN_LOSS : train_loss.mean(), VAL_LOSS : val_loss, ACCURACY : val_acc.mean()}
             )
             log.commit()
+            
+        if stopper(val_loss.mean().item()): break
 
     log.metrics({TRAIN_LOSS : train_loss, VAL_LOSS : val_loss, ACCURACY : val_acc})
 
@@ -96,7 +100,11 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
         gm.update(model, config.pruning_levels)
         log.feature_categorization()
         log.splitting()
-        if gm.iteration == gm.split_iteration: log.graphs()
+
+        if gm.iteration == gm.split_iteration:
+            log.graphs()
+            log.metrics({'split-acc':val_acc, 'split-loss': val_loss, 'split-pparams':pparams})
+
         log.summary()
         log.commit()
 

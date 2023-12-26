@@ -5,10 +5,9 @@ from common.constants import *
 
 class Logger():
     '''This class handles logging with Wandb and is strict with overriding. It raises an Exception.'''
-    def __init__(self, gm: GraphManager, task_description, log_graphs_before_split=False):
+    def __init__(self, gm: GraphManager, task_description):
         self.gm = gm
         self.task_description = task_description
-        self.log_graphs = log_graphs_before_split
         self.logdict = {}
 
     def commit(self):
