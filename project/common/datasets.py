@@ -83,7 +83,7 @@ def __make_flip_moons(n_samples, noise, seed, Scaler):
  
     return x_train, y_train, x_test, y_test, description
 
-def __make_circles_and_moons(n_samples, noise, seed, factor, Scaler):
+def __make_circles_and_moons_old(n_samples, noise, seed, factor, Scaler):
     description = (
         ('circles', (circles_inputs, circles_outputs)),
         ('moons', (moons_inputs, moons_outputs)),
@@ -95,8 +95,6 @@ def __make_circles_and_moons(n_samples, noise, seed, factor, Scaler):
     moons = datasets.make_moons(int(n_samples), noise=noise)
     x_train, y_train = concat_datasets([circles, moons])
 
-    #x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.5)
-
     test_circles = datasets.make_circles(n_samples, noise=noise, factor=factor)
     test_moons = datasets.make_moons(n_samples, noise=noise)
     x_test, y_test = concat_datasets([test_circles, test_moons])
@@ -105,8 +103,7 @@ def __make_circles_and_moons(n_samples, noise, seed, factor, Scaler):
  
     return x_train, y_train, x_test, y_test, description
 
-
-def __make_circles_and_moons_2(n_samples, noise, seed, factor, Scaler):
+def __make_circles_and_moons(n_samples, noise, seed, factor, Scaler):
     description = (
         ('circles', (circles_inputs, circles_outputs)),
         ('moons', (moons_inputs, moons_outputs)),
@@ -117,15 +114,10 @@ def __make_circles_and_moons_2(n_samples, noise, seed, factor, Scaler):
     circles = datasets.make_circles(int(n_samples*2), noise=noise, factor=factor)
     moons = datasets.make_moons(int(n_samples*2), noise=noise)
     x, y = concat_datasets([circles, moons])
-
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.5)
-
-    #test_circles = datasets.make_circles(n_samples, noise=noise, factor=factor)
-    #test_moons = datasets.make_moons(n_samples, noise=noise)
-    #x_test, y_test = concat_datasets([test_circles, test_moons])
-
+    
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.5, random_state=42)
     x_train, x_test = scale(x_train, x_test, Scaler)
- 
+
     return x_train, y_train, x_test, y_test, description
 
 
