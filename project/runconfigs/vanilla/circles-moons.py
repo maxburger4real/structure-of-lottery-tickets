@@ -3,7 +3,7 @@ from common.config import Config
 from common.constants import *
 
 run_config = Config(
-    description='''Good performance perfect split.''',
+    description='''Early stopping works well.''',
     pipeline=VANILLA,
     activation=RELU,
     loss_fn=BCE,    
@@ -17,10 +17,10 @@ run_config = Config(
     lr=0.001,
     optimizer=ADAM,
     epochs= 3000,
-    batch_size=128,
+    batch_size=64,
     
     # seeds
-    model_seed=7,
+    model_seed=8,
     data_seed=0,
 
     persist=False,
@@ -28,9 +28,6 @@ run_config = Config(
     # early stop
     early_stop_patience=30,
     early_stop_delta=0.0,
-
-    # yielded good results
-    # loss_cutoff=0.01,
 
     # pruning
     pruning_method=MAGNITUDE,
