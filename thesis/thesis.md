@@ -295,3 +295,17 @@ What is still missing is plotting the lifetimes.
 
 - [ ] connect accuracy to task metric. Why is one task so much worse than the other? And why is it always the same one. 
 - [ ] plot the lifetimes.
+
+
+## Train test split
+switch to the given train test split implementation of sklearn.
+
+## Early Stopping
+find a way for using early stopping. 
+For now, loss cutoff works unreasonably well. 
+But we need a more general early stopping mechanism.
+One that has more reasoning behind it.
+Somehow the model.
+
+
+Goal: 

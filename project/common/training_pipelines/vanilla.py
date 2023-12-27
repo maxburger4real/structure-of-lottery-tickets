@@ -8,7 +8,7 @@ from common.constants import *
 
 def run(model, train_loader, test_loader, loss_fn, config: Config):
     
-    log = Logger(config.task_description)
+    log = Logger(None, config.task_description)
     optim = build_optimizer(model, config)
     stop = build_early_stopper(config)
 
@@ -31,9 +31,9 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
         if stop(val_loss.mean().item()): 
             break
 
-        if val_acc.mean().item() == 1: 
-            print('Perfection reached.')
-            break
+        #if val_acc.mean().item() == 1: 
+            #print('Perfection reached.')
+            #break
 
     # store model
     save_model_or_skip(model, config, config.epochs)
