@@ -81,7 +81,6 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
     optim = build_optimizer(model, config)
 
     for epoch in tqdm(range(config.epochs), f'Final Finetuning', config.epochs):
-        stopper = build_early_stopper(config)
         train_loss = update(model, train_loader, optim, loss_fn, config.device, config.l1_lambda)
         val_loss, val_acc = evaluate(model, test_loader, loss_fn, config.device)
 
