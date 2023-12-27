@@ -3,6 +3,7 @@ import torch
 import numpy as np
 from sklearn import datasets
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
 from common.config import Config
 from common.constants import *
@@ -90,13 +91,38 @@ def __make_circles_and_moons(n_samples, noise, seed, factor, Scaler):
 
     torch_utils.set_seed(seed)
 
-    circles = datasets.make_circles(n_samples, noise=noise, factor=factor)
-    moons = datasets.make_moons(n_samples, noise=noise)
+    circles = datasets.make_circles(int(n_samples), noise=noise, factor=factor)
+    moons = datasets.make_moons(int(n_samples), noise=noise)
     x_train, y_train = concat_datasets([circles, moons])
+
+    #x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.5)
 
     test_circles = datasets.make_circles(n_samples, noise=noise, factor=factor)
     test_moons = datasets.make_moons(n_samples, noise=noise)
     x_test, y_test = concat_datasets([test_circles, test_moons])
+
+    x_train, x_test = scale(x_train, x_test, Scaler)
+ 
+    return x_train, y_train, x_test, y_test, description
+
+
+def __make_circles_and_moons_2(n_samples, noise, seed, factor, Scaler):
+    description = (
+        ('circles', (circles_inputs, circles_outputs)),
+        ('moons', (moons_inputs, moons_outputs)),
+    )
+
+    torch_utils.set_seed(seed)
+
+    circles = datasets.make_circles(int(n_samples*2), noise=noise, factor=factor)
+    moons = datasets.make_moons(int(n_samples*2), noise=noise)
+    x, y = concat_datasets([circles, moons])
+
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.5)
+
+    #test_circles = datasets.make_circles(n_samples, noise=noise, factor=factor)
+    #test_moons = datasets.make_moons(n_samples, noise=noise)
+    #x_test, y_test = concat_datasets([test_circles, test_moons])
 
     x_train, x_test = scale(x_train, x_test, Scaler)
  
@@ -114,10 +140,13 @@ def build_dataloaders_from_config(config: Config):
     match config.dataset:
         case Datasets.OLD_MOONS.name:
             *data, description = __make_old_moons(n_samples, noise, seed, config.scaler)
+
         case Datasets.FLIP_MOONS.name:
             *data, description = __make_flip_moons(n_samples, noise, seed, config.scaler)
+
         case Datasets.CIRCLES_AND_MOONS.name:
             *data, description = __make_circles_and_moons(n_samples, noise, seed, factor, config.scaler)
+
         case _:
             raise ValueError(f'Unknown dataset {config.dataset}')
     
