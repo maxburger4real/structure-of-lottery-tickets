@@ -2,6 +2,9 @@ from common.models import MLP
 from common.config import Config
 from common.constants import *
 
+# NOTES: 
+# This exact config made it split with the train-test-split. this finally kills all doubt on the splitting.
+
 run_config = Config(
     description='''Good performance perfect split.''',
     pipeline=IMP,
@@ -17,9 +20,10 @@ run_config = Config(
     lr=0.001,
     optimizer=ADAM,
     epochs= 3000,
+    batch_size=64,
     
     # seeds
-    model_seed=7,
+    model_seed=8,
     data_seed=0,
 
     persist=False,
