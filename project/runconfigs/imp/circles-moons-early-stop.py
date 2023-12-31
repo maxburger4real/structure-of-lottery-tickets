@@ -2,9 +2,12 @@ from common.models import MLP
 from common.config import Config
 from common.constants import *
 
+# NOTES: 
+# This exact config made it split with the train-test-split. this finally kills all doubt on the splitting.
+
 run_config = Config(
-    description='''Early stopping works well.''',
-    pipeline=VANILLA,
+    description='''Testing the new early stopping.''',
+    pipeline=IMP,
     activation=RELU,
     loss_fn=BCE,    
     dataset=Datasets.CIRCLES_AND_MOONS.name,

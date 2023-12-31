@@ -138,19 +138,13 @@ class EarlyStopper:
         to not count as a loss increase
     """
 
-    def __init__(self, patience=None, min_delta=0, loss_cutoff=None):
+    def __init__(self, patience=None, min_delta=0):
         self.counter = 0
         self.patience = patience
         self.min_delta = min_delta
-        self.loss_cutoff = loss_cutoff
         self.min_loss = float('inf')
 
     def __call__(self, loss):
-
-        if self.loss_cutoff is not None: 
-            if loss < self.loss_cutoff:
-                return True
-
         loss_decreased = loss < self.min_loss
         loss_increased = loss > (self.min_loss + self.min_delta)
 
@@ -163,9 +157,6 @@ class EarlyStopper:
         elif loss_increased:
             self.counter += 1
             loss_increased_too_often = (self.counter >= self.patience)
-            
-            if loss_increased_too_often:
-                return True
-        
+            if loss_increased_too_often: return True
         
         return False

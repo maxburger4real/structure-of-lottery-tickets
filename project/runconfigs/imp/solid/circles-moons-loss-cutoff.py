@@ -3,8 +3,8 @@ from common.config import Config
 from common.constants import *
 
 run_config = Config(
-    description='''Early stopping works well.''',
-    pipeline=VANILLA,
+    description='''Good performance with loss_cutoff, which is hacky.''',
+    pipeline=IMP,
     activation=RELU,
     loss_fn=BCE,    
     dataset=Datasets.CIRCLES_AND_MOONS.name,
@@ -28,6 +28,9 @@ run_config = Config(
     # early stop
     early_stop_patience=30,
     early_stop_delta=0.0,
+
+    # yielded good results
+    loss_cutoff=0.01,
 
     # pruning
     pruning_method=MAGNITUDE,

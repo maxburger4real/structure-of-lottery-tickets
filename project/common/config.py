@@ -97,10 +97,7 @@ def import_config(filename):
     # Execute the module in its own namespace
     spec.loader.exec_module(module)
 
-    config = getattr(module, 'run_config', None)
-    if config is not None: return config
-
-    config = getattr(module, 'sweep_config', None)
-    if config is not None: return config
-
-    raise ValueError('No valid config found.')
+    run_config = getattr(module, 'run_config', None)
+    sweep_config = getattr(module, 'sweep_config', None)
+    
+    return run_config, sweep_config

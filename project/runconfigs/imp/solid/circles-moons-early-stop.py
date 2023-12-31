@@ -2,11 +2,8 @@ from common.models import MLP
 from common.config import Config
 from common.constants import *
 
-# NOTES: 
-# This exact config made it split with the train-test-split. this finally kills all doubt on the splitting.
-
 run_config = Config(
-    description='''Good performance perfect split.''',
+    description='''Good splitting. Testing the new early stopping.''',
     pipeline=IMP,
     activation=RELU,
     loss_fn=BCE,    
@@ -31,9 +28,6 @@ run_config = Config(
     # early stop
     early_stop_patience=30,
     early_stop_delta=0.0,
-
-    # yielded good results
-    loss_cutoff=0.01,
 
     # pruning
     pruning_method=MAGNITUDE,
