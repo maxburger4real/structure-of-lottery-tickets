@@ -1,47 +1,49 @@
 '''
-sweep_id : ix4onq8c
+sweep_id : wpcowdl5
 '''
 
-
-from common.constants import *
 from common.models import MLP
 from common.config import Config
+from common.constants import *
 
 description = '''
-With this experiment, the plan is to see how many pruning levels are needed for a split.
-The same model will be pruned to the same target, but with a different amount of pruning levels. 
-Obviously, the pruning_rate will be different for each run. More levles, lower pruning_rate and vice
-versa.
+This experiment should show behaviour of splitting when starting with a small network,
+namely [4, 8, 8, 2] and extending it up to 20 times with a pruning rate of 0.32
+
+This pruning rate is derived from a well working experiment with a network of size 
+[4, 320, 320, 2], which is pruned 20 times to 50 parameters. It yielded good splitting behaviour and had 
+this pruning rate.
 '''
 
+extension_levels = list(range(20))
+seeds = [0]
 
-levels = list(range(1, 21))
-seeds = SEEDS_123
+# TODO: seeds 1,2
+
 sweep_config = {
     'method': 'grid', 
+    'description': description,
     'name': str(__name__),
-    'description' : description,
     'parameters':{
+        "extension_levels" : { "values": extension_levels },
         "model_seed":  { "values": seeds },
-        "pruning_levels":  { "values": levels },
     }
 }
 
 
 run_config = Config(
-    # Sweeped
-    pruning_levels=20,
+
+    # sweeped
     model_seed=8,
+    extension_levels=0,
+
+    model_shape=[4, 8, 8, 2],
 
     pipeline=IMP,
     activation=RELU,
     loss_fn=BCE,    
-
     dataset=Datasets.CIRCLES_AND_MOONS.name,
-    n_samples=1000,
-    noise=0.1,
 
-    model_shape=[4, 410, 410, 2],
     model_class=MLP.__name__,
     scaler=StandardUnitVariance,
 
@@ -51,8 +53,12 @@ run_config = Config(
     epochs= 3000,
     batch_size=64,
     
+    # seeds
     data_seed=0,
+
     persist=False,
+
+    # early stop
     early_stop_patience=30,
     early_stop_delta=0.0,
 
@@ -61,9 +67,13 @@ run_config = Config(
     pruning_scope=GLOBAL,
     prune_biases=False,
     prune_weights=True,
-
-    pruning_target=112,  # 4*8 + 8*8 + 8*2  --> [4,8,8,2]
+    pruning_rate=0.32,
+    pruning_levels=0,
     reinit=True,
+
+    # newly added 
     init_strategy_weights = InitializationStrategy.KAIMING_NORMAL.name,
     init_strategy_biases = InitializationStrategy.ZERO.name,
+    n_samples=1000,
+    noise=0.1
 )
