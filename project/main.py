@@ -75,6 +75,9 @@ def main():
     parser = argparse.ArgumentParser()
     argcomplete.autocomplete(parser)  # Enable autocompletion with argcomplete
 
+    # experiments  (run + sweep config in a folder)
+    parser.add_argument('-e', '--experiment', help='run experiment. run config and sweep config in a single file')
+
     # runs
     parser.add_argument('-r', '--run_config', help='run config file')
     parser.add_argument('-p', '--plot', action='store_true', help="plot nn that are created. No sweeps yet.")
@@ -93,23 +96,19 @@ def main():
     # THE ARGHSSSSSS
     args = parser.parse_args()
 
-    # read count if it exists or ignore
-    count = None
-    if args.count is not None:
-        if args.count.isdigit():
-            count = int(args.count)
-        else: 
-            print(f'Ignoring args.count {args.count}')
+    if args.experiment is None:
+        run_config, _ = import_config(args.run_config)
+        _ ,sweep_config = import_config(args.sweep_config)
+    else:
+        run_config, sweep_config = import_config(args.experiment)
 
-    run_config = import_config(args.run_config)
-    sweep_config = import_config(args.sweep_config)
+    # single run
     mode = 'disabled' if args.disable else None
-    
+
     # skip
     if run_config is None:
-        print('No run config provided')
+        print('No run config provided. Will plot only if provided')
     
-    # single run
     elif sweep_config is None:
         id = run_experiment(run_config, mode)
         if args.plot and run_config.persist: 
@@ -117,7 +116,14 @@ def main():
 
     # sweep
     else: 
-       
+        # read count if it exists or ignore
+        count = None
+        if args.count is not None:
+            if args.count.isdigit():
+                count = int(args.count)
+            else: 
+                print(f'Ignoring args.count {args.count}')
+
         sweep_id = wandb.sweep(sweep_config, ENTITY, PROJECT)  # initialize the sweep
         function = lambda : run_experiment(run_config, mode)
         wandb.agent(sweep_id, function, ENTITY, PROJECT, count) # start execution of the sweeps

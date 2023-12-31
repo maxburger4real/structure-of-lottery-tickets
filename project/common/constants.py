@@ -1,5 +1,8 @@
 from enum import Enum
 
+SEEDS_123 = [1,2,3]
+SEEDS_1 = [1]
+
 bias = 'bias'
 weight='weight'
 layer='layer'
