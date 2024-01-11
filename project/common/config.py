@@ -83,7 +83,7 @@ class Config:
 
 def import_config(filename):
     """Import a file, used for config."""
-    if filename is None: return None
+    if filename is None: return (None, None)
 
     # Remove the '.py' extension from the filename
     module_name = filename.replace('.py', '')

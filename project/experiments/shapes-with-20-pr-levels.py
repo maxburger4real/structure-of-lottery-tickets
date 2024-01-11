@@ -43,7 +43,7 @@ run_config = Config(
     model_shape=[4, 8, 8, 2],
     model_seed=0,
 
-    pipeline=IMP,
+    pipeline=Pipeline.imp.name,
     activation=RELU,
     loss_fn=BCE,    
     dataset=Datasets.CIRCLES_AND_MOONS.name,
