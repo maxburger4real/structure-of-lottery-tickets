@@ -8,14 +8,14 @@ class Config:
     model_class : str  # use CLASS.__name__
     dataset : str  # use CONSTANTS
     pipeline : str   # use CONSTANTS
-    activation : str # use CONSTANTS
     optimizer : str  # use CONSTANTS
 
     lr : float
     epochs : int
     model_shape : list[int]
-    model_seed : int
 
+    model_seed : int = 0
+    activation : str = RELU# use CONSTANTS
     # DEFAULTED CONFIGS
     scaler: str = None
     factor: float = 0.35
@@ -31,7 +31,7 @@ class Config:
 
 
     device: str = 'cpu'
-    persist : bool = True  # wether to save the model at the checkpoints
+    persist : bool = False  # wether to save the model at the checkpoints
 
     # OPTIONAL CONFIGS
     log_every: int = None
