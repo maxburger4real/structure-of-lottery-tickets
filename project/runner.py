@@ -1,10 +1,8 @@
 '''Runner for wandb experiments.'''
 import wandb
 
-from common.config import Config
 from common.models import build_model_from_config
 from common.training_pipelines import vanilla, imp, bimt
-from common.persistance import save_hparams
 from common.pruning import update_pruning_config
 from common.datasets import build_dataloaders_from_config
 from common.constants import *
@@ -34,31 +32,32 @@ def __start_run(config, mode=None):
 
     with wandb.init(config=config, mode=mode, **wandb_kwargs) as run:
 
+        # get changes made by sweep into config
+        config.__dict__.update(**wandb.config)
+        
         # optional config updates needed for model extension
-        if Pipeline[config.pipeline] == Pipeline.imp: 
-            update_pruning_config(wandb.config)
+        config = update_pruning_config(config) if Pipeline[config.pipeline] == Pipeline.imp else config
 
         # make model, loss, optim and dataloaders
-        model = build_model_from_config(wandb.config)
-        loss_fn = model.loss_fn
-        #loss_fn = build_loss_from_config(wandb.config)
-        train_loader, test_loader = build_dataloaders_from_config(wandb.config)
+        model = build_model_from_config(config)
+        train_loader, test_loader = build_dataloaders_from_config(config)
 
         # save the config and add some wandb info to connect wandb with local files
-        config_dict = Config(**wandb.config)
-        config_dict.run_id = run.id
-        config_dict.run_name = run.name
-        config_dict.wandb_url = run.url
-        config_dict.local_dir_name = run.id
-        save_hparams(config_dict)
+        config.run_id = run.id
+        config.run_name = run.name
+        config.wandb_url = run.url
+        config.local_dir_name = run.id
+
+        # push the updated config to wandb.
+        wandb.config.update(config.__dict__, allow_val_change=True)
 
         # run the pipeline defined in the config
         match Pipeline[config.pipeline]:
             case Pipeline.vanilla:
-                return vanilla.run(model, train_loader, test_loader, config_dict)
+                return vanilla.run(model, train_loader, test_loader, config)
 
             case Pipeline.imp:
-                return imp.run(model, train_loader, test_loader, config_dict)
+                return imp.run(model, train_loader, test_loader, config)
         
             case Pipeline.bimt:
-                return bimt.run(model, train_loader, test_loader, config_dict)
+                return bimt.run(model, train_loader, test_loader, config)

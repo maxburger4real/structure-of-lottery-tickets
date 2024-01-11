@@ -21,7 +21,7 @@ run_config = Config(
     n_samples=1000,
     noise=0.1,
 
-    model_shape=[4, 50, 50, 2],
+    model_shape='50_50',
     model_class=MultiTaskBinaryMLP,
     scaler=StandardUnitVariance,
 

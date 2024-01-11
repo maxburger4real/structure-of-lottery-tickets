@@ -2,6 +2,7 @@ import importlib.util
 from dataclasses import dataclass, asdict, fields
 from common.constants import *
 
+
 @dataclass
 class Config:
     # MODEL and INITIALIZATION
@@ -28,7 +29,6 @@ class Config:
     n_samples : int = 800
     data_seed : int = None
     noise : float = None
-
 
     device: str = 'cpu'
     persist : bool = False  # wether to save the model at the checkpoints
@@ -83,6 +83,17 @@ class Config:
         return {key: value for key, value in data.items() if value is not None}
 
     def __post_init__(self):
+
+        if isinstance(self.model_shape, str):
+            dims = self.model_shape.split('_')
+            hidden_dims = [int(d) for d in dims]
+            inputs, outputs = tuple(zip(*self.dataset.value.values()))
+            input_dim, output_dim = sum(inputs), sum(outputs)
+            self.model_shape = [input_dim] + hidden_dims + [output_dim]
+        
+        # TODO: change the whole task_description implementation to Ordered Dict.
+        self.task_description = [(k, v) for k, v in self.dataset.value.items()]
+
         for field in fields(self):
             value = getattr(self, field.name)
             

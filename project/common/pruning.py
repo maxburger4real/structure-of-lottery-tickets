@@ -125,21 +125,19 @@ def update_pruning_config(config: Config):
     param_trajectory = list(reversed(extended_pparams)) + param_trajectory
     pruning_trajectory = list(-np.diff(param_trajectory))
 
-    update_dict = {
-        'pruning_rate':pr,
-        'params_before_pruning':pparams,
-        'param_trajectory':param_trajectory,
-        'pruning_trajectory':pruning_trajectory,
-    }
+    config.pruning_rate = pr
+    config.pparams = pparams
+    config.param_trajectory = param_trajectory
+    config.pruning_trajectory = pruning_trajectory
 
     if extended_shapes:
         # add extension before parma trajectory (order decreasing)
-        update_dict['model_shape'] = extended_shapes[-1]
-        update_dict['base_model_shape'] = config.model_shape
+        config.model_shape = extended_shapes[-1]
+        config.base_model_shape = config.model_shape
 
-    config.update(update_dict, allow_val_change=True)
+    return config
 
-
+# not visible
 def __count_parameters(
     shape, prune_weights=True, prune_biases=True
 ):

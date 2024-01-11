@@ -1,4 +1,6 @@
 """This file contains everything to create datasets."""
+
+from collections import OrderedDict
 import torch
 import torchvision
 import numpy as np
@@ -17,14 +19,18 @@ mnist_inputs, mnist_outputs = 784, 10  # 28x28
 
 # visible
 class Datasets(Enum):
-    CIRCLES_MOONS = 'circles and moons'
-    MNIST = 'mnist'
+    '''Datasets.Enum
+    .name : used to match with the configuration. 
+    .value : used as a task description for multi task settings.
+    '''
+    CIRCLES_MOONS = OrderedDict(circles=(2, 1), moons=(2,1))
+    MNIST = OrderedDict(mnist=(784, 10))
 
 def build_dataloaders_from_config(config: Config):
     
     batch_size = config.batch_size if config.batch_size is not None else config.n_samples
 
-    (x_train, y_train, x_test, y_test), description = make_dataset(
+    x_train, y_train, x_test, y_test = make_dataset(
         name=config.dataset,
         n_samples=config.n_samples,
         noise=config.noise,
@@ -35,10 +41,9 @@ def build_dataloaders_from_config(config: Config):
 
     train_set = TensorDataset(x_train, y_train)
     test_set = TensorDataset(x_test, y_test)
+    
     train_dataloader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=0)
     test_dataloader = DataLoader(test_set, batch_size=batch_size)
-
-    config.update({'task_description' : description }, allow_val_change=True)
 
     return train_dataloader, test_dataloader
 
@@ -46,21 +51,15 @@ def make_dataset(name, n_samples, noise, seed, factor, scaler):
     '''create the correct dataset, based on name.'''
     match Datasets[name]:
         case Datasets.CIRCLES_MOONS:
-            *data, description = __make_circles_and_moons(n_samples, noise, seed, factor, scaler)
-
+            return __make_circles_and_moons(n_samples, noise, seed, factor, scaler)
         case Datasets.MNIST:
-            *data, description = __make_mnist(scaler)
+            return __make_mnist(scaler)
+        
         case _:
             raise ValueError(f'Unknown dataset {name}')
     
-    return data, description
-
 def __make_circles_and_moons(n_samples, noise, seed, factor, Scaler):
     '''The concatenated circles and moons dataset.'''
-    description = (
-        ('circles', (circles_inputs, circles_outputs)),
-        ('moons', (moons_inputs, moons_outputs)),
-    )
 
     torch_utils.set_seed(seed)
 
@@ -71,17 +70,10 @@ def __make_circles_and_moons(n_samples, noise, seed, factor, Scaler):
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.5, random_state=42)
     x_train, x_test = __scale_dataset(x_train, x_test, Scaler)
 
-    return x_train, y_train, x_test, y_test, description
+    return x_train, y_train, x_test, y_test
 
 def __make_mnist(Scaler):
     '''The classic MNIST Dataset from torchvision.'''
-    description = (
-        ('mnist', (mnist_inputs, mnist_outputs)),
-    )
-    transform = torchvision.transforms.Compose([
-        torchvision.transforms.ToTensor(), 
-        torchvision.transforms.Lambda(torch.flatten)
-    ])
 
     train = torchvision.datasets.MNIST(
         root="mnist_data",
@@ -100,7 +92,7 @@ def __make_mnist(Scaler):
     x_test = torch.flatten(test.data, start_dim=1)
     x_train, x_test = __scale_dataset(x_train, x_test, Scaler)
 
-    return x_train, train.targets, x_test, test.targets, description
+    return x_train, train.targets, x_test, test.targets
 
 # helpers
 def __concat_datasets(list_of_datasets):

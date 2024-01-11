@@ -14,15 +14,15 @@ run_config = Config(
     pruning_levels=6, # 6, 7, 8
     model_seed=model_seeds[0],  # splits with any of the seeds
 
-    pipeline=Pipeline.imp.name,
+    pipeline=Pipeline.imp,
     activation=RELU,
 
-    dataset=Datasets.CIRCLES_MOONS.name,
+    dataset=Datasets.CIRCLES_MOONS,
     n_samples=1000,
     noise=0.1,
 
-    model_shape=[4, 410, 410, 2],
-    model_class=MultiTaskBinaryMLP.__name__,
+    model_shape='410_410',
+    model_class=MultiTaskBinaryMLP,
     scaler=StandardUnitVariance,
 
     # training
@@ -44,6 +44,6 @@ run_config = Config(
 
     pruning_target=112,  # 4*8 + 8*8 + 8*2  --> [4,8,8,2]
     reinit=True,
-    init_strategy_weights = InitializationStrategy.KAIMING_NORMAL.name,
-    init_strategy_biases = InitializationStrategy.ZERO.name,
+    init_strategy_weights = InitializationStrategy.KAIMING_NORMAL,
+    init_strategy_biases = InitializationStrategy.ZERO,
 )
