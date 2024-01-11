@@ -3,6 +3,7 @@
 from common.models import MultiTaskBinaryMLP
 from common.config import Config
 from common.datasets import Datasets
+from common.models import Init
 from common.constants import *
 
 # verified seeds
@@ -32,7 +33,6 @@ run_config = Config(
     batch_size=64,
     
     data_seed=data_seeds[0],
-    persist=False,
     early_stop_patience=30,
     early_stop_delta=0.0,
 
@@ -44,6 +44,6 @@ run_config = Config(
 
     pruning_target=112,  # 4*8 + 8*8 + 8*2  --> [4,8,8,2]
     reinit=True,
-    init_strategy_weights = InitializationStrategy.KAIMING_NORMAL,
-    init_strategy_biases = InitializationStrategy.ZERO,
+    init_strategy_weights=Init.kaiming_normal,
+    init_strategy_biases=Init.zero,
 )

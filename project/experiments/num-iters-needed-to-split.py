@@ -7,6 +7,7 @@ from common.constants import *
 from common.models import MultiTaskBinaryMLP
 from common.config import Config
 from common.datasets import Datasets
+from common.models import Init
 
 
 description = '''
@@ -65,6 +66,6 @@ run_config = Config(
 
     pruning_target=112,  # 4*8 + 8*8 + 8*2  --> [4,8,8,2]
     reinit=True,
-    init_strategy_weights = InitializationStrategy.KAIMING_NORMAL.name,
-    init_strategy_biases = InitializationStrategy.ZERO.name,
+    init_strategy_weights = Init.kaiming_normal,
+    init_strategy_biases = Init.zero,
 )

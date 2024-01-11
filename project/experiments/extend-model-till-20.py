@@ -4,6 +4,7 @@ sweep_id : wpcowdl5
 
 from common.models import MultiTaskBinaryMLP
 from common.config import Config
+from common.models import Init
 from common.constants import *
 from common.datasets import Datasets
 
@@ -73,8 +74,8 @@ run_config = Config(
     reinit=True,
 
     # newly added 
-    init_strategy_weights = InitializationStrategy.KAIMING_NORMAL.name,
-    init_strategy_biases = InitializationStrategy.ZERO.name,
+    init_strategy_weights = Init.kaiming_normal,
+    init_strategy_biases = Init.zero,
     n_samples=1000,
     noise=0.1
 )

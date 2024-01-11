@@ -22,12 +22,7 @@ class Pipeline(Enum):
 
 
 STATE_DICT = "model_state_dict"
-HPARAMS_FILE = 'hparams.json'
 
-InitializationStrategy = Enum(
-    'InitializationStrategy', 
-    ['ZERO', 'NORMAL', 'DEFAULT', 'KAIMING_NORMAL','XAVIER_UNIFORM', 'XAVIER_NORMAL','FRANKLE_XOR_TRUNC_NORMAL']
-)
 TaskCoverage = Enum('TaskCoverage', ['COMPLETE', 'PARTIAL', 'ABSENT'])
 
 # Optimizers

@@ -13,6 +13,6 @@ sweep_config = {
         "model_seed":  { "values": seeds },
         "scaler": {"values": scaler},
         "prune_biases": {"values": [True, False]},
-        "init_strategy_biases": {"values": [InitializationStrategy.ZERO, InitializationStrategy.DEFAULT]},
+        "init_strategy_biases": {"values": [Init.zero, Init.DEFAULT]},
     }
 }

@@ -16,12 +16,12 @@ class Config:
     model_shape : list[int]
 
     model_seed : int = 0
-    activation : str = RELU# use CONSTANTS
+    activation : str = RELU # use CONSTANTS
     # DEFAULTED CONFIGS
     scaler: str = None
     factor: float = 0.35
-    init_strategy_biases : InitializationStrategy = None
-    init_strategy_weights : InitializationStrategy = None
+    init_strategy_biases: str = None
+    init_strategy_weights: str = None
     init_mean : float = None
     init_std : float = None
 

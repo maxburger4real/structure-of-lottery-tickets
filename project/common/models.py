@@ -5,6 +5,7 @@ from sklearn.metrics import accuracy_score
 from common import torch_utils
 from common.config import Config
 from common.constants import *
+from enum import Enum
 """
 This module contains the MLP Architectures for reproducibility.
 For reproducibility reasons, the *code* for each model architecture must be
@@ -16,6 +17,14 @@ __activations_map = {
     SILU : nn.SiLU,
     SIGM : nn.Sigmoid
 }
+
+class Init(Enum):
+    '''functions that get a tensor and manipulate it inplace'''
+    zero=(nn.init.zeros_,)
+    kaiming_normal=(lambda tensor: nn.init.kaiming_normal_(tensor, mode='fan_in', nonlinearity='relu'),)
+    
+    def __call__(self, tensor):
+        self.value[0](tensor)
 
 def build_model_from_config(config: Config):
 
@@ -35,8 +44,8 @@ def build_model_from_config(config: Config):
 
     # because enums are parsed to strings in config, parse back and convert to enum
     model.init(
-        weight_strategy = InitializationStrategy[config.init_strategy_weights],
-        bias_strategy = InitializationStrategy[config.init_strategy_biases]
+        weight_init_func=Init[config.init_strategy_weights],
+        bias_init_func=Init[config.init_strategy_biases]
     )
     model = model.to(config.device)
     return model
@@ -49,38 +58,12 @@ class BaseModel(nn.Module):
         if seed is None: seed = 0
         torch_utils.set_seed(seed)
 
-    def init(self, weight_strategy, bias_strategy):
+    def init(self, weight_init_func, bias_init_func):
         def init_module(module):
             if not isinstance(module, nn.Linear): return
-            match weight_strategy:
-                case InitializationStrategy.NORMAL:
-                    nn.init.normal_(module.weight, mean=0, std=0.1)
+            weight_init_func(module.weight)
+            bias_init_func(module.bias)
 
-                case InitializationStrategy.XAVIER_NORMAL:
-                    nn.init.xavier_normal_(module.weight)
-
-                case InitializationStrategy.XAVIER_UNIFORM:
-                    nn.init.xavier_uniform_(module.weight)
-
-                case InitializationStrategy.KAIMING_NORMAL:
-                    nn.init.kaiming_normal_(module.weight, mode='fan_in', nonlinearity='relu')
-
-                case InitializationStrategy.FRANKLE_XOR_TRUNC_NORMAL:
-                    # from original LT paper V1, initialization for XOR problem.
-                    # https://arxiv.org/pdf/1803.03635v1.pdf
-                    mean, stddev = 0, 0.1
-                    nn.init.trunc_normal_(module.weight, mean, stddev, a=-2*stddev, b=2*stddev)
-                    
-                case _:
-                    print('Using Default initialization for Weights')
-
-            match bias_strategy:
-                case InitializationStrategy.ZERO:
-                    nn.init.zeros_(module.bias)
-
-                case _:
-                    print('Using Default initialization for Bias')
-     
         self.apply(init_module)
         return self
 
