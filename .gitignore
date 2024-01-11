@@ -1,6 +1,5 @@
 .venv/
 /venv
-models/
 __pycache__/
 .original_bimt/
 .DS_Store
@@ -9,12 +8,6 @@ wandb/
 .others/
 **/*.html
 .runs/
-.images/
-others/
-.html
-.investigation/
-.gpus/
-.runs/
 .others/
-.poster/
-.gpus/
+
+**/pdfs/
