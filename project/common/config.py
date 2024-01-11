@@ -1,5 +1,5 @@
 import importlib.util
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, fields
 from common.constants import *
 
 @dataclass
@@ -7,7 +7,6 @@ class Config:
     # MODEL and INITIALIZATION
     model_class : str  # use CLASS.__name__
     dataset : str  # use CONSTANTS
-    loss_fn : str  # use CONSTANTS
     pipeline : str   # use CONSTANTS
     activation : str # use CONSTANTS
     optimizer : str  # use CONSTANTS
@@ -16,7 +15,6 @@ class Config:
     epochs : int
     model_shape : list[int]
     model_seed : int
-    data_seed : int
 
     # DEFAULTED CONFIGS
     scaler: str = None
@@ -28,7 +26,10 @@ class Config:
 
     task_description : dict = None
     n_samples : int = 800
+    data_seed : int = None
     noise : float = None
+
+
     device: str = 'cpu'
     persist : bool = True  # wether to save the model at the checkpoints
 
@@ -80,6 +81,17 @@ class Config:
     def as_dict(self):
         data = asdict(self)
         return {key: value for key, value in data.items() if value is not None}
+
+    def __post_init__(self):
+        for field in fields(self):
+            value = getattr(self, field.name)
+            
+            # transform enums to their names
+            if isinstance(value, Enum):
+                setattr(self, field.name, value.name)
+            
+            if isinstance(value, type):
+                setattr(self, field.name, value.__name__)
 
 def import_config(filename):
     """Import a file, used for config."""

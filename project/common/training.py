@@ -109,18 +109,6 @@ def build_optimizer(model, config: Config):
         )
     return optimizer
 
-def build_loss_from_config(config: Config):
-    if config.loss_fn == MSE:
-        return torch.nn.MSELoss(reduction='mean')
-    
-    elif config.loss_fn == CCE:
-        # Multiclass [cat, dog, mouse]
-        return torch.nn.CrossEntropyLoss(reduction='mean')
-
-    elif config.loss_fn == BCE:
-        # Binary and Multi-label-Binary
-        return torch.nn.BCEWithLogitsLoss(reduction='none')
-
 def build_early_stopper(config: Config):
     """Returns a callable object that decides if to early stop."""
     return EarlyStopper(

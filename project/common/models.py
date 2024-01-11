@@ -17,27 +17,32 @@ __activations_map = {
 
 def build_model_from_config(config: Config):
 
-    name = config.model_class
     shape = config.model_shape
     seed = config.model_seed
     activation = __activations_map[config.activation]
 
+    match config.model_class:
+        case MultiClassClassifierMLP.__name__:
+            model = MultiClassClassifierMLP(shape=shape, activation=activation, seed=seed)
+        case BinaryClassifierMLP.__name__:
+            model = BinaryClassifierMLP(shape=shape, activation=activation, seed=seed)
+        case MLP.__name__:
+            raise ValueError('You shouldnt use MLP, it doesnt have a loss defined.')
+        case _:
+            raise ValueError('Model Unkown')
+
     # because enums are parsed to strings in config, parse back and convert to enum
-    weight_strategy = InitializationStrategy[config.init_strategy_weights]
-    bias_strategy = InitializationStrategy[config.init_strategy_biases]
-
-    if name == MLP.__name__: 
-        model = MLP(shape=shape, activation=activation, seed=seed)
-        model.init(weight_strategy, bias_strategy)
-        model = model.to(config.device)
-        return model
-
-    raise ValueError('Model Unkown')
+    model.init(
+        weight_strategy = InitializationStrategy[config.init_strategy_weights],
+        bias_strategy = InitializationStrategy[config.init_strategy_biases]
+    )
+    model = model.to(config.device)
+    return model
 
 
 class BaseModel(nn.Module):
     """An abstract class that sets the seed for reproducible initialization."""
-    def __init__(self, seed=None):
+    def __init__(self, seed):
         super().__init__()
         if seed is None: seed = 0
         torch_utils.set_seed(seed)
@@ -80,12 +85,7 @@ class BaseModel(nn.Module):
 
 class MLP(BaseModel):
     """Versatile MLP."""
-    def __init__(
-            self, 
-            shape: torch.Size,
-            activation=nn.ReLU,  
-            seed=None
-    ):
+    def __init__(self, shape, activation, seed):
         super().__init__(seed)
 
         modules = []
@@ -105,3 +105,25 @@ class MLP(BaseModel):
     def forward(self, x):
         y = self.model(x)
         return y
+
+
+class BinaryClassifierMLP(MLP):
+    '''
+    MLP that supports parallel binary classification.
+    each output of the model is treated as a binary classification problem, which is independent
+    of the other outputs.
+    '''
+    def __init__(self, shape: torch.Size, activation=nn.ReLU, seed=None):        
+        super().__init__(shape, activation, seed)
+        self.loss_fn = torch.nn.BCEWithLogitsLoss(reduction='none')
+
+
+class MultiClassClassifierMLP(MLP):
+    '''
+    MLP that supports parallel Multiclass classification.
+    each output of the model is treated as a binary classification problem, which is independent
+    of the other outputs.
+    '''
+    def __init__(self, shape: torch.Size, activation=nn.ReLU, seed=None):
+        super().__init__(shape, activation, seed)
+        self.loss_fn = torch.nn.CrossEntropyLoss(reduction='none')

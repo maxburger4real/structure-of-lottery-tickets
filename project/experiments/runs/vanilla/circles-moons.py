@@ -1,16 +1,16 @@
-from common.models import MLP
+from common.models import BinaryClassifierMLP
 from common.config import Config
+from common.datasets import Datasets
 from common.constants import *
 
 run_config = Config(
     description='''Early stopping works well.''',
     pipeline=Pipeline.vanilla.name,
     activation=RELU,
-    loss_fn=BCE,    
     dataset=Datasets.CIRCLES_AND_MOONS.name,
 
     model_shape=[4, 320, 320, 2],
-    model_class=MLP.__name__,
+    model_class=BinaryClassifierMLP.__name__,
     scaler=StandardUnitVariance,
 
     # training

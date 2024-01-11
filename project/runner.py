@@ -4,7 +4,6 @@ import wandb
 from common.config import Config
 from common.models import build_model_from_config
 from common.training_pipelines import vanilla, imp, bimt
-from common.training import build_loss_from_config
 from common.persistance import save_hparams
 from common.pruning import update_pruning_config
 from common.datasets import build_dataloaders_from_config
@@ -41,7 +40,8 @@ def __start_run(config, mode=None):
 
         # make model, loss, optim and dataloaders
         model = build_model_from_config(wandb.config)
-        loss_fn = build_loss_from_config(wandb.config)
+        loss_fn = model.loss_fn
+        #loss_fn = build_loss_from_config(wandb.config)
         train_loader, test_loader = build_dataloaders_from_config(wandb.config)
 
         # save the config and add some wandb info to connect wandb with local files

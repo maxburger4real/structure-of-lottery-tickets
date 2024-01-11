@@ -2,9 +2,11 @@
 sweep_id : wpcowdl5
 '''
 
-from common.models import MLP
+from common.models import BinaryClassifierMLP
 from common.config import Config
 from common.constants import *
+from common.datasets import Datasets
+
 
 description = '''
 This experiment should show behaviour of splitting when starting with a small network,
@@ -41,10 +43,9 @@ run_config = Config(
 
     pipeline=Pipeline.imp.name,
     activation=RELU,
-    loss_fn=BCE,    
     dataset=Datasets.CIRCLES_AND_MOONS.name,
 
-    model_class=MLP.__name__,
+    model_class=BinaryClassifierMLP.__name__,
     scaler=StandardUnitVariance,
 
     # training

@@ -1,6 +1,7 @@
 """This file contains everything to create datasets."""
 import torch
 import numpy as np
+from enum import Enum
 from sklearn import datasets
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.model_selection import train_test_split
@@ -11,8 +12,13 @@ from common import torch_utils
 
 circles_inputs = moons_inputs = 2
 circles_outputs = moons_outputs = 1
+mnist_inputs, mnist_outputs = 784, 10  # 28x28
 
 # visible
+class Datasets(Enum):
+    CIRCLES_MOONS = 'circles and moons'
+    MNIST = 'mnist'
+
 
 def build_dataloaders_from_config(config: Config):
     
@@ -36,10 +42,12 @@ def build_dataloaders_from_config(config: Config):
 
 def make_dataset(name, n_samples, noise, seed, factor, scaler):
     '''create the correct dataset, based on name.'''
-    match name:
-        case Datasets.CIRCLES_AND_MOONS.name:
+    match Datasets[name]:
+        case Datasets.CIRCLES_MOONS:
             *data, description = __make_circles_and_moons(n_samples, noise, seed, factor, scaler)
 
+        case Datasets.MNIST:
+            *data, description = __make_mnist(n_samples, noise, seed, factor, scaler)
         case _:
             raise ValueError(f'Unknown dataset {name}')
     
@@ -63,6 +71,25 @@ def __make_circles_and_moons(n_samples, noise, seed, factor, Scaler):
 
     return x_train, y_train, x_test, y_test, description
 
+def __make_mnist(Scaler):
+    '''The classic MNIST Dataset from sklearn.'''
+    description = (
+        ('mnist', (mnist_inputs, mnist_outputs)),
+    )
+
+    import mnist
+    
+    x_train = mnist.train_images()
+    y_train = mnist.train_labels()
+
+    x_test = mnist.test_images()
+    y_test = mnist.test_labels()
+
+    x_train, x_test = __scale_dataset(x_train, x_test, Scaler)
+
+    return x_train, y_train, x_test, y_test, description
+
+    
 
 
 # helpers
@@ -90,4 +117,5 @@ def __scale_dataset(x_train, x_test, Scaler):
     scaler = scaler.fit(x_train)
     x_train = torch.from_numpy(scaler.transform(x_train)).float()
     x_test = torch.from_numpy(scaler.transform(x_test)).float()
+
     return x_train, x_test

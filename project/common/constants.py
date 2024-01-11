@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 SEEDS_123 = [1,2,3]
 SEEDS_1 = [1]
 
@@ -13,6 +14,7 @@ ParamState = Enum(
     'ParamState', 
     ['active', 'inactive', 'zombious', 'zombie_downstream', 'pruned']
 )
+
 class Pipeline(Enum):
     vanilla = 'vanilla'
     imp = 'imp'
@@ -26,7 +28,6 @@ InitializationStrategy = Enum(
     'InitializationStrategy', 
     ['ZERO', 'NORMAL', 'DEFAULT', 'KAIMING_NORMAL','XAVIER_UNIFORM', 'XAVIER_NORMAL','FRANKLE_XOR_TRUNC_NORMAL']
 )
-Datasets = Enum('Datasets', ['CIRCLES_AND_MOONS'])
 TaskCoverage = Enum('TaskCoverage', ['COMPLETE', 'PARTIAL', 'ABSENT'])
 
 # Optimizers
@@ -43,11 +44,6 @@ StandardUnitVariance = 'std-unit-variance'
 RELU = 'relu'
 SILU = 'silu'
 SIGM = 'sigmoid'
-
-# Loss Functions
-MSE = 'mse'
-CCE = 'cce'
-BCE = 'bce'
 
 # Pruning Methods
 MAGNITUDE = 'magnitude'

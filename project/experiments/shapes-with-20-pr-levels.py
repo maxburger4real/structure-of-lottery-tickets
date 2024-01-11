@@ -2,8 +2,9 @@
 sweep_id: p30nbq46
 '''
 
-from common.models import MLP
+from common.models import BinaryClassifierMLP
 from common.config import Config
+from common.datasets import Datasets
 from common.constants import *
 
 description = '''
@@ -45,10 +46,9 @@ run_config = Config(
 
     pipeline=Pipeline.imp.name,
     activation=RELU,
-    loss_fn=BCE,    
     dataset=Datasets.CIRCLES_AND_MOONS.name,
 
-    model_class=MLP.__name__,
+    model_class=BinaryClassifierMLP.__name__,
     scaler=StandardUnitVariance,
 
     # training
