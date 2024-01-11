@@ -1,4 +1,4 @@
-from common.models import MultiClassClassifierMLP
+from common.models import SingleTaskMultiClassMLP
 from common.config import Config
 from common.datasets import Datasets
 from common.constants import *
@@ -9,7 +9,7 @@ run_config = Config(
     dataset=Datasets.MNIST,
     scaler=StandardUnitVariance,
 
-    model_class=MultiClassClassifierMLP,
+    model_class=SingleTaskMultiClassMLP,
     model_shape=[784, 300, 100, 10],
 
     # training

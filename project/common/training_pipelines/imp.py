@@ -7,7 +7,7 @@ from common.pruning import build_pruning_func, build_reinit_func
 from common.training import build_early_stopper, build_optimizer, update, evaluate
 from common.constants import *
 
-def run(model, train_loader, test_loader, loss_fn, config: Config):
+def run(model, train_loader, test_loader, config: Config):
 
     # preparing for pruning and [OPTIONALLY] save model state
     prune = build_pruning_func(model, config)
@@ -17,7 +17,7 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
     save_model_or_skip(model, config, f'{-config.extension_levels}_init')
     
     # log initial performance and descriptive statistics
-    init_loss, init_accuracy = evaluate(model, test_loader, loss_fn, config.device)
+    init_loss, init_accuracy = evaluate(model, test_loader, config.device)
     log.metrics({VAL_LOSS:init_loss, ACCURACY:init_accuracy, 'level': -config.extension_levels-1})
     log.commit()  # LOG BEFORE TRAINING
 
@@ -34,8 +34,8 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
         stopper = build_early_stopper(config)
 
         for epoch in tqdm(range(config.epochs), f'Training Level {level}', config.epochs):
-            train_loss = update(model, train_loader, optim, loss_fn, config.device, config.l1_lambda)
-            val_loss, val_acc = evaluate(model, test_loader, loss_fn, config.device)
+            train_loss = update(model, train_loader, optim, config.device, config.l1_lambda)
+            val_loss, val_acc = evaluate(model, test_loader, config.device)
 
             if config.log_every is not None and epoch % config.log_every == 0:
                 log.metrics(
@@ -81,8 +81,8 @@ def run(model, train_loader, test_loader, loss_fn, config: Config):
     optim = build_optimizer(model, config)
 
     for epoch in tqdm(range(config.epochs), f'Final Finetuning', config.epochs):
-        train_loss = update(model, train_loader, optim, loss_fn, config.device, config.l1_lambda)
-        val_loss, val_acc = evaluate(model, test_loader, loss_fn, config.device)
+        train_loss = update(model, train_loader, optim, config.device, config.l1_lambda)
+        val_loss, val_acc = evaluate(model, test_loader, config.device)
 
         if config.log_every is not None and epoch % config.log_every == 0:
             log.metrics(

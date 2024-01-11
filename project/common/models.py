@@ -1,5 +1,7 @@
 import torch
 import torch.nn as nn
+import numpy as np
+from sklearn.metrics import accuracy_score
 from common import torch_utils
 from common.config import Config
 from common.constants import *
@@ -22,10 +24,10 @@ def build_model_from_config(config: Config):
     activation = __activations_map[config.activation]
 
     match config.model_class:
-        case MultiClassClassifierMLP.__name__:
-            model = MultiClassClassifierMLP(shape=shape, activation=activation, seed=seed)
-        case BinaryClassifierMLP.__name__:
-            model = BinaryClassifierMLP(shape=shape, activation=activation, seed=seed)
+        case SingleTaskMultiClassMLP.__name__:
+            model = SingleTaskMultiClassMLP(shape=shape, activation=activation, seed=seed)
+        case MultiTaskBinaryMLP.__name__:
+            model = MultiTaskBinaryMLP(shape=shape, activation=activation, seed=seed)
         case MLP.__name__:
             raise ValueError('You shouldnt use MLP, it doesnt have a loss defined.')
         case _:
@@ -101,13 +103,21 @@ class MLP(BaseModel):
         self.model = nn.Sequential(*modules)
         self.layers = [m for m in self.modules if torch_utils.module_is_trainable(m)]
 
-
     def forward(self, x):
         y = self.model(x)
         return y
 
+    def predict(self, logits):
+        raise NotImplementedError('Abstract method')
 
-class BinaryClassifierMLP(MLP):
+    def loss(self, logits, targets):
+        raise NotImplementedError('Abstract method')
+        
+    def accuracy(self, logits, targets):
+        raise NotImplementedError('Abstract method')
+
+
+class MultiTaskBinaryMLP(MLP):
     '''
     MLP that supports parallel binary classification.
     each output of the model is treated as a binary classification problem, which is independent
@@ -116,9 +126,34 @@ class BinaryClassifierMLP(MLP):
     def __init__(self, shape: torch.Size, activation=nn.ReLU, seed=None):        
         super().__init__(shape, activation, seed)
         self.loss_fn = torch.nn.BCEWithLogitsLoss(reduction='none')
+    
+    def predict(self, logits):
+        '''Logits are between -inf and inf. The decision-border is at 0.'''
+        return (logits > 0).int()
+    
+    def loss(self, logits, targets):
+        loss = self.loss_fn(logits, targets)
+        
+        if self.training:
+            return loss.mean()
+        
+        return loss.mean(0).detach().cpu()
+        
+    def accuracy(self, logits, targets):
+        pred = self.predict(logits)
+        num_tasks = targets.shape[1]
+
+        accs = []
+        for i in range(num_tasks):
+            accuracy = accuracy_score(
+                y_true=targets[:,i], 
+                y_pred=pred[:,i]
+            )
+            accs.append(accuracy)
+        return np.array(accs, dtype=np.float32)
 
 
-class MultiClassClassifierMLP(MLP):
+class SingleTaskMultiClassMLP(MLP):
     '''
     MLP that supports parallel Multiclass classification.
     each output of the model is treated as a binary classification problem, which is independent
@@ -126,4 +161,17 @@ class MultiClassClassifierMLP(MLP):
     '''
     def __init__(self, shape: torch.Size, activation=nn.ReLU, seed=None):
         super().__init__(shape, activation, seed)
-        self.loss_fn = torch.nn.CrossEntropyLoss(reduction='none')
+        self.loss_fn = torch.nn.CrossEntropyLoss(reduction='mean')
+
+    def predict(self, logits):
+        '''Logits represent class probabilities. Maximum value is the prediction.'''
+        return logits.argmax(axis=1)
+
+    def loss(self, logits, targets):
+        loss = self.loss_fn(logits, targets)
+        return loss
+    
+    def accuracy(self, logits, targets):
+        predictions = self.predict(logits)
+        accuracy = accuracy_score(targets, predictions, normalize=True)
+        return accuracy

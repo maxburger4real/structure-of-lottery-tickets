@@ -1,5 +1,6 @@
 """This file contains everything to create datasets."""
 import torch
+import torchvision
 import numpy as np
 from enum import Enum
 from sklearn import datasets
@@ -19,7 +20,6 @@ class Datasets(Enum):
     CIRCLES_MOONS = 'circles and moons'
     MNIST = 'mnist'
 
-
 def build_dataloaders_from_config(config: Config):
     
     batch_size = config.batch_size if config.batch_size is not None else config.n_samples
@@ -32,9 +32,11 @@ def build_dataloaders_from_config(config: Config):
         factor=config.factor,
         scaler=config.scaler,
     )
-    
-    train_dataloader = DataLoader(TensorDataset(x_train, y_train), batch_size=batch_size, shuffle=True, num_workers=0)
-    test_dataloader = DataLoader(TensorDataset(x_test, y_test), batch_size=batch_size)
+
+    train_set = TensorDataset(x_train, y_train)
+    test_set = TensorDataset(x_test, y_test)
+    train_dataloader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=0)
+    test_dataloader = DataLoader(test_set, batch_size=batch_size)
 
     config.update({'task_description' : description }, allow_val_change=True)
 
@@ -47,7 +49,7 @@ def make_dataset(name, n_samples, noise, seed, factor, scaler):
             *data, description = __make_circles_and_moons(n_samples, noise, seed, factor, scaler)
 
         case Datasets.MNIST:
-            *data, description = __make_mnist(n_samples, noise, seed, factor, scaler)
+            *data, description = __make_mnist(scaler)
         case _:
             raise ValueError(f'Unknown dataset {name}')
     
@@ -72,25 +74,33 @@ def __make_circles_and_moons(n_samples, noise, seed, factor, Scaler):
     return x_train, y_train, x_test, y_test, description
 
 def __make_mnist(Scaler):
-    '''The classic MNIST Dataset from sklearn.'''
+    '''The classic MNIST Dataset from torchvision.'''
     description = (
         ('mnist', (mnist_inputs, mnist_outputs)),
     )
+    transform = torchvision.transforms.Compose([
+        torchvision.transforms.ToTensor(), 
+        torchvision.transforms.Lambda(torch.flatten)
+    ])
 
-    import mnist
-    
-    x_train = mnist.train_images()
-    y_train = mnist.train_labels()
+    train = torchvision.datasets.MNIST(
+        root="mnist_data",
+        train=True,
+        download=True,
+    )
 
-    x_test = mnist.test_images()
-    y_test = mnist.test_labels()
+    x_train = torch.flatten(train.data, start_dim=1)
 
+    test = torchvision.datasets.MNIST(
+        root="mnist_data",
+        train=False,
+        download=True,
+    )
+
+    x_test = torch.flatten(test.data, start_dim=1)
     x_train, x_test = __scale_dataset(x_train, x_test, Scaler)
 
-    return x_train, y_train, x_test, y_test, description
-
-    
-
+    return x_train, train.targets, x_test, test.targets, description
 
 # helpers
 def __concat_datasets(list_of_datasets):

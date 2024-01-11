@@ -55,10 +55,10 @@ def __start_run(config, mode=None):
         # run the pipeline defined in the config
         match Pipeline[config.pipeline]:
             case Pipeline.vanilla:
-                return vanilla.run(model, train_loader, test_loader, loss_fn, config_dict)
+                return vanilla.run(model, train_loader, test_loader, config_dict)
 
             case Pipeline.imp:
-                return imp.run(model, train_loader, test_loader, loss_fn, config_dict)
+                return imp.run(model, train_loader, test_loader, config_dict)
         
             case Pipeline.bimt:
-                return bimt.run(model, train_loader, test_loader, loss_fn, config_dict)
+                return bimt.run(model, train_loader, test_loader, config_dict)

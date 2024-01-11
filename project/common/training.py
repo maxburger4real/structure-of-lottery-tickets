@@ -1,24 +1,12 @@
 import torch
 import numpy as np
 from torch import optim
-from sklearn.metrics import accuracy_score
 
 from common.config import Config
 from common.constants import *
 
-def calc_accuracy(logits, y):
-    '''Calculate Accuracy from logits and labels.'''
-    pred = (logits > 0).int()
-    assert pred.shape == y.shape, 'True labels must habe same shape as predictions.'
-    accs = []
-    for i in range(y.shape[1]):
-        y_true = y[:,i]
-        y_pred = pred[:,i]
-        acc = accuracy_score(y_true, y_pred)
-        accs.append(acc)
-    return np.array(accs, dtype=np.float32)
 
-def evaluate(model, loader, loss_fn, device, accuracy=True):
+def evaluate(model, loader, device):
     """Evaluate the model and return a numpy array of losses for each batch."""
 
     model.eval()
@@ -27,17 +15,18 @@ def evaluate(model, loader, loss_fn, device, accuracy=True):
         for _, (x, y) in enumerate(loader):
             x,y = x.to(device), y.to(device)
 
-            pred  = model(x)
-            batch_loss = loss_fn(pred, y).mean(axis=0).cpu().numpy()
-            batch_acc = calc_accuracy(pred.detach().cpu(), y.detach().cpu())
-            assert batch_acc.shape == batch_loss.shape, 'Metrics must have the same size'
+            logits = model(x)
+            loss = model.loss(logits, y)
+            accuracy = model.accuracy(logits, y)
+            
+            assert accuracy.shape == loss.shape, 'Metrics must have the same size'
 
-            accs.append(batch_acc)
-            losses.append(batch_loss)
+            accs.append(accuracy)
+            losses.append(loss)
 
     return np.array(losses), np.array(accs)
 
-def update(model, loader, optim, loss_fn, device, lambda_l1=None):
+def update(model, loader, optim, device, lambda_l1=None):
     """
     Update the model and 
     return a numpy array of losses for each batch.
@@ -47,8 +36,8 @@ def update(model, loader, optim, loss_fn, device, lambda_l1=None):
     for _, (x, y) in enumerate(loader):
         x,y = x.to(device), y.to(device)
         optim.zero_grad()
-        pred  = model(x)
-        loss = loss_fn(pred, y).mean()
+        logits = model(x)
+        loss = model.loss(logits, y)
 
         # L1 regularization. 
         if lambda_l1 is not None and 0 < lambda_l1 < 1:
@@ -64,7 +53,7 @@ def update(model, loader, optim, loss_fn, device, lambda_l1=None):
 
     return np.array(losses)
 
-def train_and_evaluate(model, train_loader, test_loader, optim, loss_fn, config:Config):
+def train_and_evaluate(model, train_loader, test_loader, optim, config:Config):
     """Train a model for the specified amount of epochs."""
 
     train_losses, eval_losses = [], []
@@ -73,14 +62,13 @@ def train_and_evaluate(model, train_loader, test_loader, optim, loss_fn, config:
 
     # train for epochs
     for _ in range(0, config.epochs):
-        loss_train = update(model, train_loader, optim, loss_fn, config.device, config.l1_lambda).mean()
-        loss_eval, acc = evaluate(model, test_loader, loss_fn, config.device).mean().item()
+        loss_train = update(model, train_loader, optim, config.device, config.l1_lambda).mean()
+        loss_eval, acc = evaluate(model, test_loader, config.device).mean().item()
 
         train_losses += [loss_train]
         eval_losses += [loss_eval]
 
         if stop(loss_eval): break
-
 
     return np.array(train_losses), np.array(eval_losses)
 
@@ -115,7 +103,6 @@ def build_early_stopper(config: Config):
         patience=config.early_stop_patience,
         min_delta=config.early_stop_delta
     )
-
 
 class EarlyStopper:
     """from https://stackoverflow.com/a/73704579 assuming the loss is always larger than 0.

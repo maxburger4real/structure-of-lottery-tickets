@@ -1,4 +1,4 @@
-from common.models import BinaryClassifierMLP
+from common.models import MultiTaskBinaryMLP
 from common.config import Config
 from common.datasets import Datasets
 from common.constants import *
@@ -10,7 +10,7 @@ run_config = Config(
     dataset=Datasets.CIRCLES_AND_MOONS.name,
 
     model_shape=[4, 320, 320, 2],
-    model_class=BinaryClassifierMLP.__name__,
+    model_class=MultiTaskBinaryMLP.__name__,
     scaler=StandardUnitVariance,
 
     # training

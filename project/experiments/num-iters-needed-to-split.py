@@ -4,7 +4,7 @@ sweep_id : ix4onq8c
 
 
 from common.constants import *
-from common.models import BinaryClassifierMLP
+from common.models import MultiTaskBinaryMLP
 from common.config import Config
 from common.datasets import Datasets
 
@@ -43,7 +43,7 @@ run_config = Config(
     noise=0.1,
 
     model_shape=[4, 410, 410, 2],
-    model_class=BinaryClassifierMLP.__name__,
+    model_class=MultiTaskBinaryMLP.__name__,
     scaler=StandardUnitVariance,
 
     # training

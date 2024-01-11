@@ -1,6 +1,6 @@
 '''A run config that is fast and splits.'''
 
-from common.models import BinaryClassifierMLP
+from common.models import MultiTaskBinaryMLP
 from common.config import Config
 from common.datasets import Datasets
 from common.constants import *
@@ -22,7 +22,7 @@ run_config = Config(
     noise=0.1,
 
     model_shape=[4, 50, 50, 2],
-    model_class=BinaryClassifierMLP,
+    model_class=MultiTaskBinaryMLP,
     scaler=StandardUnitVariance,
 
     # training

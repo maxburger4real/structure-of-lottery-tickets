@@ -2,7 +2,7 @@
 sweep_id : wpcowdl5
 '''
 
-from common.models import BinaryClassifierMLP
+from common.models import MultiTaskBinaryMLP
 from common.config import Config
 from common.constants import *
 from common.datasets import Datasets
@@ -45,7 +45,7 @@ run_config = Config(
     activation=RELU,
     dataset=Datasets.CIRCLES_AND_MOONS.name,
 
-    model_class=BinaryClassifierMLP.__name__,
+    model_class=MultiTaskBinaryMLP.__name__,
     scaler=StandardUnitVariance,
 
     # training
