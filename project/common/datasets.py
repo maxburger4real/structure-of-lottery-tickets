@@ -20,10 +20,11 @@ def build_dataloaders_from_config(config: Config):
 
     (x_train, y_train, x_test, y_test), description = make_dataset(
         name=config.dataset,
-        n_samples = config.n_samples,
-        noise = config.noise,
-        seed = config.data_seed,
-        factor = config.factor,
+        n_samples=config.n_samples,
+        noise=config.noise,
+        seed=config.data_seed,
+        factor=config.factor,
+        scaler=config.scaler,
     )
     
     train_dataloader = DataLoader(TensorDataset(x_train, y_train), batch_size=batch_size, shuffle=True, num_workers=0)

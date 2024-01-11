@@ -8,26 +8,25 @@ weight='weight'
 layer='layer'
 state='state'
 
+
 ParamState = Enum(
     'ParamState', 
     ['active', 'inactive', 'zombious', 'zombie_downstream', 'pruned']
 )
+class Pipeline(Enum):
+    vanilla = 'vanilla'
+    imp = 'imp'
+    bimt = 'bimt'
+
 
 STATE_DICT = "model_state_dict"
 HPARAMS_FILE = 'hparams.json'
-
-# wandb
-PROJECT='concat_moons'
-# PROJECT='thesis' #'init-thesis'
-ENTITY='mxmn'
-MODE='online'
-# MODE='disabled'
 
 InitializationStrategy = Enum(
     'InitializationStrategy', 
     ['ZERO', 'NORMAL', 'DEFAULT', 'KAIMING_NORMAL','XAVIER_UNIFORM', 'XAVIER_NORMAL','FRANKLE_XOR_TRUNC_NORMAL']
 )
-Datasets = Enum('Datasets', ['CIRCLES_AND_MOONS','FLIP_MOONS', 'OLD_MOONS', 'MOONS', 'CIRCLES', 'MOONS_AND_CIRCLES'])
+Datasets = Enum('Datasets', ['CIRCLES_AND_MOONS'])
 TaskCoverage = Enum('TaskCoverage', ['COMPLETE', 'PARTIAL', 'ABSENT'])
 
 # Optimizers
@@ -58,10 +57,7 @@ RANDOM = 'random'
 GLOBAL = 'global'
 LAYERWISE = 'layerwise'
 
-# Training Pipelines
-VANILLA = 'vanilla'
-IMP = 'imp'
-BIMT = 'bimt'
+
 
 # Metrics to Track
 VAL, TRAIN = 'val', 'train'

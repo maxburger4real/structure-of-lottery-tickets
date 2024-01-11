@@ -4,7 +4,7 @@ from common.constants import *
 
 run_config = Config(
     description='''Early stopping works well.''',
-    pipeline=VANILLA,
+    pipeline=Pipeline.vanilla.name,
     activation=RELU,
     loss_fn=BCE,    
     dataset=Datasets.CIRCLES_AND_MOONS.name,

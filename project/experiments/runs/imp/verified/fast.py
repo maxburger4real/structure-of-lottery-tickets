@@ -1,14 +1,19 @@
+'''A run config that is '''
+
 from common.models import MLP
 from common.config import Config
 from common.constants import *
 
+# verified seeds
+data_seeds = [0,2]
+model_seeds = SEEDS_123
 
 run_config = Config(
 
     pruning_levels=6, # 6, 7, 8
-    model_seed=SEEDS_123[0],  # splits with any of the seeds
+    model_seed=model_seeds[0],  # splits with any of the seeds
 
-    pipeline=IMP,
+    pipeline=Pipeline.imp.name,
     activation=RELU,
     loss_fn=BCE,    
 
@@ -26,7 +31,8 @@ run_config = Config(
     epochs= 3000,
     batch_size=64,
     
-    data_seed=0,
+    data_seed=data_seeds[0],
+    #data_seed=2,
     persist=False,
     early_stop_patience=30,
     early_stop_delta=0.0,
