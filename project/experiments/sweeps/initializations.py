@@ -1,14 +1,14 @@
 """Simply run the configuration with multiple seeds to see stability."""
 
-from common.constants import InitializationStrategy
+from common.constants import Init
 seeds = list(range(10,15))
 seeds = list(range(10))
 
 seeds = list(range(100,110))
 
 init_strategies = (
-    InitializationStrategy.KAIMING_NORMAL.name,
-    InitializationStrategy.DEFAULT.name,
+    Init.kaiming_normal,
+    Init.DEFAULT.name,
 )
 
 sweep_config = {

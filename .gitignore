@@ -1,13 +1,13 @@
-.venv/
-/venv
-__pycache__/
-.original_bimt/
+venv/
+
 .DS_Store
 .vscode/
 wandb/
-.others/
-**/*.html
+
 .runs/
 .others/
+mnist_data/
 
 **/pdfs/
+
+__pycache__/

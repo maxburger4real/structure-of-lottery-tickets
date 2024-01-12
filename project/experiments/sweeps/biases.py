@@ -6,7 +6,7 @@ seeds = [7,8,9]
 
 scalers = [StandardUnitVariance, None]
 datasets = [Datasets.CIRCLES_AND_MOONS.name, Datasets.OLD_MOONS.name]
-bias_inits = [InitializationStrategy.ZERO.name, InitializationStrategy.DEFAULT.name]
+bias_inits = [Init.zero, Init.DEFAULT.name]
 
 sweep_config = {
     'method': 'grid', 

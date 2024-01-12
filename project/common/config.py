@@ -1,36 +1,37 @@
 import importlib.util
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, fields
 from common.constants import *
+
 
 @dataclass
 class Config:
     # MODEL and INITIALIZATION
     model_class : str  # use CLASS.__name__
     dataset : str  # use CONSTANTS
-    loss_fn : str  # use CONSTANTS
     pipeline : str   # use CONSTANTS
-    activation : str # use CONSTANTS
     optimizer : str  # use CONSTANTS
 
     lr : float
     epochs : int
     model_shape : list[int]
-    model_seed : int
-    data_seed : int
 
+    model_seed : int = 0
+    activation : str = RELU # use CONSTANTS
     # DEFAULTED CONFIGS
     scaler: str = None
     factor: float = 0.35
-    init_strategy_biases : InitializationStrategy = None
-    init_strategy_weights : InitializationStrategy = None
+    init_strategy_biases: str = None
+    init_strategy_weights: str = None
     init_mean : float = None
     init_std : float = None
 
     task_description : dict = None
     n_samples : int = 800
+    data_seed : int = None
     noise : float = None
+
     device: str = 'cpu'
-    persist : bool = True  # wether to save the model at the checkpoints
+    persist : bool = False  # wether to save the model at the checkpoints
 
     # OPTIONAL CONFIGS
     log_every: int = None
@@ -80,6 +81,28 @@ class Config:
     def as_dict(self):
         data = asdict(self)
         return {key: value for key, value in data.items() if value is not None}
+
+    def __post_init__(self):
+
+        if isinstance(self.model_shape, str):
+            dims = self.model_shape.split('_')
+            hidden_dims = [int(d) for d in dims]
+            inputs, outputs = tuple(zip(*self.dataset.value.values()))
+            input_dim, output_dim = sum(inputs), sum(outputs)
+            self.model_shape = [input_dim] + hidden_dims + [output_dim]
+        
+        # TODO: change the whole task_description implementation to Ordered Dict.
+        self.task_description = [(k, v) for k, v in self.dataset.value.items()]
+
+        for field in fields(self):
+            value = getattr(self, field.name)
+            
+            # transform enums to their names
+            if isinstance(value, Enum):
+                setattr(self, field.name, value.name)
+            
+            if isinstance(value, type):
+                setattr(self, field.name, value.__name__)
 
 def import_config(filename):
     """Import a file, used for config."""

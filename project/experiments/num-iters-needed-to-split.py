@@ -4,8 +4,11 @@ sweep_id : ix4onq8c
 
 
 from common.constants import *
-from common.models import MLP
+from common.models import MultiTaskBinaryMLP
 from common.config import Config
+from common.datasets import Datasets
+from common.models import Init
+
 
 description = '''
 With this experiment, the plan is to see how many pruning levels are needed for a split.
@@ -33,16 +36,15 @@ run_config = Config(
     pruning_levels=20,
     model_seed=8,
 
-    pipeline=IMP,
+    pipeline=Pipeline.imp.name,
     activation=RELU,
-    loss_fn=BCE,    
 
     dataset=Datasets.CIRCLES_AND_MOONS.name,
     n_samples=1000,
     noise=0.1,
 
     model_shape=[4, 410, 410, 2],
-    model_class=MLP.__name__,
+    model_class=MultiTaskBinaryMLP.__name__,
     scaler=StandardUnitVariance,
 
     # training
@@ -64,6 +66,6 @@ run_config = Config(
 
     pruning_target=112,  # 4*8 + 8*8 + 8*2  --> [4,8,8,2]
     reinit=True,
-    init_strategy_weights = InitializationStrategy.KAIMING_NORMAL.name,
-    init_strategy_biases = InitializationStrategy.ZERO.name,
+    init_strategy_weights = Init.kaiming_normal,
+    init_strategy_biases = Init.zero,
 )

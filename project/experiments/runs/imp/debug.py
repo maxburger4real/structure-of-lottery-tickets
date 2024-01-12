@@ -12,7 +12,7 @@ model_seeds = SEEDS_123
 
 run_config = Config(
 
-    pruning_levels=6, # 6, 7, 8
+    pruning_levels=2, # 6, 7, 8
     model_seed=model_seeds[0],  # splits with any of the seeds
 
     pipeline=Pipeline.imp,
@@ -22,17 +22,18 @@ run_config = Config(
     n_samples=1000,
     noise=0.1,
 
-    model_shape='410_410',
+    model_shape='50_50',
     model_class=MultiTaskBinaryMLP,
     scaler=StandardUnitVariance,
 
     # training
-    lr=0.001,
+    lr=0.5,
     optimizer=ADAM,
-    epochs= 3000,
+    epochs=20,
     batch_size=64,
     
     data_seed=data_seeds[0],
+    persist=False,
     early_stop_patience=30,
     early_stop_delta=0.0,
 
@@ -44,6 +45,6 @@ run_config = Config(
 
     pruning_target=112,  # 4*8 + 8*8 + 8*2  --> [4,8,8,2]
     reinit=True,
-    init_strategy_weights=Init.kaiming_normal,
-    init_strategy_biases=Init.zero,
+    init_strategy_weights = Init.kaiming_normal,
+    init_strategy_biases = Init.zero,
 )

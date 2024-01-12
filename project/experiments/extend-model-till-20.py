@@ -2,9 +2,12 @@
 sweep_id : wpcowdl5
 '''
 
-from common.models import MLP
+from common.models import MultiTaskBinaryMLP
 from common.config import Config
+from common.models import Init
 from common.constants import *
+from common.datasets import Datasets
+
 
 description = '''
 This experiment should show behaviour of splitting when starting with a small network,
@@ -41,10 +44,9 @@ run_config = Config(
 
     pipeline=Pipeline.imp.name,
     activation=RELU,
-    loss_fn=BCE,    
     dataset=Datasets.CIRCLES_AND_MOONS.name,
 
-    model_class=MLP.__name__,
+    model_class=MultiTaskBinaryMLP.__name__,
     scaler=StandardUnitVariance,
 
     # training
@@ -72,8 +74,8 @@ run_config = Config(
     reinit=True,
 
     # newly added 
-    init_strategy_weights = InitializationStrategy.KAIMING_NORMAL.name,
-    init_strategy_biases = InitializationStrategy.ZERO.name,
+    init_strategy_weights = Init.kaiming_normal,
+    init_strategy_biases = Init.zero,
     n_samples=1000,
     noise=0.1
 )

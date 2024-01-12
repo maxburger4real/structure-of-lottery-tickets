@@ -1,4 +1,4 @@
-from common.models import MultiTaskBinaryMLP
+from common.models import SingleTaskMultiClassMLP
 from common.config import Config
 from common.datasets import Datasets
 from common.models import Init
@@ -6,25 +6,22 @@ from common.constants import *
 
 run_config = Config(
     pipeline=Pipeline.vanilla,
-    dataset=Datasets.CIRCLES_AND_MOONS,
-
-    model_shape='320_320',
-    model_class=MultiTaskBinaryMLP,
+    dataset=Datasets.MNIST,
     scaler=StandardUnitVariance,
+    model_class=SingleTaskMultiClassMLP,
+    model_shape='300_100',
 
     # training
     lr=0.001,
+    epochs=100,
+    batch_size=256,
     optimizer=ADAM,
-    epochs= 3000,
-    batch_size=64,
 
     # early stop
-    early_stop_patience=30,
+    early_stop_patience=10,
     early_stop_delta=0.0,
 
     # newly added 
-    init_strategy_weights = Init.DEFAULT,
+    init_strategy_weights = Init.kaiming_normal,
     init_strategy_biases = Init.zero,
-    n_samples=1000,
-    noise=0.1
 )
