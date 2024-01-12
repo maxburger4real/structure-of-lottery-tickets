@@ -7,6 +7,8 @@ sweep_id: r0b16unk
 
 seed 01234 with larger shapes
 ocfuu4ip
+
+'p30nbq46', 'r0b16unk', 'ocfuu4ip'
 '''
 
 from common.models import MultiTaskBinaryMLP
@@ -70,7 +72,6 @@ run_config = Config(
     
     # seeds
     data_seed=0,
-
     persist=False,
 
     # early stop

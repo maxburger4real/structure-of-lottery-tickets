@@ -6,7 +6,7 @@ levels 0-19
 sweep_id: j9lvvxjg
 SEEDS_123
 
-levels 20-29
+levels 20-25
 sweep_id: a5kr3muw
 SEEDS_123
 '''
@@ -28,9 +28,10 @@ this pruning rate.
 '''
 
 extension_levels = list(range(20))
-extension_levels = list(range(20, 30))
+extension_levels = list(range(20, 26))
 
 seeds = SEEDS_123
+seeds = [0]
 
 sweep_config = {
     'method': 'grid', 
