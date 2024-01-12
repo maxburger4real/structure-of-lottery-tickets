@@ -25,6 +25,13 @@ class Datasets(Enum):
     '''
     CIRCLES_MOONS = OrderedDict(circles=(2, 1), moons=(2,1))
     MNIST = OrderedDict(mnist=(784, 10))
+    # TODO:
+    MINI_MNIST = OrderedDict(mnist=(196, 10))  
+    MINI_FASHION = OrderedDict(mnist=(196, 10))
+    MINI_MNIST_FASHION = OrderedDict(mnist=(392, 20))
+    # TODO FINAL:
+    FASHION = OrderedDict(mnist=(784, 10))
+    MNIST_FASHION = OrderedDict(mnist=(1568, 20))
 
 def build_dataloaders_from_config(config: Config):
     
