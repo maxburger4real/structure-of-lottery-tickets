@@ -1,11 +1,14 @@
+Intro
+
+
+
+
 Idea
 
 Goal
 
 Why is it interesting ? 
-
 Experiments inspired by BIMT
-
 Does IMP find independent tasks? 
 If the lottery ticket is good, it should not cointain unnecessary components. Therefore shouldnt have connections to random inputs
 
