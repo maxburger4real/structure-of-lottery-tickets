@@ -208,7 +208,12 @@ def make_plotly_fig(G: nx.Graph, pos):
             xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
             yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
         )
-    fig.update_layout(plot_bgcolor='white')
+    fig.update_layout(
+        plot_bgcolor='white',
+        autosize=False,
+        width=400,height=400
+        )
+    #fig.write_image("large.svg")
     return fig
 
 def statistics(G: nx.DiGraph) -> Tuple[Dict, Dict]:
@@ -409,7 +414,8 @@ def __make_edge_traces(G, pos):
         edge_trace = go.Scatter(
             x=[x0, x1, None], y=[y0, y1, None],
             #line=dict(width=2*abs(data[vocab.weight]), color=rgba),
-            line=dict(width=5, color=rgba),
+            #line=dict(width=.5, color=rgba),  # for very many weights
+            line=dict(width=7, color=rgba),
             hoverinfo='none',
             mode='lines')
         edge_traces.append(edge_trace)
