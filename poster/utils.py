@@ -3,6 +3,7 @@ import wandb
 from collections import defaultdict
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 __WANDB_PROJECT = "mxmn/concat_moons/"
 
@@ -105,6 +106,39 @@ def make_df_from_history(histories_and_config, key, invert, drop_first):
         rows.append(df)
 
     return pd.DataFrame(rows).reset_index(drop=True)
+
+
+# helpers
+def make_group(group_df, source_df, source_keys):
+
+    assert len(group_df.columns) == 1, 'only one column allowed'
+    group_attr = group_df.columns[0]
+
+    group = pd.concat(
+        [group_df] + [source_df[k] for k in source_keys], 
+        axis=1
+    ).groupby(group_attr)
+
+    return group
+
+def mean_std_from_group(group, key):
+    return pd.DataFrame(
+        data={
+            'x' : group.mean().index,
+            'y' : group.mean()[key],
+            'yerr' : group.agg(np.std, ddof=0)[key],
+        }
+    )
+
+def errorbar_from_df(df, **kwargs):
+    plt.errorbar(
+        x=df['x'], 
+        y=df['y'], 
+        yerr=df['yerr'],
+        **kwargs
+    )
+    plt.xticks(df['x'])
+    plt.legend()
 
 
 # plotting format
