@@ -87,6 +87,25 @@ def make_dfs_at_splitrange(hc, df):
     
     return pd.DataFrame(data_first, index=df.index), pd.DataFrame(data_last, index=df.index)
 
+def make_df_from_history(histories_and_config, key, invert, drop_first):
+    rows = []
+    for h,_ in histories_and_config:
+
+        df = h[key]
+        if drop_first:
+            # 0-th entry is often always None, no pruning happens
+            df.drop(0, inplace=True)
+
+        if invert:
+            # invert to align where p-params is equal
+            df_inverted = df.iloc[::-1].reset_index(drop=True)
+            df_inverted.index = df.index
+            df = df_inverted
+
+        rows.append(df)
+
+    return pd.DataFrame(rows).reset_index(drop=True)
+
 
 # plotting format
 def set_style(axes):
