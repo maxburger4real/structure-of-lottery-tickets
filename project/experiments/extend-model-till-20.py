@@ -1,5 +1,14 @@
 '''
 sweep_id : wpcowdl5
+seeds = [0]
+
+levels 0-19
+sweep_id: j9lvvxjg
+SEEDS_123
+
+levels 20-29
+sweep_id: a5kr3muw
+SEEDS_123
 '''
 
 from common.models import MultiTaskBinaryMLP
@@ -19,9 +28,9 @@ this pruning rate.
 '''
 
 extension_levels = list(range(20))
-seeds = [0]
+extension_levels = list(range(20, 30))
 
-# TODO: seeds 1,2
+seeds = SEEDS_123
 
 sweep_config = {
     'method': 'grid', 

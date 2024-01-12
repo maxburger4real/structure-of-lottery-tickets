@@ -1,5 +1,12 @@
 '''
+seed 0
 sweep_id: p30nbq46
+
+seed 123
+sweep_id: r0b16unk
+
+seed 01234 with larger shapes
+ocfuu4ip
 '''
 
 from common.models import MultiTaskBinaryMLP
@@ -23,10 +30,13 @@ hidden_dims = [
     188, 229, 278, 337, 410
 ]
 
+hidden_dims = [
+    498, 604, 733, 890, 1080, 1310
+]
+
 shapes = [ [4] + [h]*2 + [2] for h in hidden_dims]
 
-seeds = [0]
-# TODO: seeds 1,2
+seeds = SEEDS_123 + [0]
 
 sweep_config = {
     'method': 'grid', 

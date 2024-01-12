@@ -18,7 +18,7 @@ versa.
 '''
 
 
-levels = list(range(1, 21))
+levels = list(range(21, 26))
 seeds = SEEDS_123
 sweep_config = {
     'method': 'grid', 
