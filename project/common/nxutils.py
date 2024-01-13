@@ -208,7 +208,12 @@ def make_plotly_fig(G: nx.Graph, pos):
             xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
             yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
         )
-    fig.update_layout(plot_bgcolor='white')
+    fig.update_layout(
+        plot_bgcolor='white',
+        autosize=False,
+        width=400,height=400
+        )
+    #fig.write_image("large.svg")
     return fig
 
 def statistics(G: nx.DiGraph) -> Tuple[Dict, Dict]:
@@ -409,7 +414,8 @@ def __make_edge_traces(G, pos):
         edge_trace = go.Scatter(
             x=[x0, x1, None], y=[y0, y1, None],
             #line=dict(width=2*abs(data[vocab.weight]), color=rgba),
-            line=dict(width=5, color=rgba),
+            #line=dict(width=.5, color=rgba),  # for very many weights
+            line=dict(width=7, color=rgba),
             hoverinfo='none',
             mode='lines')
         edge_traces.append(edge_trace)
@@ -417,9 +423,9 @@ def __make_edge_traces(G, pos):
     return edge_traces 
 
 def __colormap(state: str):
-    if state == vocab.ParamState.active: return 'green'
-    if state == vocab.ParamState.inactive: return 'blue'
-    if state == vocab.ParamState.zombious: return 'red'
+    if state == vocab.ParamState.active: return '#FFC107'
+    if state == vocab.ParamState.inactive: return '#1E88E5'
+    if state == vocab.ParamState.zombious: return '#D81B60'
     if state == vocab.ParamState.zombie_downstream: return 'pink'
     if state == vocab.ParamState.pruned: return 'black'
     raise
@@ -443,10 +449,9 @@ def __draw_nx(G, layout_G=None):
         pos,
         edgelist=G.edges(),
         width=6,
-        alpha=0.5,
+        alpha=0.7,
         edge_color=edge_colors,
     )
-    plt.show()
 
 def to_rgba(colorname, alpha):
     rgb_color = mcolors.to_rgba(colorname)  # Convert color name to RGBA
