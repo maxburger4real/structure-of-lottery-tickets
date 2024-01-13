@@ -7,8 +7,19 @@ import matplotlib.pyplot as plt
 
 __WANDB_PROJECT = "mxmn/concat_moons/"
 
+
+splitters = {
+    'split only':'#68B684',
+    'split + degrade':'#508B65' 
+}
+nonsplitters = {
+    'still connected':'#B84A62',
+    'degrade only': '#FFC107',#'#AC7B84',
+}
+
+
 def runs_from_sweeps(sweep_ids):
-    api = wandb.Api()
+    api = wandb.Api(timeout=60)
     base = __WANDB_PROJECT
     runs = []
     for id in sweep_ids:
@@ -124,6 +135,8 @@ def make_group(group_df, source_df, source_keys):
 def mean_std_from_group(group, key):
     return pd.DataFrame(
         data={
+            'xticks' : group.mean().reset_index().index,
+            'xticklabels' : group.mean().index,
             'x' : group.mean().index,
             'y' : group.mean()[key],
             'yerr' : group.agg(np.std, ddof=0)[key],
