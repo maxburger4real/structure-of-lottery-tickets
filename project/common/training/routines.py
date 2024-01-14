@@ -1,4 +1,5 @@
 from tqdm import tqdm
+from collections import defaultdict
 from common.log import Logger
 from common import factory
 from common.config import Config
@@ -30,16 +31,37 @@ def start_routine(config: Config):
             return bimt.run(model, train_loader, test_loader, config)
 
 
+def train_and_evaluate(model, train_loader, test_loader, optim, logger: Logger, stopper, epochs, device, log_every):
+
+    metrics = defaultdict(list)
+
+    for epoch in epochs:
+
+        train_loss = update(model, train_loader, optim, device)
+        val_loss, val_acc = evaluate(model, test_loader, device)
+
+        metrics[TRAIN_LOSS].append(train_loss.mean().item())
+        metrics[VAL_LOSS].append(val_loss.mean().item())
+        metrics[ACCURACY].append(val_acc.mean().item())
+
+        if stopper(metrics[VAL_LOSS][-1]):
+            latest = {k: v[-1] for k, v in metrics.items()}
+            logger.metrics(latest)
+            logger.commit()
+            break
+
+        if log_every is not None and epoch % log_every == 0:
+            latest = {k: v[-1] for k, v in metrics.items()}
+            logger.metrics(latest, prefix='epoch/')
+            logger.commit()
+            
+    return metrics
+
 
 #def imp(model, train_loader, test_loader, config: Config):
-def imp(model, train_loader, test_loader, prune, reinit, gm, log, config: Config):
+def imp(model, train_loader, test_loader, prune, reinit, gm: GraphManager, log: Logger, config: Config):
 
-    # preparing for pruning and [OPTIONALLY] save model state
-    #prune = build_pruning_func(model, config)
-    #reinit = build_reinit_func(model)
-    #gm = GraphManager(model, config.model_shape, config.task_description) if config.log_graphs else None
-    #log = Logger(gm, config.task_description)
-    save_model_or_skip(model, config, f'{-config.extension_levels}_init')
+    # save_model_or_skip(model, config, f'{-config.extension_levels}_init')
     
     # log initial performance and descriptive statistics
     init_loss, init_accuracy = evaluate(model, test_loader, config.device)
@@ -58,27 +80,13 @@ def imp(model, train_loader, test_loader, prune, reinit, gm, log, config: Config
         optim = build_optimizer(model, config)
         stopper = build_early_stopper(config)
 
-        for epoch in tqdm(range(config.epochs), f'Training Level {level}', config.epochs):
-            train_loss = update(model, train_loader, optim, config.device, config.l1_lambda)
-            val_loss, val_acc = evaluate(model, test_loader, config.device)
-
-            if config.log_every is not None and epoch % config.log_every == 0:
-                log.metrics(
-                    prefix='epoch/',
-                    values={TRAIN_LOSS : train_loss.mean(), VAL_LOSS : val_loss, ACCURACY : val_acc.mean()},
-                )
-                log.commit()
-
-            if config.loss_cutoff is not None and val_loss.mean().item() < config.loss_cutoff: break
-            if stopper(val_loss.mean().item()): break
+        epochs = tqdm(range(config.epochs), f'Training Level {level}', config.epochs)
+        metrics = train_and_evaluate(model, train_loader, test_loader, optim, log, stopper, epochs, config.device, config.log_every)
 
         save_model_or_skip(model, config, level)
 
-        # log weights, biases, metrics at early stopping iteration
-        log.metrics({
-            TRAIN_LOSS : train_loss, VAL_LOSS : val_loss, ACCURACY : val_acc,
-            'pparams' : pparams, 'level' : level, 'stop' : epoch, 'pborder' : pborder
-        })
+        log.metrics(dict(pparams=pparams, level=level, stop=len(list(metrics.values())[0]), pborder=pborder))
+
         
         if gm is not None:
             gm.update(model, level) 
