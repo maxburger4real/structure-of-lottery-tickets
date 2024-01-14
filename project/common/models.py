@@ -3,7 +3,6 @@ import torch.nn as nn
 import numpy as np
 from sklearn.metrics import accuracy_score
 from common import torch_utils
-from common.config import Config
 from common.constants import *
 from enum import Enum
 """
@@ -25,30 +24,6 @@ class Init(Enum):
     
     def __call__(self, tensor):
         self.value[0](tensor)
-
-def build_model_from_config(config: Config):
-
-    shape = config.model_shape
-    seed = config.model_seed
-    activation = __activations_map[config.activation]
-
-    match config.model_class:
-        case SingleTaskMultiClassMLP.__name__:
-            model = SingleTaskMultiClassMLP(shape=shape, activation=activation, seed=seed)
-        case MultiTaskBinaryMLP.__name__:
-            model = MultiTaskBinaryMLP(shape=shape, activation=activation, seed=seed)
-        case MLP.__name__:
-            raise ValueError('You shouldnt use MLP, it doesnt have a loss defined.')
-        case _:
-            raise ValueError('Model Unkown')
-
-    # because enums are parsed to strings in config, parse back and convert to enum
-    model.init(
-        weight_init_func=Init[config.init_strategy_weights],
-        bias_init_func=Init[config.init_strategy_biases]
-    )
-    model = model.to(config.device)
-    return model
 
 
 class BaseModel(nn.Module):

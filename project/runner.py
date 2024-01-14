@@ -1,7 +1,6 @@
 '''Runner for wandb experiments.'''
 import wandb
 
-from common.models import build_model_from_config
 from common.training_pipelines import vanilla, imp, bimt
 from common.pruning import update_pruning_config
 from common import factory
@@ -39,7 +38,7 @@ def __start_run(config, mode=None):
         config = update_pruning_config(config) if Pipeline[config.pipeline] == Pipeline.imp else config
 
         # make model, loss, optim and dataloaders
-        model = build_model_from_config(config)
+        model = factory.make_model(config)
         train_loader, test_loader = factory.make_dataloaders(config)
 
         # save the config and add some wandb info to connect wandb with local files
