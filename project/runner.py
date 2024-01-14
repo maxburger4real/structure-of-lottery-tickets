@@ -1,9 +1,8 @@
 '''Runner for wandb experiments.'''
 import wandb
 
-from common.training_pipelines import vanilla, imp, bimt
+from common.training import routines
 from common.pruning import update_pruning_config
-from common import factory
 from common.constants import *
 
 from settings import wandb_kwargs
@@ -37,10 +36,6 @@ def __start_run(config, mode=None):
         # optional config updates needed for model extension
         config = update_pruning_config(config) if Pipeline[config.pipeline] == Pipeline.imp else config
 
-        # make model, loss, optim and dataloaders
-        model = factory.make_model(config)
-        train_loader, test_loader = factory.make_dataloaders(config)
-
         # save the config and add some wandb info to connect wandb with local files
         config.run_id = run.id
         config.run_name = run.name
@@ -50,13 +45,4 @@ def __start_run(config, mode=None):
         # push the updated config to wandb.
         wandb.config.update(config.__dict__, allow_val_change=True)
 
-        # run the pipeline defined in the config
-        match Pipeline[config.pipeline]:
-            case Pipeline.vanilla:
-                return vanilla.run(model, train_loader, test_loader, config)
-
-            case Pipeline.imp:
-                return imp.run(model, train_loader, test_loader, config)
-        
-            case Pipeline.bimt:
-                return bimt.run(model, train_loader, test_loader, config)
+        routines.start_routine(config)
