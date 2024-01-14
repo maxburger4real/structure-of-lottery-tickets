@@ -11,7 +11,7 @@ from common.constants import *
 
 
 # visible
-def build_reinit_func(model: torch.nn.Module):
+def build_reinit_func(model: torch.nn.Module, config: Config):
     """
     Returns a Closure that reinitializes the model on call.
     """
@@ -24,7 +24,8 @@ def build_reinit_func(model: torch.nn.Module):
 
     def reinitialize(model):
         """Closure that contains the reinit state_dict to reinitialize any model."""
-        model.load_state_dict(state_dict, strict=False)
+        if config.reinit: 
+            model.load_state_dict(state_dict, strict=False)
 
     return reinitialize
 
