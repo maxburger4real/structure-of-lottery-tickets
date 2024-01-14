@@ -20,7 +20,7 @@ def start_routine(config: Config):
             model = factory.make_model(config)
             train_loader, test_loader = factory.make_dataloaders(config)
             pruner = build_pruning_func(model, config)
-            reinitializer = build_reinit_func(model)
+            reinitializer = build_reinit_func(model, config)
             gm = GraphManager(model, config.model_shape, config.task_description) if config.log_graphs else None
             logger = Logger(gm, config.task_description)
 
@@ -45,18 +45,15 @@ def train_and_evaluate(model, train_loader, test_loader, optim, logger: Logger, 
         metrics[ACCURACY].append(val_acc.mean().item())
 
         if stopper(metrics[VAL_LOSS][-1]):
-            latest = {k: v[-1] for k, v in metrics.items()}
-            logger.metrics(latest)
-            logger.commit()
             break
 
-        if log_every is not None and epoch % log_every == 0:
+        if log_every is not None and epoch % log_every == 0 and epoch != epochs[-1]:
             latest = {k: v[-1] for k, v in metrics.items()}
             logger.metrics(latest, prefix='epoch/')
             logger.commit()
-            
-    return metrics
 
+    logger.metrics({k: v[-1] for k, v in metrics.items()})
+    return metrics
 
 #def imp(model, train_loader, test_loader, config: Config):
 def imp(model, train_loader, test_loader, prune, reinit, gm: GraphManager, log: Logger, config: Config):
@@ -103,7 +100,7 @@ def imp(model, train_loader, test_loader, prune, reinit, gm: GraphManager, log: 
         # prune the model and reinit
         pborder = prune(pruning_amount)
         pparams -= pruning_amount
-        if config.reinit: reinit(model)
+        reinit(model)
     
     log.metrics({'pparams' : pparams, 'level' : config.pruning_levels, 'pborder' : pborder})
 
