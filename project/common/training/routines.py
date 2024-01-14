@@ -4,7 +4,6 @@ from common.log import Logger
 from common import factory
 from common.config import Config
 from common.nxutils import GraphManager
-from common.persistance import save_model_or_skip
 from common.pruning import build_pruning_func, build_reinit_func
 from common.training.utils import build_early_stopper, build_optimizer, update, evaluate
 from common.constants import *
@@ -55,80 +54,45 @@ def train_and_evaluate(model, train_loader, test_loader, optim, logger: Logger, 
     logger.metrics({k: v[-1] for k, v in metrics.items()})
     return metrics
 
-#def imp(model, train_loader, test_loader, config: Config):
+
 def imp(model, train_loader, test_loader, prune, reinit, gm: GraphManager, log: Logger, config: Config):
 
-    # save_model_or_skip(model, config, f'{-config.extension_levels}_init')
-    
-    # log initial performance and descriptive statistics
+
     init_loss, init_accuracy = evaluate(model, test_loader, config.device)
     log.metrics({VAL_LOSS:init_loss, ACCURACY:init_accuracy, 'level': -config.extension_levels-1})
     log.commit()  # LOG BEFORE TRAINING
 
     # get the complete levels
-    levels = list(range(-config.extension_levels, config.pruning_levels))
+    levels = list(range(-config.extension_levels, config.pruning_levels+1))
     pparams, pborder = config.param_trajectory[0], 0
 
     ####################
     ### Training 
     ####################
-    for level, pruning_amount in tqdm(zip(levels, config.pruning_trajectory, strict=True), 'Pruning Levels', len(levels)):
+
+    for i, level in tqdm(enumerate(levels, start=-1), 'Pruning Levels', len(levels)):
+    #for level, pruning_amount in tqdm(zip(levels, config.pruning_trajectory, strict=True), 'Pruning Levels', len(levels)):
+
+        if i != -1:
+            amount = config.pruning_trajectory[i]
+            pborder = prune(amount)
+            pparams -= amount
+            reinit(model)
 
         optim = build_optimizer(model, config)
         stopper = build_early_stopper(config)
 
-        epochs = tqdm(range(config.epochs), f'Training Level {level}', config.epochs)
-        metrics = train_and_evaluate(model, train_loader, test_loader, optim, log, stopper, epochs, config.device, config.log_every)
+        epochs = tqdm(range(config.epochs), f'Training Level {level+1}/{len(levels)}', config.epochs)
+        train_and_evaluate(model, train_loader, test_loader, optim, log, stopper, epochs, config.device, config.log_every)
 
-        save_model_or_skip(model, config, level)
+        log.metrics(dict(pparams=pparams, level=level, pborder=pborder))
 
-        log.metrics(dict(pparams=pparams, level=level, stop=len(list(metrics.values())[0]), pborder=pborder))
-
-        
         if gm is not None:
             gm.update(model, level) 
             metrics = gm.metrics()
             log.metrics(metrics)
 
-
             if gm.untapped_potential < 0 and config.stop_on_degradation: 
                 break
 
         log.commit()
-
-        # prune the model and reinit
-        pborder = prune(pruning_amount)
-        pparams -= pruning_amount
-        reinit(model)
-    
-    log.metrics({'pparams' : pparams, 'level' : config.pruning_levels, 'pborder' : pborder})
-
-    ####################
-    ### final finetuning
-    ####################
-    stopper = build_early_stopper(config)
-    optim = build_optimizer(model, config)
-
-    for epoch in tqdm(range(config.epochs), f'Final Finetuning', config.epochs):
-        train_loss = update(model, train_loader, optim, config.device, config.l1_lambda)
-        val_loss, val_acc = evaluate(model, test_loader, config.device)
-
-        if config.log_every is not None and epoch % config.log_every == 0:
-            log.metrics(
-                prefix='epoch/',
-                values={TRAIN_LOSS : train_loss.mean(), VAL_LOSS : val_loss, ACCURACY : val_acc.mean()}
-            )
-            log.commit()
-            
-        if stopper(val_loss.mean().item()): break
-
-    log.metrics({TRAIN_LOSS : train_loss, VAL_LOSS : val_loss, ACCURACY : val_acc})
-
-    if gm is not None:
-        gm.update(model, level) 
-        metrics = gm.metrics()
-        log.metrics(metrics)
-
-    log.commit()
-
-    save_model_or_skip(model, config, config.pruning_levels)
