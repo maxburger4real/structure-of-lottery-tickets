@@ -54,6 +54,12 @@ def train_and_evaluate(model, train_loader, test_loader, optim, logger: Logger, 
     logger.metrics({k: v[-1] for k, v in metrics.items()})
     return metrics
 
+def evaluate_graph(model, gm, level, logger):
+    if gm is None: return
+
+    gm.update(model, level) 
+    metrics = gm.metrics()
+    logger.metrics(metrics)
 
 def imp(model, train_loader, test_loader, prune, reinit, gm: GraphManager, log: Logger, config: Config):
 
@@ -66,12 +72,10 @@ def imp(model, train_loader, test_loader, prune, reinit, gm: GraphManager, log: 
     levels = list(range(-config.extension_levels, config.pruning_levels+1))
     pparams, pborder = config.param_trajectory[0], 0
 
-    ####################
-    ### Training 
-    ####################
-
     for i, level in tqdm(enumerate(levels, start=-1), 'Pruning Levels', len(levels)):
     #for level, pruning_amount in tqdm(zip(levels, config.pruning_trajectory, strict=True), 'Pruning Levels', len(levels)):
+
+        log.metrics(dict(pparams=pparams, level=level, pborder=pborder))
 
         if i != -1:
             amount = config.pruning_trajectory[i]
@@ -84,15 +88,9 @@ def imp(model, train_loader, test_loader, prune, reinit, gm: GraphManager, log: 
 
         epochs = tqdm(range(config.epochs), f'Training Level {level+1}/{len(levels)}', config.epochs)
         train_and_evaluate(model, train_loader, test_loader, optim, log, stopper, epochs, config.device, config.log_every)
+        evaluate_graph(model, gm, level, log)
 
-        log.metrics(dict(pparams=pparams, level=level, pborder=pborder))
-
-        if gm is not None:
-            gm.update(model, level) 
-            metrics = gm.metrics()
-            log.metrics(metrics)
-
-            if gm.untapped_potential < 0 and config.stop_on_degradation: 
-                break
+        if gm.untapped_potential < 0 and config.stop_on_degradation: 
+            break
 
         log.commit()
