@@ -40,6 +40,34 @@ class GraphManager():
 
         self.node_statistics, self.edge_statistics = statistics(self.G)
 
+    def metrics(self):
+        metrics = {}
+        
+        total_nodes = sum([value for key, value in self.node_statistics.items() if key != ParamState.pruned])
+        total_edges = sum([value for key, value in self.edge_statistics.items() if key != ParamState.pruned])
+        
+        for state in ParamState:
+            num_nodes = self.node_statistics[state]
+            num_edges = self.edge_statistics[state]
+            metrics[state.name + '-features' + '-abs'] = num_nodes
+            metrics[state.name + '-features' + '-rel'] = num_nodes / total_nodes
+            metrics[state.name + '-weights' + '-abs'] = num_edges
+            metrics[state.name + '-weights' + '-rel'] = num_edges / total_edges
+            metrics[state.name + '-rel'] =(num_edges + num_nodes) / (total_edges + total_nodes)
+            metrics[state.name + '-abs'] = num_edges + num_nodes
+
+        # log everything on split as well
+        if self.iteration == self.split_iteration: 
+            items = list(metrics.items())
+            for k,v in items:
+                metrics[f'split-{k}'] = v
+
+            for name, g in self.catalogue.items():
+                metrics[name] = self.fig(g)
+
+        metrics['untapped-potential'] = self.untapped_potential
+        return metrics
+
     def update(self, model, iteration):
         self.iteration = iteration
 

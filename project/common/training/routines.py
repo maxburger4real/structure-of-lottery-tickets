@@ -22,7 +22,7 @@ def start_routine(config: Config):
             pruner = build_pruning_func(model, config)
             reinitializer = build_reinit_func(model, config)
             gm = GraphManager(model, config.model_shape, config.task_description) if config.log_graphs else None
-            logger = Logger(gm, config.task_description)
+            logger = Logger(config.task_description)
 
             return imp(model, train_loader, test_loader, pruner, reinitializer, gm, logger, config)
     
@@ -87,15 +87,14 @@ def imp(model, train_loader, test_loader, prune, reinit, gm: GraphManager, log: 
         
         if gm is not None:
             gm.update(model, level) 
-            log.feature_categorization()
-            log.splitting()
-            if gm.iteration == gm.split_iteration: 
-                log.graphs()
-                log.metrics({'split-acc':val_acc, 'split-loss': val_loss, 'split-pparams':pparams})
-            log.commit()
+            metrics = gm.metrics()
+            log.metrics(metrics)
+
 
             if gm.untapped_potential < 0 and config.stop_on_degradation: 
                 break
+
+        log.commit()
 
         # prune the model and reinit
         pborder = prune(pruning_amount)
@@ -126,15 +125,10 @@ def imp(model, train_loader, test_loader, prune, reinit, gm: GraphManager, log: 
     log.metrics({TRAIN_LOSS : train_loss, VAL_LOSS : val_loss, ACCURACY : val_acc})
 
     if gm is not None:
-        gm.update(model, config.pruning_levels)
-        log.feature_categorization()
-        log.splitting()
+        gm.update(model, level) 
+        metrics = gm.metrics()
+        log.metrics(metrics)
 
-        if gm.iteration == gm.split_iteration:
-            log.graphs()
-            log.metrics({'split-acc':val_acc, 'split-loss': val_loss, 'split-pparams':pparams})
-
-        log.summary()
-        log.commit()
+    log.commit()
 
     save_model_or_skip(model, config, config.pruning_levels)

@@ -5,8 +5,7 @@ from common.constants import *
 
 class Logger():
     '''This class handles logging with Wandb and is strict with overriding. It raises an Exception.'''
-    def __init__(self, gm: GraphManager, task_description):
-        self.gm = gm
+    def __init__(self, task_description, step=None, start=0):
         self.task_description = task_description
         self.logdict = {}
 
@@ -17,15 +16,18 @@ class Logger():
         self.logdict = {}
 
     def summary(self):
+        raise
         wandb.run.summary['split-iteration'] = self.gm.split_iteration
         wandb.run.summary['degradation-iteration'] = self.gm.degradation_iteration
         self.__strict_insert('split-iteration', self.gm.split_iteration)
         self.__strict_insert('degradation-iteration', self.gm.degradation_iteration)
 
     def splitting(self):
+        raise
         self.__strict_insert('untapped-potential', self.gm.untapped_potential)
     
     def graphs(self):
+        raise
         for name, g in self.gm.catalogue.items():
             self.__strict_insert(name, self.gm.fig(g))
 
@@ -34,7 +36,7 @@ class Logger():
             self.__metric(x, prefix+key)
     
     def feature_categorization(self):
-
+        raise
         total_nodes = sum([value for key, value in self.gm.node_statistics.items() if key != ParamState.pruned])
         total_edges = sum([value for key, value in self.gm.edge_statistics.items() if key != ParamState.pruned])
         
