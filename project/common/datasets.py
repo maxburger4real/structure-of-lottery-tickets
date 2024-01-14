@@ -9,7 +9,6 @@ from sklearn import datasets
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
-from common.config import Config
 from common.constants import *
 from common import torch_utils
 
@@ -33,18 +32,7 @@ class Datasets(Enum):
     FASHION = OrderedDict(mnist=(784, 10))
     MNIST_FASHION = OrderedDict(mnist=(1568, 20))
 
-def build_dataloaders_from_config(config: Config):
-    
-    batch_size = config.batch_size if config.batch_size is not None else config.n_samples
-
-    x_train, y_train, x_test, y_test = make_dataset(
-        name=config.dataset,
-        n_samples=config.n_samples,
-        noise=config.noise,
-        seed=config.data_seed,
-        factor=config.factor,
-        scaler=config.scaler,
-    )
+def make_dataloaders(x_train, y_train, x_test, y_test, batch_size):
 
     train_set = TensorDataset(x_train, y_train)
     test_set = TensorDataset(x_test, y_test)

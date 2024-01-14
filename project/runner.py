@@ -4,7 +4,7 @@ import wandb
 from common.models import build_model_from_config
 from common.training_pipelines import vanilla, imp, bimt
 from common.pruning import update_pruning_config
-from common.datasets import build_dataloaders_from_config
+from common import factory
 from common.constants import *
 
 from settings import wandb_kwargs
@@ -40,7 +40,7 @@ def __start_run(config, mode=None):
 
         # make model, loss, optim and dataloaders
         model = build_model_from_config(config)
-        train_loader, test_loader = build_dataloaders_from_config(config)
+        train_loader, test_loader = factory.make_dataloaders(config)
 
         # save the config and add some wandb info to connect wandb with local files
         config.run_id = run.id
