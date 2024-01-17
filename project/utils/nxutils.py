@@ -16,8 +16,8 @@ ParamState = Enum(
     "ParamState", ["active", "inactive", "zombious", "zombie_downstream", "pruned"]
 )
 
-LAYER = 'layer'
-STATE = 'state'
+STATE = "state"
+
 
 class GraphManager:
     """A class that manages the state over the pruning iterations"""
@@ -34,12 +34,12 @@ class GraphManager:
         self.degradation_iteration = None
 
         self.G = build_nx(unpruned_model)
-        self.pos = nx.multipartite_layout(self.G, LAYER)
-        self.in_features = in_features(self.G)
-        self.out_features = out_features(self.G, len(shape) - 1)
+        self.pos = nx.multipartite_layout(self.G, "layer")
+        self.in_features = find_nodes(self.G, layer=0)
+        self.out_features = find_nodes(self.G, layer=len(shape) - 1)
 
         # map the tasks to the network features
-        self.task_description = taskmap(
+        self.task_description = map_tasks_to_features(
             task_description, self.in_features, self.out_features
         )
 
@@ -94,11 +94,13 @@ class GraphManager:
         self.iteration = iteration
 
         # tag the parameters based on new pruning mask
-        tag_params(self.G, model, self.in_features, self.out_features)
+        tag_parameters(self.G, model, self.in_features, self.out_features)
 
         # split the network into subnetworks
         G = subgraph_by_state(self.G, include=[ParamState.active])
-        subnetworks = split(G)
+        subnetworks = [
+            G.subgraph(c) for c in nx.connected_components(G.to_undirected())
+        ]
 
         # update the catalogue of subnetworks
         self.__update_catalogue(subnetworks)
@@ -172,46 +174,40 @@ class GraphManager:
             self.catalogue[name] = g
 
 
-# new code
 def build_nx(model: torch.nn.Module) -> nx.DiGraph:
     """Layers from [0, 1, ... ,-1]"""
     G = nx.DiGraph()
-    for i, layer in enumerate(model.layers, start=1):
-        out_dim, in_dim = layer.weight.shape
+    for previous_node_idx, module in enumerate(model.layers, start=1):
+        num_current_nodes, num_previous_nodes = module.weight.shape
 
-        if i == 1:  # add first layer
-            in_features = [(0, k) for k in range(in_dim)]
-            G.add_nodes_from(
-                in_features, **{LAYER: 0, STATE: ParamState.active}
-            )
+        # add 0-th layer (input features)
+        if previous_node_idx == 1:
+            previous_nodes = [(0, i) for i in range(num_previous_nodes)]
+            G.add_nodes_from(previous_nodes, layer=0)
 
-        out_features = [(i, k) for k in range(out_dim)]
-        out_features_w_atts = [
-            (
-                f,
-                {
-                    'bias': b.detach().item(),
-                    LAYER: i,
-                    STATE: ParamState.active,
-                },
-            )
-            for f, b in zip(out_features, layer.bias)
-        ]
+        current_nodes = [(previous_node_idx, i) for i in range(num_current_nodes)]
+        biases = [bias.detach().item() for bias in module.bias]
+        node_biases = dict(zip(current_nodes, biases))
 
-        G.add_nodes_from(out_features_w_atts)
+        # create all nodes of the current output layer
+        G.add_nodes_from(current_nodes, layer=previous_node_idx)
+        nx.set_node_attributes(G, node_biases, "bias")
 
-        # l and l-1 exist
-        for li, i in in_features:
-            for lj, j in out_features:
-                w = layer.weight[j, i].item()
-
+        # connect the nodes of current and previous layer
+        for previous_layer, previous_node_idx in previous_nodes:
+            for current_layer, current_node_idx in current_nodes:
+                weight = module.weight[current_node_idx, previous_node_idx].item()
                 G.add_edge(
-                    u_of_edge=(li, i),
-                    v_of_edge=(lj, j),
-                    **{'weight': w, STATE: ParamState.active},
+                    u_of_edge=(previous_layer, previous_node_idx),
+                    v_of_edge=(current_layer, current_node_idx),
+                    weight=weight,
                 )
 
-        in_features = out_features
+        previous_nodes = current_nodes
+
+    # set all weights and edges as active
+    nx.set_node_attributes(G, ParamState.active, STATE)
+    nx.set_edge_attributes(G, ParamState.active, STATE)
     return G
 
 
@@ -249,10 +245,6 @@ def subgraph_by_state(
         return g.copy()
 
     return g
-
-
-def split(G: nx.DiGraph) -> List[nx.DiGraph]:
-    return [G.subgraph(c) for c in nx.connected_components(G.to_undirected())]
 
 
 def task_matrix(subnetworks: List[nx.DiGraph], task_description):
@@ -315,7 +307,7 @@ def statistics(G: nx.DiGraph) -> Tuple[Dict, Dict]:
     return node_count, edge_count
 
 
-def tag_params(G: nx.DiGraph, model: torch.nn.Module, in_features, out_features):
+def tag_parameters(G: nx.DiGraph, model: torch.nn.Module, in_features, out_features):
     # tag the newly pruned parameters first
     __tag_pruned(G, model)
     G_pruned = subgraph_by_state(G, exclude=[ParamState.pruned])
@@ -330,11 +322,23 @@ def tag_params(G: nx.DiGraph, model: torch.nn.Module, in_features, out_features)
     __tag_zombious(G_active_with_zombious, in_features)
 
 
-def get_nodes_by_attribute(G: nx.Graph, attr: str, value):
-    return [node for node, data in G.nodes(data=True) if data[attr] == value]
+def find_nodes(G: nx.Graph, **kwargs):
+    nodes = []
+    for node, data in G.nodes(data=True):
+        add_node = False
+        for key, value in kwargs.items():
+            if key not in data:
+                continue
+            if data[key] == value:
+                add_node = True
+
+        if add_node:
+            nodes.append(node)
+
+    return nodes
 
 
-def taskmap(
+def map_tasks_to_features(
     task_description: Tuple, in_features: List[int], out_features: List[int]
 ) -> List[Tuple[str, Tuple[int, int]]]:
     """Map the provided task description to the feature ids of the network."""
@@ -357,31 +361,25 @@ def taskmap(
     return ret
 
 
-def out_features(G, layer: int):
-    return get_nodes_by_attribute(G, LAYER, layer)
-
-
-def in_features(G):
-    return get_nodes_by_attribute(G, LAYER, 0)
-
-
 def __tag_pruned(G: nx.Graph, model: torch.nn.Module):
-    for i, layer in enumerate(model.layers, start=1):
-        indices = torch.nonzero(layer.weight_mask == 0).tolist()
+    for layer, module in enumerate(model.layers, start=1):
+        # find all pruned weights
+        indices = torch.nonzero(module.weight_mask == 0).tolist()
 
-        pruned_edges = [((i - 1, i), (i, j)) for j, i in indices]
+        # translate their indices to edges
+        pruned_edges = [((layer - 1, i), (layer, j)) for j, i in indices]
 
         nx.set_edge_attributes(
-            G.edge_subgraph(pruned_edges), ParamState.pruned, STATE
+            G=G.edge_subgraph(pruned_edges), values=ParamState.pruned, name=STATE
         )
 
-        if hasattr(layer, "bias_mask"):
-            indices = torch.nonzero(layer.bias_mask == 0).tolist()
-            pruned_nodes = [(i, i) for (i,) in indices]
+        if not hasattr(module, "bias_mask"):
+            continue
 
-            nx.set_node_attributes(
-                G.subgraph(pruned_nodes), ParamState.pruned, STATE
-            )
+        indices = torch.nonzero(module.bias_mask == 0).tolist()
+        pruned_nodes = [(layer, i) for (i,) in indices]
+
+        nx.set_node_attributes(G.subgraph(pruned_nodes), ParamState.pruned, STATE)
 
 
 def __tag_inactive(G: nx.DiGraph, out_features):
@@ -446,10 +444,7 @@ def __tag_zombious(G: nx.DiGraph, in_features):
         ]
 
         # all in_edges are inactive ->> turn the node and all out_edges inactive
-        if (
-            not in_edges_states
-            and G.nodes[node][STATE] == ParamState.pruned
-        ):
+        if not in_edges_states and G.nodes[node][STATE] == ParamState.pruned:
             for edge in G.out_edges(node):
                 G.edges[edge][STATE] = ParamState.inactive
 
@@ -533,40 +528,7 @@ def __colormap(state: str):
     raise
 
 
-def __draw_nx(G, layout_G=None):
-    if layout_G is None:
-        layout_G = G
-
-    pos = nx.multipartite_layout(layout_G, LAYER)
-    edge_colors = [__colormap(data.get(STATE)) for *_, data in G.edges(data=True)]
-    node_colors = [__colormap(data.get(STATE)) for _, data in G.nodes(data=True)]
-
-    nx.draw_networkx_nodes(G, pos, nodelist=G.nodes(), node_color=node_colors)
-
-    nx.draw_networkx_edges(
-        G,
-        pos,
-        edgelist=G.edges(),
-        width=6,
-        alpha=0.7,
-        edge_color=edge_colors,
-    )
-
-
 def to_rgba(colorname, alpha):
     rgb_color = mcolors.to_rgba(colorname)  # Convert color name to RGBA
     r, g, b, _ = [int(255 * comp) for comp in rgb_color]  # Scale to 0-255 range
     return f"rgba({r}, {g}, {b}, {alpha})"
-
-
-# GENERAL UTILS for testing and so on.
-def lists_are_mutually_disjoint(*lists):
-    combined = set()
-    for lst in lists:
-        lst_set = set(lst)
-
-        if not combined.isdisjoint(lst_set):
-            return False
-
-        combined.update(lst_set)
-    return True

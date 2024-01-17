@@ -1,6 +1,6 @@
 """Simply run the configuration with multiple seeds to see stability."""
 
-from utils.constants import Init
+from training.models import Init
 
 seeds = list(range(10, 15))
 seeds = list(range(10))

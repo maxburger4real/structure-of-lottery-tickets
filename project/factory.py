@@ -143,10 +143,6 @@ class EarlyStopper:
         self.min_delta = min_delta
         self.min_loss = float("inf")
 
-    def reset(self):
-        self.counter = 0
-        self.min_loss = float("inf")
-
     def __call__(self, loss):
         loss_decreased = loss < self.min_loss
         loss_increased = loss > (self.min_loss + self.min_delta)

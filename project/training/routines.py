@@ -124,12 +124,11 @@ def imp(
 
         graph_metrics = evaluate_graph(model, graph_manager, level)
 
-
         logger.metrics(graph_metrics, prefix="graph/")
         logger.metrics(train_eval_metrics, prefix="performance/")
         logger.metrics(pparams=parameter_count, level=level, prefix="meta/")
         logger.commit()
-        
+
         if stop_when_model_degrades and graph_manager.is_degraded:
-            print('Stopping Because of Degradation')
+            print("Stopping Because of Degradation")
             break

@@ -24,8 +24,6 @@ class Config:
     factor: float = 0.35
     init_strategy_biases: str = None
     init_strategy_weights: str = None
-    init_mean: float = None
-    init_std: float = None
 
     task_description: dict = None
     n_samples: int = 800
@@ -48,9 +46,6 @@ class Config:
     local_dir_name: str = None
 
     l1_lambda: float = None  # lambda for l1 regularisation
-    bimt_local: bool = None  # if locality regularisation should be activated
-    bimt_swap: int = None  # swap every n-th iteration
-    bimt_prune: float = None  # if bimt thresholding in the end is activated.
     momentum: float = None
     batch_size: int = None  # if None, batch size is dataset size
     description: str = None  # just add information about the idea behind the configuration for documentation purposes.
