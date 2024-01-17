@@ -1,7 +1,7 @@
 '''Runner for wandb experiments.'''
 import wandb
 
-from common.training import routines
+from common.training.routines import start_routine
 from common.pruning import update_pruning_config
 from common.constants import *
 
@@ -45,4 +45,4 @@ def __start_run(config, mode=None):
         # push the updated config to wandb.
         wandb.config.update(config.__dict__, allow_val_change=True)
 
-        routines.start_routine(config)
+        start_routine(config)

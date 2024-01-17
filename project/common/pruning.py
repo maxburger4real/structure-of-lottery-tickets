@@ -29,6 +29,11 @@ def build_reinit_func(model: torch.nn.Module, config: Config):
 
     return reinitialize
 
+def prunify_model(model, prune_weights: bool, prune_biases: bool):
+    params = _extract_pruning_params(model, prune_weights, prune_biases)
+    prune.global_unstructured(params, prune.Identity)
+    return params
+    
 def build_pruning_func(model: torch.nn.Module, config: Config):
     """
     Returns a Closure that prunes the model on call.
@@ -137,6 +142,30 @@ def update_pruning_config(config: Config):
         config.base_model_shape = config.model_shape
 
     return config
+
+def make_global_pruner(parameters, pruning_method):
+
+    # pruner function CLOSURE
+    def pruner(amount):
+        prune.global_unstructured(
+            parameters=parameters, 
+            pruning_method=pruning_method, 
+            amount=amount
+        )
+        tensors = [getattr(module, name) for module, name in parameters]
+        min_magnitude = min(T[T != 0].abs().min() for T in tensors if T[T != 0].numel() > 0).item()
+        return min_magnitude
+    
+    return pruner
+
+def get_pruning_method(method_name):
+    if method_name == MAGNITUDE: 
+        return prune.L1Unstructured
+    elif method_name == RANDOM:
+        return prune.RandomUnstructured
+    else: 
+        raise ValueError('must specify pruning method')
+
 
 # not visible
 def __count_parameters(

@@ -1,7 +1,11 @@
+from collections import defaultdict
+from typing import Callable, Iterable
+
 import torch
 import numpy as np
 from torch import optim
 
+from common.log import Logger
 from common.config import Config
 from common.constants import *
 
@@ -52,24 +56,39 @@ def update(model, loader, optim, device, lambda_l1=None):
 
     return np.array(losses)
 
-def train_and_evaluate(model, train_loader, test_loader, optim, config:Config):
-    """Train a model for the specified amount of epochs."""
+def train_and_evaluate(
+    model: torch.nn.Module, 
+    train_loader: torch.utils.data.DataLoader, 
+    test_loader: torch.utils.data.DataLoader, 
+    optim: torch.optim.Optimizer, 
+    logger: Logger, 
+    stopper: Callable, 
+    epochs: Iterable, 
+    device: torch.device, 
+    log_every: int
+):
 
-    train_losses, eval_losses = [], []
+    metrics = defaultdict(list)
 
-    stop = build_early_stopper(config)
+    for epoch in epochs:
 
-    # train for epochs
-    for _ in range(0, config.epochs):
-        loss_train = update(model, train_loader, optim, config.device, config.l1_lambda).mean()
-        loss_eval, acc = evaluate(model, test_loader, config.device).mean().item()
+        train_loss = update(model, train_loader, optim, device)
+        val_loss, val_acc = evaluate(model, test_loader, device)
 
-        train_losses += [loss_train]
-        eval_losses += [loss_eval]
+        metrics[TRAIN_LOSS].append(train_loss.mean().item())
+        metrics[VAL_LOSS].append(val_loss.mean().item())
+        metrics[ACCURACY].append(val_acc.mean().item())
 
-        if stop(loss_eval): break
+        if stopper(metrics[VAL_LOSS][-1]):
+            break
 
-    return np.array(train_losses), np.array(eval_losses)
+        if log_every is not None and epoch % log_every == 0 and epoch != epochs[-1]:
+            latest = {k: v[-1] for k, v in metrics.items()}
+            logger.metrics(latest, prefix='epoch/')
+            logger.commit()
+
+    logger.metrics({k: v[-1] for k, v in metrics.items()})
+    return metrics
 
 def build_optimizer(model, config: Config):
     """inspired by wandb
@@ -116,6 +135,10 @@ class EarlyStopper:
         self.counter = 0
         self.patience = patience
         self.min_delta = min_delta
+        self.min_loss = float('inf')
+
+    def reset(self):
+        self.counter = 0
         self.min_loss = float('inf')
 
     def __call__(self, loss):

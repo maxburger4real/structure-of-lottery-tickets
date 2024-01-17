@@ -28,16 +28,19 @@ class Init(Enum):
 
 class BaseModel(nn.Module):
     """An abstract class that sets the seed for reproducible initialization."""
-    def __init__(self, seed):
+    def __init__(self, seed, weight_init_func, bias_init_func):
         super().__init__()
         if seed is None: seed = 0
         torch_utils.set_seed(seed)
 
-    def init(self, weight_init_func, bias_init_func):
+        self.weight_init_func = weight_init_func
+        self.bias_init_func = bias_init_func
+
+    def init(self):
         def init_module(module):
             if not isinstance(module, nn.Linear): return
-            weight_init_func(module.weight)
-            bias_init_func(module.bias)
+            self.weight_init_func(module.weight)
+            self.bias_init_func(module.bias)
 
         self.apply(init_module)
         return self
@@ -45,8 +48,8 @@ class BaseModel(nn.Module):
 
 class MLP(BaseModel):
     """Versatile MLP."""
-    def __init__(self, shape, activation, seed):
-        super().__init__(seed)
+    def __init__(self, shape, activation, seed, weight_init_func, bias_init_func):
+        super().__init__(seed, weight_init_func, bias_init_func)
 
         modules = []
         modules.append(nn.Linear(shape[0], shape[1]))
@@ -81,9 +84,10 @@ class MultiTaskBinaryMLP(MLP):
     each output of the model is treated as a binary classification problem, which is independent
     of the other outputs.
     '''
-    def __init__(self, shape: torch.Size, activation=nn.ReLU, seed=None):        
-        super().__init__(shape, activation, seed)
+    def __init__(self, shape: torch.Size, activation=nn.ReLU, seed=None, weight_init_func=None, bias_init_func=None):        
+        super().__init__(shape, activation, seed, weight_init_func, bias_init_func)
         self.loss_fn = torch.nn.BCEWithLogitsLoss(reduction='none')
+        self.init()
     
     def predict(self, logits):
         '''Logits are between -inf and inf. The decision-border is at 0.'''
@@ -117,9 +121,10 @@ class SingleTaskMultiClassMLP(MLP):
     each output of the model is treated as a binary classification problem, which is independent
     of the other outputs.
     '''
-    def __init__(self, shape: torch.Size, activation=nn.ReLU, seed=None):
-        super().__init__(shape, activation, seed)
+    def __init__(self, shape: torch.Size, activation=nn.ReLU, seed=None, weight_init_func=None, bias_init_func=None):
+        super().__init__(shape, activation, seed, weight_init_func, bias_init_func)
         self.loss_fn = torch.nn.CrossEntropyLoss(reduction='mean')
+        self.init()
 
     def predict(self, logits):
         '''Logits represent class probabilities. Maximum value is the prediction.'''
