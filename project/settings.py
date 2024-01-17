@@ -1,8 +1,6 @@
 """Containing Settings for local things."""
 from pathlib import Path
 
-
-
 # Assuming this file is in the 'config' directory
 _config_file_path = Path(__file__).resolve()
 PROJECT_ROOT = _config_file_path.parent.parent  # This will navigate two levels up

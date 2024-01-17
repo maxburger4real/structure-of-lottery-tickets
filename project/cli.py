@@ -1,9 +1,11 @@
 """
-USAGE
--d wandb disable
-python project/run_experiment.py -d -r project/configs/runs/_000_debug.py
-python project/run_experiment.py -d -r project/configs/runs/_000_debug.py
-python project/run_experiment.py -d -r project/configs/runs/_000_debug.py -s project/configs/sweeps/_01_compare_with_multiple_seeds
+CLI for starting runs and sweeps from files.
+
+python cli.py -r path/to/runconfig.py
+python cli.py -r path/to/runconfig.py -s path/to/sweepconfig.py
+python cli.py -e path/to/experiment.py (contains both run and sweep config)
+
+use the -d flag for debugging
 """
 
 import argparse

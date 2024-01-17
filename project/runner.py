@@ -1,9 +1,13 @@
-'''Runner for wandb experiments.'''
+'''
+Runner for wandb experiments.
+1. Retrieves the config files
+2. creates a wandb run or sweep with the selected training routine
+'''
 import wandb
 
-from common.pruning import update_pruning_config
-from common.training.routines import start_routine
-from common.config import import_config, Config
+from training.pruning import update_pruning_config
+from training.routines import start_routine
+from training.config import import_config, Config
 
 from settings import wandb_kwargs
 
