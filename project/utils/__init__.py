@@ -1,1 +1,1 @@
-'''Simple independendent utilities.'''
+"""Simple independendent utilities."""
