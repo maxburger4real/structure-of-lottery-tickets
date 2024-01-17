@@ -7,6 +7,7 @@ from typing import List, Tuple
 
 from common.config import Config
 from common.torch_utils import module_is_trainable
+from common.training.routines import Pipeline
 from common.constants import *
 
 
@@ -108,6 +109,9 @@ def update_pruning_config(config: Config):
      * pruning_rate  -> just fyi 
      * pruning_trajectory  -> single point of truth
     '''
+    if Pipeline[config.pipeline] != Pipeline.imp:
+        return config
+    
     pparams = __count_parameters(
         config.model_shape, config.prune_weights, config.prune_biases
     )
@@ -153,8 +157,11 @@ def make_global_pruner(parameters, pruning_method):
             amount=amount
         )
         tensors = [getattr(module, name) for module, name in parameters]
-        min_magnitude = min(T[T != 0].abs().min() for T in tensors if T[T != 0].numel() > 0).item()
-        return min_magnitude
+        metrics = dict(
+            min_pruning_magnitude=min(T[T != 0].abs().min() for T in tensors if T[T != 0].numel() > 0).item()
+        )
+
+        return metrics
     
     return pruner
 

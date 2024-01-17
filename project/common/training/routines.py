@@ -1,12 +1,15 @@
+'''high level training routines.'''
+from enum import Enum
 from tqdm import tqdm
-from common.log import Logger
-from common import factory as f
+from typing import Iterable
 from common.config import Config
 from common.factory import Factory
-from common.nxutils import GraphManager
-from common.pruning import build_pruning_func, build_reinit_func
-from common.training.utils import build_early_stopper, build_optimizer, evaluate, train_and_evaluate
-from common.constants import *
+from common.training.utils import evaluate, train_and_evaluate
+
+class Pipeline(Enum):
+    vanilla = 'vanilla'
+    imp = 'imp'
+    bimt = 'bimt'
 
 def start_routine(config: Config):
     # run the pipeline defined in the config
@@ -16,63 +19,77 @@ def start_routine(config: Config):
             return vanilla.run(model, train_loader, test_loader, config)
 
         case Pipeline.imp:
-            factory = Factory(config)
-            model = factory.make_model()
-            train_loader, test_loader = factory.make_dataloaders()
-            pruner = factory.make_pruner(model)
-            reinitializer = factory.make_renititializer(model)
-            gm = factory.make_graph_manager(model)
-            logger = factory.make_logger()
-
-            return imp(model, train_loader, test_loader, pruner, reinitializer, gm, logger, config, Factory(config))
+            return imp(
+                training_epochs=config.epochs,
+                parameter_trajectory=config.param_trajectory,
+                device=config.device,
+                factory=Factory(config),
+                first_level=-config.extension_levels,
+                stop_when_model_degrades=config.stop_on_degradation
+            )
     
         case Pipeline.bimt:
             raise
             return bimt.run(model, train_loader, test_loader, config)
 
-def evaluate_graph(model, gm, level, logger):
+def evaluate_graph(model, gm, level):
     if gm is None: return
-
     gm.update(model, level) 
-    metrics = gm.metrics()
-    logger.metrics(metrics)
+    return gm.metrics()
 
-def imp(model, train_loader, test_loader, prune, reinit, gm: GraphManager, log: Logger, config: Config, factory: Factory):
+def imp(
+    training_epochs: int, 
+    parameter_trajectory: Iterable,
+    factory: Factory,
+    device: str, 
+    first_level: int = 0, 
+    stop_when_model_degrades=True,
+):
+    # prepare model and data
+    model = factory.make_model()
+    train_loader, test_loader = factory.make_dataloaders()
 
-    #model = factory.make_model()
+    # prepare helpers
+    pruner = factory.make_pruner(model)
+    reinitializer = factory.make_renititializer(model)
+    graph_manager = factory.make_graph_manager(model)
+    logger = factory.make_logger()
 
-    levels = list(range(-config.extension_levels, config.pruning_levels+1))
+    # test model before any training
+    initial_metrics = evaluate(model, test_loader, device)
+    logger.metrics(initial_metrics, prefix='performance/')
+    logger.metrics(level=first_level-1,prefix='meta/')
+    logger.commit()
 
-    init_loss, init_accuracy = evaluate(model, test_loader, config.device)
-    log.metrics({VAL_LOSS:init_loss, ACCURACY:init_accuracy, 'level': levels[0]-1})
-    log.commit()  # LOG BEFORE TRAINING
+    parameter_count = parameter_trajectory[0]
+    for level, parameter_target in enumerate(parameter_trajectory, start=first_level):
 
-    # get the complete levels
-    pparams, pborder = config.param_trajectory[0], 0
+        if level > first_level:
+            pruning_amount = parameter_count - parameter_target
+            parameter_count = parameter_target
 
-    for i, level in tqdm(enumerate(levels, start=-1), 'Pruning Levels', len(levels)):
+            pruning_metrics = pruner(pruning_amount)
+            logger.metrics(pruning_metrics, prefix='meta/')
 
-        log.metrics(dict(pparams=pparams, level=level, pborder=pborder))
+            reinitializer(model)
 
-        if i != -1:
-            amount = config.pruning_trajectory[i]
-            pborder = prune(amount)
-            pparams -= amount
-            reinit(model)
-
-        train_and_evaluate(
+        train_eval_metrics = train_and_evaluate(
             model, train_loader, test_loader, 
-            optim=build_optimizer(model, config), 
-            logger=log, 
-            stopper=build_early_stopper(config), 
-            epochs=tqdm(range(config.epochs), f'Training Level {level+1}/{len(levels)}', config.epochs), 
-            device=config.device, 
-            log_every=config.log_every
+            optim=factory.make_optimizer(model), 
+            stopper=factory.make_stopper(), 
+            epochs=tqdm(range(training_epochs), f'Training Level {level-first_level+1}/{len(parameter_trajectory)}', training_epochs), 
+            device=device, 
         )
 
-        evaluate_graph(model, gm, level, log)
+        graph_metrics = evaluate_graph(model, graph_manager, level)
 
-        if gm.untapped_potential < 0 and config.stop_on_degradation: 
-            break
+        if stop_when_model_degrades and graph_manager.is_degraded: break
 
-        log.commit()
+        logger.metrics(graph_metrics, prefix='graph/')
+        logger.metrics(train_eval_metrics, prefix='performance/')
+        logger.metrics(
+            pparams=parameter_count, 
+            level=level, 
+            prefix='meta/'
+        )
+        logger.commit()

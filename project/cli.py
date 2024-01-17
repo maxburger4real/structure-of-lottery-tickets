@@ -11,10 +11,6 @@ import argcomplete
 
 import runner
 
-from common.constants import *
-from common.config import import_config
-
-
 def main():
 
     parser = argparse.ArgumentParser()
@@ -32,19 +28,10 @@ def main():
     # THE ARGHSSSSSS
     args = parser.parse_args()
 
-    if args.experiment is not None:
-        runconfig, sweepconfig = import_config(args.experiment)
-    elif args.runconfig is not None:
-        runconfig, _ = import_config(args.runconfig)
-        _ ,sweepconfig = import_config(args.sweepconfig)
-    else:
-        raise ValueError('Must provide either experiment or runconfig.')
-        
-    if runconfig is None: raise ValueError('No valid runconfig found.')
-    
     runner.run(
-        runconfig, 
-        sweepconfig, 
+        experiment_file=args.experiment,
+        run_file=args.runconfig,
+        sweep_file=args.sweepconfig,
         mode=__parse_mode(args),
         count=__parse_count(args)
     )

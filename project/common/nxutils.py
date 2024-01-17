@@ -20,6 +20,8 @@ class GraphManager():
 
     def __init__(self, unpruned_model, shape, task_description):
         '''Initialize the contant values of the Network, that will remain true over pruning iterations.'''
+        self.is_connected = self.is_split = self.is_degraded = False
+
         self.shape = shape
 
         self.num_tasks = len(task_description) if task_description is not None else 1
@@ -60,7 +62,7 @@ class GraphManager():
         if self.iteration == self.split_iteration: 
             items = list(metrics.items())
             for k,v in items:
-                metrics[f'split-{k}'] = v
+                metrics[f'split/{k}'] = v
 
             for name, g in self.catalogue.items():
                 metrics[name] = self.fig(g)
@@ -82,6 +84,14 @@ class GraphManager():
         self.__update_catalogue(subnetworks)
 
         self.node_statistics, self.edge_statistics = statistics(self.G)
+
+        self.is_connected = self.is_split = self.is_degraded = False
+        if self.untapped_potential > 0:
+            self.is_connected = True
+        if self.untapped_potential == 0:
+            self.is_split = True
+        elif self.untapped_potential < 0:
+            self.is_degraded = True
     
     def fig(self, 
         G: nx.Graph = None,

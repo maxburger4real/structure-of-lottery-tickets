@@ -1,13 +1,16 @@
 '''Runner for wandb experiments.'''
 import wandb
 
-from common.training.routines import start_routine
 from common.pruning import update_pruning_config
-from common.constants import *
+from common.training.routines import start_routine
+from common.config import import_config, Config
 
 from settings import wandb_kwargs
 
-def run(runconfig, sweepconfig, **kwargs):
+def run(experiment_file, run_file, sweep_file, **kwargs):
+
+    runconfig, sweepconfig = __import_configs(experiment_file, run_file, sweep_file)
+
     if sweepconfig is not None:
         sweep_id = wandb.sweep(
             sweep=sweepconfig, 
@@ -25,7 +28,24 @@ def run(runconfig, sweepconfig, **kwargs):
     else:
         __start_run(runconfig, kwargs.get('mode', None))
 
-def __start_run(config, mode=None):
+def __import_configs(experiment_file, run_file, sweep_file):
+    '''
+    Import the configurations from the provided file. 
+    returns at least a runconfig, optionally a sweepconfig
+    '''
+    if experiment_file is not None:
+        runconfig, sweepconfig = import_config(experiment_file)
+    elif run_file is not None:
+        runconfig, _ = import_config(run_file)
+        _ ,sweepconfig = import_config(sweep_file)
+    else:
+        raise ValueError('Must provide either experiment or runconfig.')
+        
+    if runconfig is None: raise ValueError('No valid runconfig found.')
+
+    return runconfig, sweepconfig
+    
+def __start_run(config: Config, mode=None):
     """Start a wandb experiment from a config."""
 
     with wandb.init(config=config, mode=mode, **wandb_kwargs) as run:
@@ -34,7 +54,7 @@ def __start_run(config, mode=None):
         config.__dict__.update(**wandb.config)
         
         # optional config updates needed for model extension
-        config = update_pruning_config(config) if Pipeline[config.pipeline] == Pipeline.imp else config
+        config = update_pruning_config(config)
 
         # save the config and add some wandb info to connect wandb with local files
         config.run_id = run.id

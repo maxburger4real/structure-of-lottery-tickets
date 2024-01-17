@@ -26,9 +26,9 @@ STATE_DICT = "model_state_dict"
 TaskCoverage = Enum('TaskCoverage', ['COMPLETE', 'PARTIAL', 'ABSENT'])
 
 # Optimizers
-ADAM = 'Adam'
+ADAM = 'adam'
 SGD = 'sgd'
-ADAMW = 'AdamW'
+ADAMW = 'adamw'
 
 # Scalers
 MinMaxZeroMean = 'min-max-zero-mean'
