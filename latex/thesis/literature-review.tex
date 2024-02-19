@@ -1,12 +1,29 @@
 \section{Literature Review}
+
+\subsection{TODO: }
 overparameterization : [3] Yann Dauphin and Yoshua Bengio. Big neural networks waste capacity. CoRR, abs/1301.3583, 2013.
 
 Misha Denil, Babak Shakibi, Laurent Dinh, Nando de Freitas, et al. Predicting parameters in deep learning. In Advances in Neural Information Processing Systems, pages 2148–2156, 2013.
 
-
 Great intro to compression in Zhou et al Supermasks.
 
+A literature review helps you gain a robust understanding of any extant academic work on your topic, encompassing:
+\begin{itemize}
+    \item Selecting relevant sources
+    \item Determining the credibility of your sources
+    \item Critically evaluating each of your sources
+    \item Drawing connections between sources, including any themes, patterns, conflicts, or gaps
+  \end{itemize}
 
+
+A literature review is not merely a summary of existing work. Rather, your literature review should ultimately lead to a clear justification for your own research, perhaps via:
+\begin{itemize}
+    \item Addressing a gap in the literature
+    \item Building on existing knowledge to draw new conclusions
+    \item Exploring a new theoretical or methodological approach
+    \item Introducing a new solution to an unresolved problem
+    \item Definitively advocating for one side of a theoretical debate
+\end{itemize}
 
 \subsection{introduction}
 at the core this thesis is about understanding the structure of lottery tickets. So what is or was important about that?
@@ -188,7 +205,11 @@ The results suggest that pruning the smallest weights of a network is a competet
 The authors show that the lottery tickets are significantly closer to the subnetwork that was pruned solution than randomly reinitialized sparse models were after training. 
 The experiments are conducted on the original LeNet5 architecture trained on MNIST, as well as ResNet-50 Architecture trained on ImageNet. Further they show that the trained lottery tickets reside in the same basin of the loss landscape as the pruned solution, by linearly interpolating between the two networks, in the same way as in \autocite{LinearModeConnectivity}.
 
-\textcite{maene_towards_2021} name the hypothesis of \autocite{WhyLotteryTicketsWin} the regurgitating tickets interpretation. They designed an experiment in which they force the network to learn a different solution by creating a repellent loss function. This loss function increases when the model is close to the same solution as in the previous iteration of IMP. With the repellent loss, no lottery tickets could be found, which further indicates that the solution found with IMP indeed relearns the pruned solution.
+\textcite{maene_towards_2021} name the hypothesis of \autocite{WhyLotteryTicketsWin} the regurgitating tickets interpretation.
+They designed an experiment in which they force the network to learn a different solution by creating a repellent loss function.
+This loss increases when the model is close to the same solution as in the previous iteration of IMP.
+This forces the network to find a new solution every iteration.
+With the repellent loss, no lottery tickets could be found, which further indicates that the solution found with IMP indeed relearns the pruned solution.
 
 TODO: what are the theories for why it works? learn to the same basin as sgd.
 
@@ -249,16 +270,58 @@ The authors claim, that their algorithm is up to \textbf{19x} faster than the it
 This increase in efficiency is compelling for repeated experiments.
 
 \subsection{Understanding Lottery Tickets}
-find attempts where people tried to understand
-\subsection{All Alive Pruning}
-acknoledges dead connections
-\subsubsection{Mechanistic Interpretability}
-is the basis of understanding the networks
-\subsubsection{symbolic regression, BIMT}
-inspired the experiments
+\subsubsection{Numerical Characteristics}
+\autocite{maene_towards_2021} note that the average magnitude of the unpruned weights increases with each pruning round. The smallest magnitude weights in the network are pruned, and the remaining weights train to similar values, therby increasing the average magnitude. The authors note, that this follows from the regurgitating tickets interpretation, described in chapter (?).
+In the original lottery tickets paper by \textcite{DBLP:conf/iclr/FrankleC19}, the authors analyse the distribution of weight magnitudes after training. Before the first pruning iteration, the distribution of weight magnitudes follows a gaussian distribution. After several pruning iterations, the distributions tends towards a bimodal distribution, where the values close to zero are carved out.
+The authors attempted to reinitialize the sparse subnetworks randomly according to the distribution of the the lottery ticket weight magnitudes, however the performance was only slightly better that reinitialization with the original weight distribution.
+
+\subsubsection{Lottery Ticket as a Directed Acyclic Graph}
+It can be interesting to view the lottery ticket as a directed Acyclic Graph (DAG).
+Since it is sparsely connected, the remaining connections could provide insight into the funcionality of the network.
+\textcite{DBLP:conf/iclr/FrankleC19} analyse the connectivity of each node in the Lottery Ticket DAG.
+They find that the input connectivity, namely the number of incomming edges to a node (neuron) is relatively even among nodes of the same layer.
+The connectivity examined in LeNet trained on MNIST is approximately proportional to the sparsity of the layer.
+Regarding the output connections, there are bigger differences in connectivity amongst nodes.
+Especially in the input layer, a significant proportion of nodes has no remaining outgoing connections at high sparsity. 
+The authors hypothesize that the disconnected input nodes are not informative and likely correspond to the outer frame of the MNIST Image, which does not contain information about the desired prediction task.
+
+When applying unstructured pruning (prune individual weights instead of neurons), some neurons may end up in a state where they do not have any incoming or outgoing connections. 
+
+\textcite{HanEtAl15} acknoledge the possibility of 'dead neurons'. 
+The authors state that dead neurons and all connections to or from a dead neuron can be safely pruned.
+According to \autocite{HanEtAl15}, the dead neurons do not contribute to the final loss, and therefore do not receive any gradients. 
+During retraining, regularization will remove the dead neurons automatically. 
+A missing scenario is the existence of a neuron with outgoing connections, a bias and no incoming connections. This neuron might still contribute to the output and receive gradients. 
+In this case, the neuron is considered dead, but removing it changes the output of the network.
+\textcite{AllAlivePruning} include this scenario and describe that removing such a neuron maintains the networks function by simply transfering the bias to the next layer. 
+Therefore, all neurons with no incoming or outgoing connections can be assumed to be 'dead', thus removable. Further, all weights connection to a dead neuron can be removed as well.
+\textcite{AllAlivePruning} propose a novel pruning strategy employing this knowledge, named 'All-Alive-Pruning' . 
+The authors use Iterative Magnitude Pruning. Dead neurons and the weights connected to them are removed after pruning, resulting in an 'all-alive' network.
+Only at very high sparsities, the networks pruned with All-Alive-Pruning demonstrate better performance. 
+This improvement is attributed to the increased capacity of the subnetwork, since more of its parameters are 'alive' and can contribute to the network output.
+
+Only a few researchers looked at lottery tickets derived with Iterative Magnitude Pruning through the lens of Directed Acyclic Graphs. 
+The insights relate the function of the network to its structure.
+'Dead neurons' \autocite{HanEtAl15, AllAlivePruning} are neurons are part of the graph structure that can be removed without harming the function. 
+\textcite{DBLP:conf/iclr/FrankleC19} discover that inputs that do not transmit information are pruned at higher rates, leaving them with less outgoing connections.
+Overall the structure of Lottery Tickets and how it relates to its function remains elusive.
+
+\subsubsection{BIMT - Brain inspired modular training}
+A sparse network where the structure of the network relates to the underlying algorithm or problem structure can be beneficial for interpretability.
+\textcite{BIMT} propose a training method called Brain-Inspired Modular Training (BIMT) that aims to produce sparse networks that can more easily be visually interpreted.
+The authors aim to encourage modularity in the network through embedding the neurons in a euclidean space.
+By punishing connections that are long in euclidean space, visible clusters of neurons form. 
+Since neurons that are next to each other in the euclidean space do not necessarily belong into logical group, the authors introduce an additional algorithm that swaps neurons in the network to increase the total weighted length of connections.
+On simple symbolic tasks, \autocite{BIMT} uncover structures that represent the structure of the underlying tasks.
+On symbolic datasets, BIMT succeeds in discovering independence, feature sharing and compositionality of the problem, which is visible in the resulting structure of the sparse network.
+The authors also use BIMT to train a feed forward neural network on simple classification tasks as well as the MNIST dataset, where they used three dimensional euclidean space to embed the network.
+With larger models and especially in three dimensions, the shortcomings of the method become apparent as visual inspection does not help for interpretation any longer.
 
 
-
+\subsection{Conclusion}
+The study of lottery tickets is a broad and diverse field. Even though theoretical studies were mentioned in the literature review, the majority of research conducted in this space is of empirical nature.
+TODO: review all the papers and cite all of them again.
+A blind spot in the literature is the connection between the structure of a lottery ticket and its function. 
 
 \subsection{Other possibly related stuff}
 \begin{itemize}
@@ -269,21 +332,4 @@ inspired the experiments
 
 
 
-\subsection{about}
-A literature review helps you gain a robust understanding of any extant academic work on your topic, encompassing:
-\begin{itemize}
-    \item Selecting relevant sources
-    \item Determining the credibility of your sources
-    \item Critically evaluating each of your sources
-    \item Drawing connections between sources, including any themes, patterns, conflicts, or gaps
-  \end{itemize}
 
-
-A literature review is not merely a summary of existing work. Rather, your literature review should ultimately lead to a clear justification for your own research, perhaps via:
-\begin{itemize}
-    \item Addressing a gap in the literature
-    \item Building on existing knowledge to draw new conclusions
-    \item Exploring a new theoretical or methodological approach
-    \item Introducing a new solution to an unresolved problem
-    \item Definitively advocating for one side of a theoretical debate
-\end{itemize}
