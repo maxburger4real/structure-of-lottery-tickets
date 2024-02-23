@@ -73,6 +73,7 @@ Over all pruning levels, the network might seperate into two network or lose one
 For the experiments described here, the run is stopped as soon as the network degrades to avoid unnecessary computational effort.
 After each pruning level, the network is evaluated to check if it seperated or degraded.
 When looking at this over the the course of all pruning levels, there are four different scenario for a network:
+
 \begin{enumerate}
     \item seperated (and not degraded)\\
     The network seperates at some pruning level. 
@@ -86,6 +87,7 @@ When looking at this over the the course of all pruning levels, there are four d
     The network does neither seperate, nor degrade. 
     The result is a single network that contains all input and output nodes of all tasks.
 \end{enumerate}
+
 \begin{figure}[ht]
     \centering
     \includegraphics[width=1.0\linewidth]{2-layer-histogram-split-behaviour.png}
@@ -100,8 +102,8 @@ Each scenario described above is encoded with a color.
 On the x-axis, the extension levels are shown.
 On the y-axis, the percentage of networks in each category can be view.
 A clear pattern in the data is, that the network seperates for the first time with at least 7 pruning levels.
-The number of weights at that level is 1672, which is $~15$-times the amount of weights compared to the base model. 
-Starting at extension level 9, which represents an increase of $~32$-times, the majority of the netowrks seperate.
+The shape and number of weights at that level is 4-38-38-2 and 1672 respectively, which is $~15$-times the amount of weights compared to the base model. 
+Starting at shape 4-57-57-2 or extension level 9, which represents an increase of $~32$-times, the majority of the netowrks seperate.
 Up until the 6-th extension level, no network seperates or degrades. 
 However if the network would be pruned further, at some point every network would degrade.
 Therefore it is also reasonable to assume that some of the networks that are still interconnected after all pruning iterations would seperate well, if they were pruned to less weights.
@@ -140,47 +142,110 @@ However even with this caveat, a clear trend is visible.
 The more pruning levels the network experiences, the smaller the percentage of the networks weights that is active.
 For some networks that were extended 20 or more levels, the final percentage of active weights in the network is only around $20$ percent, which translates to only $~22$ active weights.
 
-Techniques like L1-Regularisation used in \autocite{HanEtAl15} or All alive Pruning \autocite{AllAlivePruning} could counteract this effect of compounding inactive parameters.
+Techniques like L1-Regularisation used in \autocite{HanEtAl15} and \autocite{Frankle}?? or All-Alive-Pruning \autocite{AllAlivePruning} could counteract this effect of compounding inactive parameters.
 However, this is a topic for future research and not addressed in this thesis. 
 
+\subsubsection{When do networks seperate?}
+One question regarding the seperation of a network is, at what level it seperates.
+What is the number of available weights the network has at the level when it splits?
+How does the number of extension levels / the networks size influence the iteration when it splits?
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=.5\linewidth]{2-layer-active-available-at-split-log.png}
+    \caption{
+        The figure depicts the number of available weights / prunable weights (orange) and the number of active weights (blue) at the iteration when the networks first split.
+        Each dot represents an average over four runs with different seeds.
+        The error bars indicate the maximum and minimum value of the different runs.
+        While the number of available weights at the split iteration increases, the number of active weights stays fairly constant.
+        Logarithmic.
+    }
+    \label{fig:2l-active-split}
+\end{figure}
+
+Interestingly, when extending the network more, it tends to split in earlier pruning levels.
+In figure \ref{fig:2l-active-split}, the number of available/unpruned weights (orange) weights at each pruning level is displayed.
+Each point on the line represents an average of three runs, repeated with different seeds for the network initialization.
+The error bars depict the minimum and maximum value amonst those three repeated runs.
+The graph is shown in a logarithmic scale, and the increase follows almonst an exponential curve.
+The earlier the network seperates in terms of pruning levels, the more unpruned weights it has.
+However, when looking at the the number of active weights the networks have at iteration they split, the curve does not have the same exponential growth trajectory.
+It increases slightly but almost remains flat, covering a narrow range of around 80 to 120 weights.
+
+This data indicate that the number of active weights is a central quantity to splitting.
+Since the active subgraph is indeed the graph on which the splitting is checked, this seems plausible.
+A certain 'barrier' might be inherent to each combination of network architecture, dataset and hyperparameters.
+Given a dataset where there is exactly zero correlation between the two tasks might move the barrier towards higher number of edges where the network is likely to split.
+A slight correltation, which is probably also the case in the Moons-Circles dataset and, might move the barrier lower.
+Some hyperparameters or optimizers also might move the barrier, through being better suited to remove weights that connect the tasks.
+For instance, techniques like L1 regularisation might move the barrier up, due to more efficient removal of weights that do not increase in magnitude, but also do not decrease on their own.
+These are all questions for further research to tackle.
+ 
+TODO: look at the iteration where it degrades.
+
+
 \subsubsection{What makes the networks seperate?}
-The question arises for what the main driver for splitting in this case is.
+As seen in figure \ref{fig:2laxer-histogram}, the network starts to split at 7 extension levels and a network shape of 4-38-38-2, with 1672 weights.
+However, it is not obvious what the main contributor for network splitting is.
+To gain a better understanding of that phenomenon an experiment was conducted that compares different combinations of pruning levels, network size and pruning rate.
+For this experiment, four architecture were selected.
+One network with shape 4-31-31-2 (extension level 6), which did not seperate in any run.
+A network with 38 and 48 hidden neurons (extension levels 7 and 8), where only one in four networks seperated.
+And finally a network with 57 hidden neurons, where all four runs seperated.
+This range of architectures is assumed to encompass a critical are, due to the change in splitting behaviour.
+Further, each of the four architectures was trained with 0 to 10 pruning levels.
+The pruning target is fixed at 112, such that all networks end up at the same number of prunable parameters after the last pruning level.
+Therefore, the pruning rate is variable depending on network size and number of levels.
+Each combination of network size and number of pruning levels was repeated four times, with different seeds for the network initialization.
 
-The model size or the number of pruning iterations.
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=1.0\linewidth]{grid-2-layer-eval-abs.png}
+    \caption{This Figure depicts the network size by the number of neurons per hidden layer (hidden dim) against the number of active weights after all pruning levels.
+    The colors denote if the network seperated, degraded or stayed connected.}
+    \label{fig:grid-1}
+\end{figure}
 
-To get a first impression and intuition about this question, a tangential experiment was launched with a grid of parameters.
+In figure \ref{fig:grid-1} the impact of network size is demonstrated.
+On the y-axis, the size of the network is encoded by its hidden dimension.
+On the x-axis, the number of active weights after all pruning levels is depicted.
+Each dot represents one run of the experiment.
+Regarding the two smaller networks with hidden dimension 31 and 38, none of the networks seperated. 
+Increasing the number of pruning levels and decreasing the pruning rate did not result in a seperated network.
+On the other hand, the two larger networks indeed split.
 
+These results indicates, that there is a phase change in the networks ability to seperate and that it has to have a certain minimum of overparameterization.
+Clearly there is no hard boundary, but probably a significant increase in the likelihood of splitting when the network exceeds a certain size.
 
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=1.0\linewidth]{grid-2-layer-pruning-rate-48-hd.png}
+    \caption{This Figure depicts the network with shape 4-48-48-2.
+    TODO:more }
+    \label{fig:grid-2}
+\end{figure}
+
+To investigate the influence of pruning levels and pruning rate, the splitting behaviour of the network with hidden dimension 48 is depicted in fogure \ref{fig:grid-2}.
+Since the pruning target and the network size is fixed, the pruning rate has to change when increasing the number of pruning levels.
+On the bottom x-axis the number of pruning levels is depicted and on the top x-axis, the corresponding pruning rate.
+On the y-axis, the number of active weights after all pruning levels is depicted.
+With more pruning levels and a lower pruning rate, the network is more likely to seperate.
+Also, a seemingly contradicting trend to figure \ref{fig:collateral_damage} is visible, namely that the number of active weights increases with more pruning levels.
+The difference to the previous experiment is, that while the number of pruning levels increases in both cases, the pruning rate decreases in in this experiment, visible in figure \ref{fig:grid-2}. In the experiment depicted in figure \ref{fig:collateral_damage}, the pruning rate is constant, while the network size increases.
+
+However, this data also indicates that there also is a certain phase change in the likelihood of splitting.
+Since the pruning rate and the number of pruning levels are two tightly interlinked parameters, it is hard to examine them in isolation.
+The largest pruning rate where a network seperated was $~0.65$. 
+With pruning rates lower than $~0.41$, the networks consistently seperate.
+The data indicates that more pruning levels with lower pruning rates are generally favorable to network splitting.
+\textcite{DBLP:conf/iclr/FrankleC19} already note that iterative pruning leads to smaller lottery tickets than one shot pruning.
+It is reasonable to assume, that the same phenomenon takes place with regards to network splitting.
+Less pruning leves versus lower pruning rates represents a trade-off between favorable conditions and computational cost.
+
+A possible explanation for why the number of active weights is lower when the pruning rate is higher, is that larger pruning rates 
 
 
 \subsection{Extending the network}
-
-The question arises for what the main driver for splitting in this case is.
-The model size or the number of pruning iterations.
-To get a first impression and intuition about this question, a tangential experiment was launched with a grid of parameters.
-Four different network sizes and six different values for the number of pruning iterations are used, and each experiment is repeated four times with different seeds.
-The network sizes $h \in \{31, 38, 48, 57\}$, where $h$ is the number of hidden neurons in the network with shape (4, h, h, 2).
-The different number of pruning levels are $l = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]$.
-This parameter range is similar to where the network first splits in the previous experiment.
-For each network it is tracked if it splits.
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=1.0\linewidth]{grid.png}
-    \caption{ef}
-    \label{fig:grid}
-\end{figure}
-
-In figure \ref{fig:grid} the results are depicted as a heatmap. 
-One can clearly see that in the case of the smaller network, increasing the number of pruning iterations from 6 in the case of the network with $h=31$ to 10 did not result in a split.
-For completeness, also pruning levels between 1 and 5 did not lead the the network splitting.
-For the network with $h=38$ also no splitting occurred over the whole range of pruning levels.
-Starting at $h=48$, the network splits quite reliably.
-Even with only $3$ pruning levels, one of the four networks split.
-
-As for the network with $h=57$ a similar scenario plays out
-The network splits for all tested number of pruning levels except for one-shot pruning, meaning only one pruning level.
-The results suggest that the size of the network is a more important factor than the number of pruning levels, regarding network splitting.
-Though, the results also show that the networks tend to split more often, when there are more pruning levels.
 
 \begin{figure}[ht]
     \centering
@@ -205,11 +270,6 @@ Further, the number of active weights at the iteration slightly decreases as the
 
 In these experiments, the networks tend to split in a narrow range of active weights in the network.
 The largest number of active weights is 119 and the lowest is 82 at the iteration where the network splits.
-
-To set this observation into more context, the same experiment was conducted for 2 additional architectures.
-Once for a network with a single hidden layer, and once for a network with 3 hidden layers.
-The networks were also extended like in the previously described experiment.
-Each architecture was tested with 5 different seeds.
 
 \subsubsection{Three hidden layers}
 For this experiment, the base network has the shape (4, 6, 6, 6, 2).
