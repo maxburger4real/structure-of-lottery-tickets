@@ -72,8 +72,8 @@ def train_and_evaluate(
             break
 
         if logger is not None and log_every is not None and epoch % log_every == 0:
-            latest = {k: v[-1] for k, v in metrics.items()}
-            logger.metrics(latest)
+            #latest = {k: v[-1] for k, v in metrics.items()}
+            logger.metrics(metrics[-1])
             logger.commit()
 
     return metrics[-1]

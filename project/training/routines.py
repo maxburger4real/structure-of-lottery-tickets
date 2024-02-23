@@ -16,7 +16,7 @@ class Routines(Enum):
 def start_routine(config: Config):
     match Routines[config.pipeline]:
         case Routines.vanilla:
-            return vanilla.run(
+            return vanilla(
                 training_epochs=config.epochs,
                 device=config.device,
                 factory=Factory(config),

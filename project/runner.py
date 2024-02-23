@@ -60,8 +60,9 @@ def __start_run(config: Config, mode=None):
         config.__dict__.update(**wandb.config)
 
         # optional config updates needed for model extension
+        print(config.model_shape)
         config = update_pruning_config(config)
-
+        print(config.model_shape)
         # save the config and add some wandb info to connect wandb with local files
         config.run_id = run.id
         config.run_name = run.name
@@ -69,6 +70,7 @@ def __start_run(config: Config, mode=None):
         config.local_dir_name = run.id
 
         # push the updated config to wandb.
+
         wandb.config.update(config.__dict__, allow_val_change=True)
 
         start_routine(config)

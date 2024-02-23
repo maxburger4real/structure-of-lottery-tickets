@@ -1,19 +1,23 @@
 \usepackage[utf8]{inputenc}
+
 \usepackage{amsfonts}
 \usepackage{amsmath}
+
+% for images
 \usepackage{graphicx}
 \graphicspath{ {./images/} }
+
 \usepackage{subcaption}
+
+\AddToHook{cmd/section/before}{\clearpage}
 
 % code snippets
 \usepackage{listings}
 \usepackage{xcolor}
-
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
 \definecolor{codepurple}{rgb}{0.58,0,0.82}
 \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
-
 \lstdefinestyle{python}{
     backgroundcolor=\color{backcolour},   
     commentstyle=\color{codegreen},
@@ -34,6 +38,7 @@
 }
 \lstset{style=python}
 
+% citations
 \usepackage[
 backend=biber,
 style=apa,
@@ -41,6 +46,12 @@ url=false,
 sorting=ynt
 ]{biblatex}% authoryear
 
+% skip some space after a paragraph. also no indent, its ugly.
 \usepackage[skip=10pt plus1pt, indent=0pt]{parskip}
-% Imports bibliography file
-\addbibresource{bibliography.bib} 
+
+\usepackage{csvsimple}
+\usepackage{booktabs}
+
+
+% automatically use a new page for a new section
+\AddToHook{cmd/section/before}{\clearpage}
