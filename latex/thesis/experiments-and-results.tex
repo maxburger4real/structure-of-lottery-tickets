@@ -3,8 +3,8 @@ Description generall
 limiations of work
 
 \subsection{Extending the network}
-The first round of experiments is dedicated to find out what 'conditions' the network seperates.
-During an exploratory phase, some scenarios where the network indeed seperates were found.
+The first round of experiments is dedicated to find out what conditions are required, such that the network seperates.
+During a preliminary exploration phase, some scenarios where the network indeed seperates were found.
 Yet, they were sparse and could not be easily interpreted.
 Therefore, in this step the knowledge gained from the initial experiments is put to use.
 A systematic evaluation on the relationship between network size and splitting behaviour was conducted.
@@ -21,44 +21,42 @@ The chosen value, while somewhat arbitrary, was selected by promising results on
 \textcite{DBLP:conf/iclr/FrankleC19} used a pruning rate of $0.2$ in the original experiments for the fully connected feed forward network trained on the MNIST dataset.
 However with a larger pruning rate, a larger space of network sizes can be covered with the same number of iterations, which is why the larger pruning rate of $0.32$ was selected.
 
-\begin{table}[]
-    \centering
-    \resizebox{\columnwidth}{!}{%
-    \begin{tabular}{@{}ccccccc@{}}
-    \toprule
-    \textbf{} & \multicolumn{2}{c}{one hidden layer} & \multicolumn{2}{c}{two hidden layers} & \multicolumn{2}{c}{three hidden layers} \\ \midrule
-    \multicolumn{1}{|c|}{extension-level} & \multicolumn{1}{c|}{hidden dim} & \multicolumn{1}{c|}{\#param} & \multicolumn{1}{c|}{hidden dim} & \multicolumn{1}{c|}{\#param} & \multicolumn{1}{c|}{hidden dim} & \multicolumn{1}{c|}{\#params} \\ \midrule
-    \multicolumn{1}{|c|}{0 (base)} & 20 & \multicolumn{1}{c|}{120} & 8 & \multicolumn{1}{c|}{112} & 4 & \multicolumn{1}{c|}{56} \\ \midrule
-    \multicolumn{1}{|c|}{1} & 29 & \multicolumn{1}{c|}{174} & 10 & \multicolumn{1}{c|}{160} & 5 & \multicolumn{1}{c|}{80} \\ \midrule
-    \multicolumn{1}{|c|}{2} & 43 & \multicolumn{1}{c|}{258} & 13 & \multicolumn{1}{c|}{247} & 6 & \multicolumn{1}{c|}{108} \\ \midrule
-    \multicolumn{1}{|c|}{3} & 64 & \multicolumn{1}{c|}{384} & 16 & \multicolumn{1}{c|}{352} & 8 & \multicolumn{1}{c|}{176} \\ \midrule
-    \multicolumn{1}{|c|}{4} & 94 & \multicolumn{1}{c|}{564} & 20 & \multicolumn{1}{c|}{520} & 10 & \multicolumn{1}{c|}{260} \\ \midrule
-    \multicolumn{1}{|c|}{5} & 138 & \multicolumn{1}{c|}{828} & 25 & \multicolumn{1}{c|}{775} & 12 & \multicolumn{1}{c|}{360} \\ \midrule
-    \multicolumn{1}{|c|}{6} & 202 & \multicolumn{1}{c|}{1212} & 31 & \multicolumn{1}{c|}{1147} & 15 & \multicolumn{1}{c|}{540} \\ \midrule
-    \multicolumn{1}{|c|}{7} & 297 & \multicolumn{1}{c|}{1782} & 38 & \multicolumn{1}{c|}{1672} & 19 & \multicolumn{1}{c|}{836} \\ \midrule
-    \multicolumn{1}{|c|}{8} & 437 & \multicolumn{1}{c|}{2622} & 47 & \multicolumn{1}{c|}{2491} & 23 & \multicolumn{1}{c|}{1196} \\ \midrule
-    \multicolumn{1}{|c|}{9} & 643 & \multicolumn{1}{c|}{3858} & 57 & \multicolumn{1}{c|}{3591} & 29 & \multicolumn{1}{c|}{1856} \\ \midrule
-    \multicolumn{1}{|c|}{10} & 946 & \multicolumn{1}{c|}{5676} & 70 & \multicolumn{1}{c|}{5320} & 35 & \multicolumn{1}{c|}{2660} \\ \midrule
-    \multicolumn{1}{|c|}{11} & 1391 & \multicolumn{1}{c|}{8346} & 85 & \multicolumn{1}{c|}{7735} & 43 & \multicolumn{1}{c|}{3956} \\ \midrule
-    \multicolumn{1}{|c|}{12} & 2046 & \multicolumn{1}{c|}{12276} & 104 & \multicolumn{1}{c|}{11440} & 52 & \multicolumn{1}{c|}{5720} \\ \midrule
-    \multicolumn{1}{|c|}{13} & 3009 & \multicolumn{1}{c|}{18054} & 127 & \multicolumn{1}{c|}{16891} & 63 & \multicolumn{1}{c|}{8316} \\ \midrule
-    \multicolumn{1}{|c|}{14} & 4425 & \multicolumn{1}{c|}{26550} & 154 & \multicolumn{1}{c|}{24640} & 77 & \multicolumn{1}{c|}{12320} \\ \midrule
-    \multicolumn{1}{|c|}{15} &  & \multicolumn{1}{c|}{} & 188 & \multicolumn{1}{c|}{36472} & 94 & \multicolumn{1}{c|}{18236} \\ \midrule
-    \multicolumn{1}{|c|}{16} &  & \multicolumn{1}{c|}{} & 229 & \multicolumn{1}{c|}{53815} & 114 & \multicolumn{1}{c|}{26676} \\ \midrule
-    \multicolumn{1}{|c|}{17} &  & \multicolumn{1}{c|}{} & 278 & \multicolumn{1}{c|}{78952} &  & \multicolumn{1}{c|}{} \\ \midrule
-    \multicolumn{1}{|c|}{18} &  & \multicolumn{1}{c|}{} & 337 & \multicolumn{1}{c|}{115591} &  & \multicolumn{1}{c|}{} \\ \midrule
-    \multicolumn{1}{|c|}{19} &  & \multicolumn{1}{c|}{} & 410 & \multicolumn{1}{c|}{170560} &  & \multicolumn{1}{c|}{} \\ \midrule
-    \multicolumn{1}{|c|}{20} &  & \multicolumn{1}{c|}{} & 498 & \multicolumn{1}{c|}{250992} &  & \multicolumn{1}{c|}{} \\ \midrule
-    \multicolumn{1}{|c|}{21} &  & \multicolumn{1}{c|}{} & 604 & \multicolumn{1}{c|}{368440} &  & \multicolumn{1}{c|}{} \\ \midrule
-    \multicolumn{1}{|c|}{22} &  & \multicolumn{1}{c|}{} & 733 & \multicolumn{1}{c|}{541687} &  & \multicolumn{1}{c|}{} \\ \midrule
-    \multicolumn{1}{|c|}{23} &  & \multicolumn{1}{c|}{} & 890 & \multicolumn{1}{c|}{797440} &  & \multicolumn{1}{c|}{} \\ \midrule
-    \multicolumn{1}{|c|}{24} &  & \multicolumn{1}{c|}{} & 1080 & \multicolumn{1}{c|}{1172880} &  & \multicolumn{1}{c|}{} \\ \midrule
-    \multicolumn{1}{|c|}{25} &  & \multicolumn{1}{c|}{} & 1310 & \multicolumn{1}{c|}{1723960} &  & \multicolumn{1}{c|}{} \\ \bottomrule
-    \end{tabular}%
-    }
-    \caption{In this table, the parameter trajectories and the corresponding hidden dimension of the network are displayed for each extension level. Parameter trajectory is in each respective 'param' column and the number of hidden neurons per hidden layer in the column 'hidden dim'. At the extension level zero, the base model values are displayed.}
+\begin{table}
+    \caption{In this table, the parameter trajectories and the corresponding hidden dimension of the network are displayed for each extension level. Parameter trajectory is in each respective "param" column and the number of hidden neurons per hidden layer in the column "hidden dim". At the extension level zero, the base model values are displayed.}
     \label{tab:trajectory}
-\end{table}
+    \begin{tabular}{rrrrrrr}
+    \toprule
+    Lvl & shape(1) & param(1) & shape(2) & param(2) & shape(3) & param(3) \\
+    \midrule
+    0 & 20 & 120 & 8 & 112 & 6 & 108 \\
+    1 & 29 & 174 & 10 & 160 & 8 & 176 \\
+    2 & 43 & 258 & 13 & 247 & 10 & 260 \\
+    3 & 64 & 384 & 16 & 352 & 12 & 360 \\
+    4 & 94 & 564 & 20 & 520 & 15 & 540 \\
+    5 & 138 & 828 & 25 & 775 & 19 & 836 \\
+    6 & 202 & 1212 & 31 & 1147 & 23 & 1196 \\
+    7 & 297 & 1782 & 38 & 1672 & 29 & 1856 \\
+    8 & 437 & 2622 & 47 & 2491 & 35 & 2660 \\
+    9 & 643 & 3858 & 57 & 3591 & 43 & 3956 \\
+    10 & 946 & 5676 & 70 & 5320 & 52 & 5720 \\
+    11 & 1391 & 8346 & 85 & 7735 & 63 & 8316 \\
+    12 & 2046 & 12276 & 104 & 11440 & 77 & 12320 \\
+    13 & 3009 & 18054 & 127 & 16891 & 94 & 18236 \\
+    14 & 4425 & 26550 & 154 & 24640 & 114 & 26676 \\
+    15 & 6507 & 39042 & 188 & 36472 & 139 & 39476 \\
+    16 & 9569 & 57414 & 229 & 53815 & 169 & 58136 \\
+    17 & - & - & 278 & 78952 & - & - \\
+    18 & - & - & 337 & 115591 & - & - \\
+    19 & - & - & 410 & 170560 & - & - \\
+    20 & - & - & 498 & 250992 & - & - \\
+    21 & - & - & 604 & 368440 & - & - \\
+    22 & - & - & 733 & 541687 & - & - \\
+    23 & - & - & 890 & 797440 & - & - \\
+    24 & - & - & 1080 & 1172880 & - & - \\
+    25 & - & - & 1310 & 1723960 & - & - \\
+    \bottomrule
+    \end{tabular}
+    \end{table}
 
 \subsubsection{Two hidden layers}
 The first experiment was an extensive exploration of different model sizes by extending the network.
@@ -142,7 +140,7 @@ However even with this caveat, a clear trend is visible.
 The more pruning levels the network experiences, the smaller the percentage of the networks weights that is active.
 For some networks that were extended 20 or more levels, the final percentage of active weights in the network is only around $20$ percent, which translates to only $~22$ active weights.
 
-Techniques like L1-Regularisation used in \autocite{HanEtAl15} and \autocite{Frankle}?? or All-Alive-Pruning \autocite{AllAlivePruning} could counteract this effect of compounding inactive parameters.
+Techniques like L1-Regularisation used in \autocite{HanEtAl15} and ??\autocite{DBLP:conf/iclr/FrankleC19}?? or All-Alive-Pruning \autocite{AllAlivePruning} could counteract this effect of compounding inactive parameters.
 However, this is a topic for future research and not addressed in this thesis. 
 
 \subsubsection{When do networks seperate?}
@@ -165,6 +163,7 @@ How does the number of extension levels / the networks size influence the iterat
 
 Interestingly, when extending the network more, it tends to split in earlier pruning levels.
 In figure \ref{fig:2l-active-split}, the number of available/unpruned weights (orange) weights at each pruning level is displayed.
+Only the range of extension levels where the network seperated are displayed.
 Each point on the line represents an average of three runs, repeated with different seeds for the network initialization.
 The error bars depict the minimum and maximum value amonst those three repeated runs.
 The graph is shown in a logarithmic scale, and the increase follows almonst an exponential curve.
@@ -172,6 +171,7 @@ The earlier the network seperates in terms of pruning levels, the more unpruned 
 However, when looking at the the number of active weights the networks have at iteration they split, the curve does not have the same exponential growth trajectory.
 It increases slightly but almost remains flat, covering a narrow range of around 80 to 120 weights.
 
+TODO: revise. Does this make any sense?
 This data indicate that the number of active weights is a central quantity to splitting.
 Since the active subgraph is indeed the graph on which the splitting is checked, this seems plausible.
 A certain 'barrier' might be inherent to each combination of network architecture, dataset and hyperparameters.
@@ -182,7 +182,6 @@ For instance, techniques like L1 regularisation might move the barrier up, due t
 These are all questions for further research to tackle.
  
 TODO: look at the iteration where it degrades.
-
 
 \subsubsection{What makes the networks seperate?}
 As seen in figure \ref{fig:2laxer-histogram}, the network starts to split at 7 extension levels and a network shape of 4-38-38-2, with 1672 weights.
@@ -242,65 +241,89 @@ The data indicates that more pruning levels with lower pruning rates are general
 It is reasonable to assume, that the same phenomenon takes place with regards to network splitting.
 Less pruning leves versus lower pruning rates represents a trade-off between favorable conditions and computational cost.
 
-A possible explanation for why the number of active weights is lower when the pruning rate is higher, is that larger pruning rates 
+\subsubsection{One and Three hidden layers}
+To gain a wider picture of the effects studied with regards to the network with two hidden layers, the same experiments were conducted on networks with one and three hidden layers.
+As shown in \ref{tab:trajectory}, the networks were only extended for 15 and 17 levels instead of 25. 
+This is due to computational constraints. As the networks get larger and the number of pruning levels is higher, the computational effort increases significantly.
 
-
-\subsection{Extending the network}
-
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=.5\linewidth]{2-layer-active-available-at-split-log.png}
-    \caption{
-        The figure depicts the number of available weights / prunable weights (orange) and the number of active weights (blue) at the iteration when the networks first split.
-        Each dot represents an average over four runs with different seeds.
-        The error bars indicate the maximum and minimum value of the different runs.
-        While the number of available weights at the split iteration increases, the number of active weights stays fairly constant.
-        Logarithmic.
-    }
-    \label{fig:active-split}
-\end{figure}
-
-When the network size and the number of pruning levels is increased, the networks tend to split in earlier pruning levels.
-This is indicated by the number of prunable weights the network has by the time it splits.
-This is depicted in figure \ref{fig:active-split} by the organge line. 
-Each point represents an average over four runs with different seeds for the model initialization. 
-
-The networks tend to split earlier when they are larger.
-Further, the number of active weights at the iteration slightly decreases as the networks get larger.
-
-In these experiments, the networks tend to split in a narrow range of active weights in the network.
-The largest number of active weights is 119 and the lowest is 82 at the iteration where the network splits.
-
-\subsubsection{Three hidden layers}
-For this experiment, the base network has the shape (4, 6, 6, 6, 2).
-This architecture has 108 weights, similar to the 120 from the previous example.
-The network is extended for 15 levels, resulting in the largest shape of (4, ).
-The full trajectory of the parameters is visible in refTABLE.
+For the network with one hidden layer a base with shape 4-20-2 was selected.
+It has a similar number of weights compared to the base network with two layers.
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=.5\linewidth]{3-layer-active-available-at-split.png}
-    \caption{
-        The figure depicts the number of available weights / prunable weights (orange) and the number of active weights (blue) at the iteration when the networks first degrades.
-        Each dot represents an average over five runs with different seeds.
-        The error bars indicate the maximum and minimum value of the different runs.
-        TODO: describe 
-    }
-    \label{fig:active-split-3layer}
+    \includegraphics[width=0.5\linewidth]{1-layer-active-available-at-split-log.png}
+    \caption{This Figure depicts the network with shape 4-20-2.
+    TODO:more }
+    \label{fig:1layer-active}
 \end{figure}
 
-In figure \ref{fig:active-split-3layer} the results for the network with three hidden layers is displayed. 
-The line represent the available weights and the active weights at the network after each pruning level.
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=1.0\linewidth]{1-layer-histogram-split-behaviour.png}
+    \caption{This Figure depicts the network with shape 4-20-2.
+    TODO:more }
+    \label{fig:1layer-histogram}
+\end{figure}
+
+In figure \ref{fig:1layer-histogram}, the same plot as for the two-layer experiment is presented.
+A similar trend is visible.
+After a certain number of pruning levels and network size, the networks begin to consistently split.
+Given a few more pruning levels, the networks start to degrade more often, either before or after they seperate.
+Interestingly, at iteration 12, the network starts degrade more often before it splits.
+Begginging at 14 extension levels, where the networks are the largest, they never splits and only degrades.
+
+Why? 
+
+In figure \ref{fig:1layer-active}, the number of active weights (blue) in the network versus the number of available, unpruned weights (orange) is compared.
 Only the range of extension levels where the network seperated are displayed.
-In this case, both metrics tend higher when increasing the model size.
-Notably, the number of active weights is lower than in the case of the network with two hidden layers.
-This might be the due to the slightly lower pruning target which is determined by the model architecture.
+The graph is displayed on a logarithmic scale.
+Similarly to the experiment with two layers, the networks split in earlier iterations when they are larger and have more pruning levels.
+This is indicated by the larger number of available weights, which directly correllates with the pruning level.
+The number of active weights remains in a fairly tight range between 70 and 120 active weights.
 
+Regarding the network with three hidden layers, the results are similar.
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=1.0\linewidth]{3-layer-histogram-split-behaviour.png}
+    \caption{This Figure depicts the network with shape 4-20-2.
+    TODO:more }
+    \label{fig:3layer-histogram}
+\end{figure}
 
-This indicates that the network splits 
+\begin{figure}[ht]
+    
+    \centering
+    \includegraphics[width=0.5\linewidth]{3-layer-active-available-at-split-log.png}
+    \caption{The figure depicts the number of available weights / prunable weights (orange) and the number of active weights (blue) at the iteration when the networks first degrades.
+    Each dot represents an average over five runs with different seeds.
+    The error bars indicate the maximum and minimum value of the different runs.}
+    \label{fig:3layer-active}
+\end{figure}
 
+In figure \ref{fig:3layer-histogram} the splitting behaviour is depicted.
+A similar effect occurs but unlike the single layer network, the network does not stop to seperate in the range that was tested. 
+
+In figure \ref{fig:3layer-active} the number of active weights and the number of available weights is displayed.
+Only the range of extension levels where the network seperated are displayed.
+The networks at extension level 7 until 11 all split at the last pruning level, which can be deducted by the number of available parameters which is equal to the pruning target of 108.
+The number of active weights is slightly lower than in the other experiments.
+Generally the same pattern can be seen, with a slightly more pronounced increase in active weights for larger networks.
 
 \subsubsection{Performance of Lottery tickets}
 are there differences in the performance of lottery tickets when they split?
 
 compare 
+
+\subsubsection{Conclusion: Network Extension}
+They always split
+
+multiple this have to be given
+
+enough overparameterization
+pruning rate low enough
+enough pruning levels
+
+Not clear how the splitting happens
+Maybe unzipping?
+What about the reguriating tickets interpretation?
+What about regularization, weight decay and so on?

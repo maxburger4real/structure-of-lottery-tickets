@@ -194,62 +194,6 @@ With the repellent loss, no lottery tickets could be found, which further indica
 
 TODO: what are the theories for why it works? learn to the same basin as sgd.
 
-\subsection{Finding Lottery Tickets}
-several algorithms have been proposed to find lottery tickets. here is an inexaustive collection of some of them 
-
-\subsubsection{Supermasks}
-In follow-up work by \textcite{DBLP:conf/nips/ZhouLLY19}, the authors demonstrate that it is possible to find well-performing subnetworks at initialization by only pruning.
-First, each weight in the network is assigned a score, which is 1 for every weight at the beginning. 
-The scores are denoted $s$, where $|s| = |\theta|$.
-In each forward pass of the network, the so-called \textit{effective weights} are used.
-The effective weights $\theta_{eff}$ are the weights at initialization $\theta$ multiplied element-wise with a stochastically sampled mask.
-This mask is sampled according to $m = \textit{Bern}(\sigma(s))$, where $\textit{Bern}(p)$ is a Bernoulli sampler producing a $1$ with probability $p$ and $\sigma(\cdot)$ is the sigmoid function. 
-Thus, the effective weights are $\theta_{eff} = \textit{Bern}(\sigma(s)) \odot \theta$.
-The scores are the learned parameters and are updated via backpropagation.
-Experiments were conducted with a FCNN on MNIST and a CNN on CIFAR-10, reaching 95.3\% and 65.4\% test accuracy, respectively.
-The authors call these masks \textit{supermasks}.
-
-\subsubsection{Edge Popup}
-Based on those results, \textcite{DBLP:conf/cvpr/RamanujanWKFR20} scale up the experiments and modify the algorithm for producing the mask slightly.
-They remove the stochastic sampling of the Bernoulli sampler, as they claim that the stochasticity limits the performance. 
-Instead of sampling the mask values, a real-valued score is learned for each weight. 
-The subnetwork is chosen by selecting the top-$k$\% highest scores in each layer.
-The algorithm for finding this mask is named \textit{Edge-Popup}(EP).
-Experiments are conducted on small FCNNs and CNNs with CIFAR-10 and on several ResNet architectures with ImageNet.
-Results show that even for the much harder ImageNet dataset, there exist randomly initialized subnetworks with non-trivial performance. 
-An expressive finding of the experiments shows that a larger architecture (Wide-ResNet-50, 69M parameters) can reach 73.3\% accuracy on ImageNet by only pruning the weights with EP.
-The resulting subnetwork has 20.6M parameters. In comparison, they show that this “pruning-only” approach can compete with a fully trained ResNet-34 (21.8M parameters) which also reaches 73.3\% accuracy. 
-Surprisingly, the authors note that the subnetworks obtained by EP do not respond to any further training.
-Furthermore, they note that the subnetwork does not train to the same accuracy as the dense network.
-Therefore, the subnetworks are not considered winning tickets.
-The results suggest that there is another phenomenon at play that makes these networks perform well \autocite{DBLP:conf/cvpr/RamanujanWKFR20}.
-Despite that, the experiments show that there exist well-performing subnetworks at initialization, without any weight updates.
-
-In addition, a variety of other methods \autocite{GraSP,SNIP,SynFlow} were introduced to prune networks at initialization. However, empirical investigations by \textcite{PruningAtInitMissingTheMark, SanityCheckingPruningMethods} show that none of these approaches perform better than carefully selecting layer-wise sparsities.
-Based on this finding, \autocite{SanityCheckingPruningMethods} propose a method that select layer-wise sparsities called Smart-Ratio (SR).
-\subsubsection{Rare Gems}
-Drawing Inspiration from the EP-algorithm, \textcite{RareGems} propose an algorithm called Gem-Miner (GM) that overcomes the issues of the apparent lack of trainability of the obtained subnetworks.
-The GM-algorithm assigns a normalized score to each weight. 
-To obtain the mask $m$, a simple rounding function is applied to each score. The authors used a simple deterministic rounding function, where values below $0.5$ are rounded down to $0$ and all other values to $1$.
-In the forward pass, the effective weights $\theta_{eff} = \theta \odot m$ are used, where $\theta$ are the untrained weights at initialization. 
-The scores are the learned parameters and are updated via backpropagation.
-Furthermore, the scores are renormalized to the range $[0,1]$ after they are updated, if necessary.
-Additionally, a regularization term is added to the loss, which enforces sparsity on the scores. 
-The authors use the $L_2$ norm of the scores and note that $L_1$ norm performs almost identically.
-The final sparsity of the obtained subnetwork can be controlled by the regularization hyperparameter $\lambda$, which scales the regularization term.
- If $\lambda = 0$, there is no control over the final sparsity. 
- The authors have discovered, in line with \cite{DBLP:conf/cvpr/RamanujanWKFR20}, that the sparsity level remains close to 50\%, as apparently this is where the accuracy is maximized.
-
-Experiments with different ResNet architectures on CIFAR-10, TinyImageNet \autocite{Tinyimagenet} and Caltech-101 \autocite{Caltech101} were conducted. 
-The results show that the subnetworks obtained via the GM-algorithm, are indeed winning tickets, since they can then be trained and reach comparable accuracy to its dense counterpart.
-Furthermore, the subnetworks have reasonably high accuracy \textit{before} any weight training, which earns them the name \textit{Rare Gems}. 
-This makes the set of rare gems a subset of winning tickets. 
-They are winning tickets, that already perform well before weight training.
-The obtained subnetworks do not always outperform winning tickets obtained with IMP.
-However, there is a considerable improvement over IMP in terms of resource intensity.
-The authors claim, that their algorithm is up to \textbf{19x} faster than the iterative approach with IMP. 
-This increase in efficiency is compelling for repeated experiments.
-
 \subsection{Understanding Lottery Tickets}
 \subsubsection{Numerical Characteristics}
 \autocite{maene_towards_2021} note that the average magnitude of the unpruned weights increases with each pruning round. The smallest magnitude weights in the network are pruned, and the remaining weights train to similar values, therby increasing the average magnitude. The authors note, that this follows from the regurgitating tickets interpretation, described in chapter (?).
@@ -298,6 +242,62 @@ On symbolic datasets, BIMT succeeds in discovering independence, feature sharing
 The authors also use BIMT to train a feed forward neural network on simple classification tasks as well as the MNIST dataset, where they used three dimensional euclidean space to embed the network.
 With larger models and especially in three dimensions, the shortcomings of the method become apparent as visual inspection does not help for interpretation any longer.
 
+\subsection{Alternative Lottery Strategies}
+several algorithms have been proposed to find lottery tickets. here is an inexaustive collection of some of them 
+
+\subsubsection{Supermasks}
+In follow-up work by \textcite{DBLP:conf/nips/ZhouLLY19}, the authors demonstrate that it is possible to find well-performing subnetworks at initialization by only pruning.
+First, each weight in the network is assigned a score, which is 1 for every weight at the beginning. 
+The scores are denoted $s$, where $|s| = |\theta|$.
+In each forward pass of the network, the so-called \textit{effective weights} are used.
+The effective weights $\theta_{eff}$ are the weights at initialization $\theta$ multiplied element-wise with a stochastically sampled mask.
+This mask is sampled according to $m = \textit{Bern}(\sigma(s))$, where $\textit{Bern}(p)$ is a Bernoulli sampler producing a $1$ with probability $p$ and $\sigma(\cdot)$ is the sigmoid function. 
+Thus, the effective weights are $\theta_{eff} = \textit{Bern}(\sigma(s)) \odot \theta$.
+The scores are the learned parameters and are updated via backpropagation.
+Experiments were conducted with a FCNN on MNIST and a CNN on CIFAR-10, reaching 95.3\% and 65.4\% test accuracy, respectively.
+The authors call these masks \textit{supermasks}.
+
+\subsubsection{Edge Popup}
+Based on those results, \textcite{DBLP:conf/cvpr/RamanujanWKFR20} scale up the experiments and modify the algorithm for producing the mask slightly.
+They remove the stochastic sampling of the Bernoulli sampler, as they claim that the stochasticity limits the performance. 
+Instead of sampling the mask values, a real-valued score is learned for each weight. 
+The subnetwork is chosen by selecting the top-$k$\% highest scores in each layer.
+The algorithm for finding this mask is named \textit{Edge-Popup}(EP).
+Experiments are conducted on small FCNNs and CNNs with CIFAR-10 and on several ResNet architectures with ImageNet.
+Results show that even for the much harder ImageNet dataset, there exist randomly initialized subnetworks with non-trivial performance. 
+An expressive finding of the experiments shows that a larger architecture (Wide-ResNet-50, 69M parameters) can reach 73.3\% accuracy on ImageNet by only pruning the weights with EP.
+The resulting subnetwork has 20.6M parameters. In comparison, they show that this “pruning-only” approach can compete with a fully trained ResNet-34 (21.8M parameters) which also reaches 73.3\% accuracy. 
+Surprisingly, the authors note that the subnetworks obtained by EP do not respond to any further training.
+Furthermore, they note that the subnetwork does not train to the same accuracy as the dense network.
+Therefore, the subnetworks are not considered winning tickets.
+The results suggest that there is another phenomenon at play that makes these networks perform well \autocite{DBLP:conf/cvpr/RamanujanWKFR20}.
+Despite that, the experiments show that there exist well-performing subnetworks at initialization, without any weight updates.
+
+In addition, a variety of other methods \autocite{GraSP,SNIP,SynFlow} were introduced to prune networks at initialization. However, empirical investigations by \textcite{PruningAtInitMissingTheMark, SanityCheckingPruningMethods} show that none of these approaches perform better than carefully selecting layer-wise sparsities.
+Based on this finding, \autocite{SanityCheckingPruningMethods} propose a method that select layer-wise sparsities called Smart-Ratio (SR).
+
+\subsubsection{Rare Gems}
+Drawing Inspiration from the EP-algorithm, \textcite{RareGems} propose an algorithm called Gem-Miner (GM) that overcomes the issues of the apparent lack of trainability of the obtained subnetworks.
+The GM-algorithm assigns a normalized score to each weight. 
+To obtain the mask $m$, a simple rounding function is applied to each score. The authors used a simple deterministic rounding function, where values below $0.5$ are rounded down to $0$ and all other values to $1$.
+In the forward pass, the effective weights $\theta_{eff} = \theta \odot m$ are used, where $\theta$ are the untrained weights at initialization. 
+The scores are the learned parameters and are updated via backpropagation.
+Furthermore, the scores are renormalized to the range $[0,1]$ after they are updated, if necessary.
+Additionally, a regularization term is added to the loss, which enforces sparsity on the scores. 
+The authors use the $L_2$ norm of the scores and note that $L_1$ norm performs almost identically.
+The final sparsity of the obtained subnetwork can be controlled by the regularization hyperparameter $\lambda$, which scales the regularization term.
+ If $\lambda = 0$, there is no control over the final sparsity. 
+ The authors have discovered, in line with \cite{DBLP:conf/cvpr/RamanujanWKFR20}, that the sparsity level remains close to 50\%, as apparently this is where the accuracy is maximized.
+
+Experiments with different ResNet architectures on CIFAR-10, TinyImageNet \autocite{Tinyimagenet} and Caltech-101 \autocite{Caltech101} were conducted. 
+The results show that the subnetworks obtained via the GM-algorithm, are indeed winning tickets, since they can then be trained and reach comparable accuracy to its dense counterpart.
+Furthermore, the subnetworks have reasonably high accuracy \textit{before} any weight training, which earns them the name \textit{Rare Gems}. 
+This makes the set of rare gems a subset of winning tickets. 
+They are winning tickets, that already perform well before weight training.
+The obtained subnetworks do not always outperform winning tickets obtained with IMP.
+However, there is a considerable improvement over IMP in terms of resource intensity.
+The authors claim, that their algorithm is up to \textbf{19x} faster than the iterative approach with IMP. 
+This increase in efficiency is compelling for repeated experiments.
 
 \subsection{Conclusion}
 The study of lottery tickets is a broad and diverse field. Even though theoretical studies were mentioned in the literature review, the majority of research conducted in this space is of empirical nature.

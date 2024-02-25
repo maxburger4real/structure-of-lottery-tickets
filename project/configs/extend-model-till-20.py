@@ -48,7 +48,7 @@ extension_levels = list(range(7, 13))
 extension_levels = list(range(7))
 extension_levels = list(range(13, 15))
 extension_levels = list(range(0, 15))
-extension_levels = list(range(15, 17))
+extension_levels = list(range(17, 19))
 
 
 seeds = [1]
