@@ -3,7 +3,6 @@ Pruning functions.
 TODO:
 [ ] remove the config dependency.
 [ ] relocate 'update_pruning_config'
-[ ] remove constants dependency
 """
 
 import copy
