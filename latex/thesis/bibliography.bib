@@ -1,0 +1,549 @@
+@inproceedings{DBLP:conf/iclr/FrankleC19,
+  author    = {Jonathan Frankle and
+               Michael Carbin},
+  title     = {The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks},
+  booktitle = {7th International Conference on Learning Representations, {ICLR} 2019,
+               New Orleans, LA, USA, May 6-9, 2019},
+  publisher = {OpenReview.net},
+  year      = {2019},
+  url       = {https://openreview.net/forum?id=rJl-b3RcF7},
+  timestamp = {Thu, 25 Jul 2019 13:03:15 +0200},
+  biburl    = {https://dblp.org/rec/conf/iclr/FrankleC19.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+@article{Kaiming,
+  author       = {Kaiming He and
+                  Xiangyu Zhang and
+                  Shaoqing Ren and
+                  Jian Sun},
+  title        = {Delving Deep into Rectifiers: Surpassing Human-Level Performance on
+                  ImageNet Classification},
+  journal      = {CoRR},
+  volume       = {abs/1502.01852},
+  year         = {2015},
+  url          = {http://arxiv.org/abs/1502.01852},
+  eprinttype    = {arXiv},
+  eprint       = {1502.01852},
+  timestamp    = {Wed, 25 Jan 2023 11:01:16 +0100},
+  biburl       = {https://dblp.org/rec/journals/corr/HeZR015.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+@inproceedings{YangCS17,
+  author    = {Tien{-}Ju Yang and
+               Yu{-}Hsin Chen and
+               Vivienne Sze},
+  title     = {Designing Energy-Efficient Convolutional Neural Networks Using Energy-Aware
+               Pruning},
+  booktitle = {2017 {IEEE} Conference on Computer Vision and Pattern Recognition,
+               {CVPR} 2017, Honolulu, HI, USA, July 21-26, 2017},
+  pages     = {6071--6079},
+  publisher = {{IEEE} Computer Society},
+  year      = {2017},
+  url       = {https://doi.org/10.1109/CVPR.2017.643},
+  doi       = {10.1109/CVPR.2017.643},
+  timestamp = {Wed, 16 Oct 2019 14:14:50 +0200},
+  biburl    = {https://dblp.org/rec/conf/cvpr/YangCS17.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+@inproceedings{WhyLotteryTicketsWin,
+  author    = {Utku Evci and
+               Yani Ioannou and
+               Cem Keskin and
+               Yann N. Dauphin},
+  title     = {Gradient Flow in Sparse Neural Networks and How Lottery Tickets Win},
+  booktitle = {Thirty-Sixth {AAAI} Conference on Artificial Intelligence, {AAAI}
+               2022, Thirty-Fourth Conference on Innovative Applications of Artificial
+               Intelligence, {IAAI} 2022, The Twelveth Symposium on Educational Advances
+               in Artificial Intelligence, {EAAI} 2022 Virtual Event, February 22
+               - March 1, 2022},
+  pages     = {6577--6586},
+  publisher = {{AAAI} Press},
+  year      = {2022},
+  url       = {https://ojs.aaai.org/index.php/AAAI/article/view/20611},
+  timestamp = {Mon, 11 Jul 2022 16:09:32 +0200},
+  biburl    = {https://dblp.org/rec/conf/aaai/EvciIKD22.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+
+@inproceedings{TheEarlyPhaseOfNeuralNetworkTrainig,
+  author    = {Jonathan Frankle and
+               David J. Schwab and
+               Ari S. Morcos},
+  title     = {The Early Phase of Neural Network Training},
+  booktitle = {8th International Conference on Learning Representations, {ICLR} 2020,
+               Addis Ababa, Ethiopia, April 26-30, 2020},
+  publisher = {OpenReview.net},
+  year      = {2020},
+  url       = {https://openreview.net/forum?id=Hkl1iRNFwS},
+  timestamp = {Thu, 07 May 2020 17:11:47 +0200},
+  biburl    = {https://dblp.org/rec/conf/iclr/FrankleSM20.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{LinearModeConnectivity,
+  author    = {Jonathan Frankle and
+               Gintare Karolina Dziugaite and
+               Daniel M. Roy and
+               Michael Carbin},
+  title     = {Linear Mode Connectivity and the Lottery Ticket Hypothesis},
+  booktitle = {Proceedings of the 37th International Conference on Machine Learning,
+               {ICML} 2020, 13-18 July 2020, Virtual Event},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {119},
+  pages     = {3259--3269},
+  publisher = {{PMLR}},
+  year      = {2020},
+  url       = {http://proceedings.mlr.press/v119/frankle20a.html},
+  timestamp = {Wed, 10 Feb 2021 22:02:21 +0100},
+  biburl    = {https://dblp.org/rec/conf/icml/FrankleD0C20.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@misc{maene_towards_2021,
+	abstract = {The lottery ticket hypothesis states that sparse subnetworks exist in randomly initialized dense networks that can be trained to the same accuracy as the dense network they reside in. However, the subsequent work has failed to replicate this on large-scale models and required rewinding to an early stable state instead of initialization. We show that by using a training method that is stable with respect to linear mode connectivity, large networks can also be entirely rewound to initialization. Our subsequent experiments on common vision tasks give strong credence to the hypothesis in Evci et al. (2020b) that lottery tickets simply retrain to the same regions (although not necessarily to the same basin). These results imply that existing lottery tickets could not have been found without the preceding dense training by iterative magnitude pruning, raising doubts about the use of the lottery ticket hypothesis.},
+	author = {Maene, Jaron and Li, Mingxiao and Moens, Marie-Francine},
+	date = {2021-06-13},
+	doi = {10.48550/arXiv.2106.06955},
+	eprint = {2106.06955 [cs]},
+	eprinttype = {arxiv},
+	file = {arXiv Fulltext PDF:/Users/max/Zotero/storage/RU44WI2B/Maene et al. - 2021 - Towards Understanding Iterative Magnitude Pruning.pdf:application/pdf;arXiv.org Snapshot:/Users/max/Zotero/storage/8YCPREJK/2106.html:text/html},
+	keywords = {Computer Science - Machine Learning},
+	number = {{arXiv}:2106.06955},
+	publisher = {{arXiv}},
+	shorttitle = {Towards Understanding Iterative Magnitude Pruning},
+	title = {Towards Understanding Iterative Magnitude Pruning: Why Lottery Tickets Win},
+	url = {http://arxiv.org/abs/2106.06955},
+	urldate = {2022-11-12},
+	bdsk-url-1 = {http://arxiv.org/abs/2106.06955},
+	bdsk-url-2 = {https://doi.org/10.48550/arXiv.2106.06955}}
+
+@inproceedings{SNIP,
+  author    = {Namhoon Lee and
+               Thalaiyasingam Ajanthan and
+               Philip H. S. Torr},
+  title     = {Snip: single-Shot Network Pruning based on Connection sensitivity},
+  booktitle = {7th International Conference on Learning Representations, {ICLR} 2019,
+               New Orleans, LA, USA, May 6-9, 2019},
+  publisher = {OpenReview.net},
+  year      = {2019},
+  url       = {https://openreview.net/forum?id=B1VZqjAcYX},
+  timestamp = {Thu, 25 Jul 2019 14:26:01 +0200},
+  biburl    = {https://dblp.org/rec/conf/iclr/LeeAT19.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{PruningAtInitMissingTheMark,
+  author    = {Jonathan Frankle and
+               Gintare Karolina Dziugaite and
+               Daniel Roy and
+               Michael Carbin},
+  title     = {Pruning Neural Networks at Initialization: Why Are We Missing the Mark},
+  booktitle = {9th International Conference on Learning Representations, {ICLR} 2021,
+               Virtual Event, Austria, May 3-7, 2021},
+  publisher = {OpenReview.net},
+  year      = {2021},
+  url       = {https://openreview.net/forum?id=Ig-VyQc-MLK},
+  timestamp = {Wed, 23 Jun 2021 17:36:40 +0200},
+  biburl    = {https://dblp.org/rec/conf/iclr/FrankleD0C21.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+
+@inproceedings{SanityCheckingPruningMethods,
+  author    = {Hidenori Tanaka and
+               Daniel Kunin and
+               Daniel L. K. Yamins and
+               Surya Ganguli},
+  editor    = {Hugo Larochelle and
+               Marc'Aurelio Ranzato and
+               Raia Hadsell and
+               Maria{-}Florina Balcan and
+               Hsuan{-}Tien Lin},
+  title     = {Pruning neural networks without any data by iteratively conserving synaptic flow},
+  booktitle = {Advances in Neural Information Processing Systems 33: Annual Conference
+               on Neural Information Processing Systems 2020, NeurIPS 2020, December
+               6-12, 2020, virtual},
+  year      = {2020},
+  url       = {https://proceedings.neurips.cc/paper/2020/hash/46a4378f835dc8040c8057beb6a2da52-Abstract.html},
+  timestamp = {Thu, 21 Apr 2022 11:01:45 +0200},
+  biburl    = {https://dblp.org/rec/conf/nips/TanakaKYG20.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+
+@inproceedings{SynFlow,
+  author    = {Hidenori Tanaka and
+               Daniel Kunin and
+               Daniel L. K. Yamins and
+               Surya Ganguli},
+  editor    = {Hugo Larochelle and
+               Marc'Aurelio Ranzato and
+               Raia Hadsell and
+               Maria{-}Florina Balcan and
+               Hsuan{-}Tien Lin},
+  title     = {Pruning neural networks without any data by iteratively conservingsynaptic flow},
+  booktitle = {Advances in Neural Information Processing Systems 33: Annual Conference
+               on Neural Information Processing Systems 2020, NeurIPS 2020, December
+               6-12, 2020, virtual},
+  year      = {2020},
+  url       = {https://proceedings.neurips.cc/paper/2020/hash/46a4378f835dc8040c8057beb6a2da52-Abstract.html},
+  timestamp = {Thu, 21 Apr 2022 11:01:45 +0200},
+  biburl    = {https://dblp.org/rec/conf/nips/TanakaKYG20.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{GraSP,
+  author    = {Chaoqi Wang and
+               Guodong Zhang and
+               Roger B. Grosse},
+  title     = {Picking Winning Tickets Before Training by Preserving Gradient Flow},
+  booktitle = {8th International Conference on Learning Representations, {ICLR} 2020,
+               Addis Ababa, Ethiopia, April 26-30, 2020},
+  publisher = {OpenReview.net},
+  year      = {2020},
+  url       = {https://openreview.net/forum?id=SkgsACVKPH},
+  timestamp = {Thu, 07 May 2020 17:11:47 +0200},
+  biburl    = {https://dblp.org/rec/conf/iclr/WangZG20.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+
+@article{Gale19,
+  author    = {Trevor Gale and
+               Erich Elsen and
+               Sara Hooker},
+  title     = {The State of Sparsity in Deep Neural Networks},
+  journal   = {CoRR},
+  volume    = {abs/1902.09574},
+  year      = {2019},
+  url       = {http://arxiv.org/abs/1902.09574},
+  eprinttype = {arXiv},
+  eprint    = {1902.09574},
+  timestamp = {Tue, 21 May 2019 18:03:40 +0200},
+  biburl    = {https://dblp.org/rec/journals/corr/abs-1902-09574.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{inceptionv3,
+  author    = {Christian Szegedy and
+               Vincent Vanhoucke and
+               Sergey Ioffe and
+               Jonathon Shlens and
+               Zbigniew Wojna},
+  title     = {Rethinking the Inception Architecture for Computer Vision},
+  booktitle = {2016 {IEEE} Conference on Computer Vision and Pattern Recognition,
+               {CVPR} 2016, Las Vegas, NV, USA, June 27-30, 2016},
+  pages     = {2818--2826},
+  publisher = {{IEEE} Computer Society},
+  year      = {2016},
+  url       = {https://doi.org/10.1109/CVPR.2016.308},
+  doi       = {10.1109/CVPR.2016.308},
+  timestamp = {Sun, 25 Oct 2020 23:02:11 +0100},
+  biburl    = {https://dblp.org/rec/conf/cvpr/SzegedyVISW16.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{Liu19,
+  author    = {Zhuang Liu and
+               Mingjie Sun and
+               Tinghui Zhou and
+               Gao Huang and
+               Trevor Darrell},
+  title     = {Rethinking the Value of Network Pruning},
+  booktitle = {7th International Conference on Learning Representations, {ICLR} 2019,
+               New Orleans, LA, USA, May 6-9, 2019},
+  publisher = {OpenReview.net},
+  year      = {2019},
+  url       = {https://openreview.net/forum?id=rJlnB3C5Ym},
+  timestamp = {Thu, 25 Jul 2019 14:25:43 +0200},
+  biburl    = {https://dblp.org/rec/conf/iclr/LiuSZHD19.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+
+@inproceedings{OptimalBrainSurgeon,
+  author    = {Babak Hassibi and
+               David G. Stork},
+  editor    = {Stephen Jose Hanson and
+               Jack D. Cowan and
+               C. Lee Giles},
+  title     = {Second Order Derivatives for Network Pruning: Optimal Brain Surgeon},
+  booktitle = {Advances in Neural Information Processing Systems 5, {[NIPS} Conference,
+               Denver, Colorado, USA, November 30 - December 3, 1992]},
+  pages     = {164--171},
+  publisher = {Morgan Kaufmann},
+  year      = {1992},
+  url       = {http://papers.nips.cc/paper/647-second-order-derivatives-for-network-pruning-optimal-brain-surgeon},
+  timestamp = {Mon, 16 May 2022 15:41:51 +0200},
+  biburl    = {https://dblp.org/rec/conf/nips/HassibiS92.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{LeCun,
+  author    = {Yann LeCun and
+               John S. Denker and
+               Sara A. Solla},
+  editor    = {David S. Touretzky},
+  title     = {Optimal Brain Damage},
+  booktitle = {Advances in Neural Information Processing Systems 2, {[NIPS} Conference,
+               Denver, Colorado, USA, November 27-30, 1989]},
+  pages     = {598--605},
+  publisher = {Morgan Kaufmann},
+  year      = {1989},
+  url       = {http://papers.nips.cc/paper/250-optimal-brain-damage},
+  timestamp = {Mon, 16 May 2022 15:41:51 +0200},
+  biburl    = {https://dblp.org/rec/conf/nips/CunDS89.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{HanEtAl15,
+  author    = {Song Han and
+               Jeff Pool and
+               John Tran and
+               William J. Dally},
+  editor    = {Corinna Cortes and
+               Neil D. Lawrence and
+               Daniel D. Lee and
+               Masashi Sugiyama and
+               Roman Garnett},
+  title     = {Learning both Weights and Connections for Efficient Neural Network},
+  booktitle = {Advances in Neural Information Processing Systems 28: Annual Conference
+               on Neural Information Processing Systems 2015, December 7-12, 2015,
+               Montreal, Quebec, Canada},
+  pages     = {1135--1143},
+  year      = {2015},
+  url       = {https://proceedings.neurips.cc/paper/2015/hash/ae0eb3eed39d2bcef4622b2499a05fe6-Abstract.html},
+  timestamp = {Mon, 16 May 2022 15:41:51 +0200},
+  biburl    = {https://dblp.org/rec/conf/nips/HanPTD15.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+
+@inproceedings{PruningFiltersForEfficientConvets,
+  author    = {Hao Li and
+               Asim Kadav and
+               Igor Durdanovic and
+               Hanan Samet and
+               Hans Peter Graf},
+  title     = {Pruning Filters for Efficient ConvNets},
+  booktitle = {5th International Conference on Learning Representations, {ICLR} 2017,
+               Toulon, France, April 24-26, 2017, Conference Track Proceedings},
+  publisher = {OpenReview.net},
+  year      = {2017},
+  url       = {https://openreview.net/forum?id=rJqFGTslg},
+  timestamp = {Thu, 25 Jul 2019 14:25:50 +0200},
+  biburl    = {https://dblp.org/rec/conf/iclr/0022KDSG17.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@misc{
+AllAlivePruning,
+title={Waste not, Want not: All-Alive Pruning for Extremely Sparse Networks},
+author={Daejin Kim and Hyunjung Shim and Jongwuk Lee},
+year={2021},
+url={https://openreview.net/forum?id=rx19UMFbC9u}
+}
+
+@misc{BIMT,
+  doi = {10.48550/ARXIV.2305.08746},
+  url = {https://arxiv.org/abs/2305.08746},
+  author = {Liu,  Ziming and Gan,  Eric and Tegmark,  Max},
+  keywords = {Neural and Evolutionary Computing (cs.NE),  Disordered Systems and Neural Networks (cond-mat.dis-nn),  Artificial Intelligence (cs.AI),  Machine Learning (cs.LG),  Representation Theory (math.RT),  Neurons and Cognition (q-bio.NC),  FOS: Computer and information sciences,  FOS: Computer and information sciences,  FOS: Physical sciences,  FOS: Physical sciences,  FOS: Mathematics,  FOS: Mathematics,  FOS: Biological sciences,  FOS: Biological sciences},
+  title = {Seeing is Believing: Brain-Inspired Modular Training for Mechanistic Interpretability},
+  publisher = {arXiv},
+  year = {2023},
+  copyright = {Creative Commons Attribution 4.0 International}
+}
+@inproceedings{
+RareGems,
+title={Rare Gems: Finding Lottery Tickets at Initialization},
+author={Kartik Sreenivasan and Jy-yong Sohn and Liu Yang and Matthew Grinde and Alliot Nagle and Hongyi Wang and Eric Xing and Kangwook Lee and Dimitris Papailiopoulos},
+booktitle={Advances in Neural Information Processing Systems},
+editor={Alice H. Oh and Alekh Agarwal and Danielle Belgrave and Kyunghyun Cho},
+year={2022},
+url={https://openreview.net/forum?id=Jpxd93u2vK-},
+timestamp = {Wed, 02 Mar 2022 16:35:04 +0100},
+biburl    = {https://dblp.org/rec/journals/corr/abs-2202-12002.bib},
+bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+@inproceedings{RigL,
+  author    = {Utku Evci and
+               Trevor Gale and
+               Jacob Menick and
+               Pablo Samuel Castro and
+               Erich Elsen},
+  title     = {Rigging the Lottery: Making All Tickets Winners},
+  booktitle = {Proceedings of the 37th International Conference on Machine Learning,
+               {ICML} 2020, 13-18 July 2020, Virtual Event},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {119},
+  pages     = {2943--2952},
+  publisher = {{PMLR}},
+  year      = {2020},
+  url       = {http://proceedings.mlr.press/v119/evci20a.html},
+  timestamp = {Tue, 15 Dec 2020 17:40:18 +0100},
+  biburl    = {https://dblp.org/rec/conf/icml/EvciGMCE20.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+@inproceedings{DBLP:conf/cvpr/RamanujanWKFR20,
+  author    = {Vivek Ramanujan and
+               Mitchell Wortsman and
+               Aniruddha Kembhavi and
+               Ali Farhadi and
+               Mohammad Rastegari},
+  title     = {What's Hidden in a Randomly Weighted Neural Network?},
+  booktitle = {2020 {IEEE/CVF} Conference on Computer Vision and Pattern Recognition,
+               {CVPR} 2020, Seattle, WA, USA, June 13-19, 2020},
+  pages     = {11890--11899},
+  publisher = {Computer Vision Foundation / {IEEE}},
+  year      = {2020},
+  url       = {https://openaccess.thecvf.com/content\_CVPR\_2020/html/Ramanujan\_Whats\_Hidden\_in\_a\_Randomly\_Weighted\_Neural\_Network\_CVPR\_2020\_paper.html},
+  doi       = {10.1109/CVPR42600.2020.01191},
+  timestamp = {Tue, 31 Aug 2021 14:00:04 +0200},
+  biburl    = {https://dblp.org/rec/conf/cvpr/RamanujanWKFR20.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{DBLP:conf/nips/ZhouLLY19,
+  author    = {Hattie Zhou and
+               Janice Lan and
+               Rosanne Liu and
+               Jason Yosinski},
+  editor    = {Hanna M. Wallach and
+               Hugo Larochelle and
+               Alina Beygelzimer and
+               Florence d'Alch{\'{e}}{-}Buc and
+               Emily B. Fox and
+               Roman Garnett},
+  title     = {Deconstructing Lottery Tickets: Zeros, Signs, and the Supermask},
+  booktitle = {Advances in Neural Information Processing Systems 32: Annual Conference
+               on Neural Information Processing Systems 2019, NeurIPS 2019, December
+               8-14, 2019, Vancouver, BC, Canada},
+  pages     = {3592--3602},
+  year      = {2019},
+  url       = {https://proceedings.neurips.cc/paper/2019/hash/1113d7a76ffceca1bb350bfe145467c6-Abstract.html},
+  timestamp = {Mon, 16 May 2022 15:41:51 +0200},
+  biburl    = {https://dblp.org/rec/conf/nips/ZhouLLY19.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+@inproceedings{ADAM,
+  author    = {Diederik P. Kingma and
+               Jimmy Ba},
+  editor    = {Yoshua Bengio and
+               Yann LeCun},
+  title     = {Adam: {A} Method for Stochastic Optimization},
+  booktitle = {3rd International Conference on Learning Representations, {ICLR} 2015,
+               San Diego, CA, USA, May 7-9, 2015, Conference Track Proceedings},
+  year      = {2015},
+  url       = {http://arxiv.org/abs/1412.6980},
+  timestamp = {Thu, 25 Jul 2019 14:25:37 +0200},
+  biburl    = {https://dblp.org/rec/journals/corr/KingmaB14.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+@article{cnn,
+  author    = {Yann LeCun and
+               L{\'{e}}on Bottou and
+               Yoshua Bengio and
+               Patrick Haffner},
+  title     = {Gradient-based learning applied to document recognition},
+  journal   = {Proc. {IEEE}},
+  volume    = {86},
+  number    = {11},
+  pages     = {2278--2324},
+  year      = {1998},
+  url       = {https://doi.org/10.1109/5.726791},
+  doi       = {10.1109/5.726791},
+  timestamp = {Wed, 16 Mar 2022 23:54:13 +0100},
+  biburl    = {https://dblp.org/rec/journals/pieee/LeCunBBH98.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+ @article{mnist,
+  title={The mnist database of handwritten digit images for machine learning research},
+  author={Deng, Li},
+  journal={IEEE Signal Processing Magazine},
+  volume={29},
+  number={6},
+  pages={141--142},
+  year={2012},
+  publisher={IEEE}
+} 
+@inproceedings{imagenet,
+  title={Imagenet: A large-scale hierarchical image database},
+  author={Deng, Jia and Dong, Wei and Socher, Richard and Li, Li-Jia and Li, Kai and Fei-Fei, Li},
+  booktitle={2009 IEEE conference on computer vision and pattern recognition},
+  pages={248--255},
+  year={2009},
+  organization={Ieee}
+} 
+@inproceedings{SimonyanZisserman,
+  author    = {Karen Simonyan and
+               Andrew Zisserman},
+  editor    = {Yoshua Bengio and
+               Yann LeCun},
+  title     = {Very Deep Convolutional Networks for Large-Scale Image Recognition},
+  booktitle = {3rd International Conference on Learning Representations, {ICLR} 2015,
+               San Diego, CA, USA, May 7-9, 2015, Conference Track Proceedings},
+  year      = {2015},
+  url       = {http://arxiv.org/abs/1409.1556},
+  timestamp = {Wed, 17 Jul 2019 10:40:54 +0200},
+  biburl    = {https://dblp.org/rec/journals/corr/SimonyanZ14a.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+
+@inproceedings{ResidualConnect,
+  author    = {Kaiming He and
+               Xiangyu Zhang and
+               Shaoqing Ren and
+               Jian Sun},
+  title     = {Deep Residual Learning for Image Recognition},
+  booktitle = {2016 {IEEE} Conference on Computer Vision and Pattern Recognition,
+               {CVPR} 2016, Las Vegas, NV, USA, June 27-30, 2016},
+  pages     = {770--778},
+  publisher = {{IEEE} Computer Society},
+  year      = {2016},
+  url       = {https://doi.org/10.1109/CVPR.2016.90},
+  doi       = {10.1109/CVPR.2016.90},
+  timestamp = {Wed, 25 Jan 2023 11:01:16 +0100},
+  biburl    = {https://dblp.org/rec/conf/cvpr/HeZRS16.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+@inproceedings{batchnorm,
+  author    = {Sergey Ioffe and
+               Christian Szegedy},
+  editor    = {Francis R. Bach and
+               David M. Blei},
+  title     = {Batch Normalization: Accelerating Deep Network Training by Reducing
+               Internal Covariate Shift},
+  booktitle = {Proceedings of the 32nd International Conference on Machine Learning,
+               {ICML} 2015, Lille, France, 6-11 July 2015},
+  series    = {{JMLR} Workshop and Conference Proceedings},
+  volume    = {37},
+  pages     = {448--456},
+  publisher = {JMLR.org},
+  year      = {2015},
+  url       = {http://proceedings.mlr.press/v37/ioffe15.html},
+  timestamp = {Wed, 29 May 2019 08:41:45 +0200},
+  biburl    = {https://dblp.org/rec/conf/icml/IoffeS15.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+@article{cifar,
+title= {CIFAR-10 (Canadian Institute for Advanced Research)},
+journal= {},
+author= {Alex Krizhevsky and Vinod Nair and Geoffrey Hinton},
+year= {2009},
+url= {http://www.cs.toronto.edu/~kriz/cifar.html},
+}
+@inproceedings{Tinyimagenet,
+  title={Tiny ImageNet Visual Recognition Challenge},
+  author={Ya Le and Xuan S. Yang},
+  year={2015}
+}
+@article{Caltech101,
+  title={Learning Generative Visual Models from Few Training Examples: An Incremental Bayesian Approach Tested on 101 Object Categories},
+  author={Li Fei-Fei and Rob Fergus and Pietro Perona},
+  journal={Computer Vision and Pattern Recognition Workshop},
+  year={2004},
+}

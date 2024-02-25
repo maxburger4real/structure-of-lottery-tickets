@@ -69,7 +69,7 @@ def update_pruning_config(config: Config):
         return config
 
     pparams = __count_parameters(
-        config.model_shape, config.prune_weights, config.prune_biases
+        config.base_model_shape, config.prune_weights, config.prune_biases
     )
 
     pr = __calculate_prunung_rate(
@@ -82,7 +82,7 @@ def update_pruning_config(config: Config):
         pparams,
         pr,
         config.extension_levels,
-        config.model_shape,
+        config.base_model_shape,
         config.prune_weights,
         config.prune_biases,
     )
@@ -98,7 +98,6 @@ def update_pruning_config(config: Config):
     if extended_shapes:
         # add extension before parma trajectory (order decreasing)
         config.model_shape = extended_shapes[-1]
-        config.base_model_shape = config.model_shape
 
     return config
 

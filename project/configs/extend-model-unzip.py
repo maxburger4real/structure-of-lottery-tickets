@@ -1,30 +1,5 @@
 """
-model shape: 4 8 8 2
-sweep_id : wpcowdl5
-seeds = [0]
-
-levels 0-19
-sweep_id: j9lvvxjg
-[1, 2, 3]
-
-levels 20-25
-sweep_id: a5kr3muw
-[1, 2, 3]
-
---------
 model shape: 4 4 4 4 2
-with different model shape
-
-123 t1mp5nhi
-45 c3gin27l
-12345 82wq0l59
-vk3ftk2q
-
-try again, but with 4 6 6 6 2 from 0 to 15
-
--------
-model shape: 4, 20, 2
-01ayiisq
 """
 
 from training.models import MultiTaskBinaryMLP
@@ -34,27 +9,15 @@ from training.datasets import Datasets, Scalers
 from training.routines import Routines
 
 description = """
-This experiment should show behaviour of splitting when starting with a small network,
-namely [4, 8, 8, 2] and extending it up to 20 times with a pruning rate of 0.32
-
-This pruning rate is derived from a well working experiment with a network of size 
-[4, 320, 320, 2], which is pruned 20 times to 50 parameters. It yielded good splitting behaviour and had 
-this pruning rate.
+TODO
 """
 
-extension_levels = list(range(20))
-extension_levels = list(range(20, 26))
-extension_levels = list(range(7, 13))
-extension_levels = list(range(7))
-extension_levels = list(range(13, 15))
-extension_levels = list(range(0, 15))
-extension_levels = list(range(17, 19))
+
+# These are the networks that did split
+seeds = [3]
+extension_levels = [10, 11, 13, 14, 16, 17, 18]
 
 
-seeds = [1]
-seeds = [0]
-seeds = [1, 2, 3]
-seeds = [1, 2, 3, 4, 5]
 
 sweep_config = {
     "method": "grid",
@@ -63,7 +26,6 @@ sweep_config = {
     "parameters": {
         "extension_levels": {"values": extension_levels},
         "model_seed": {"values": seeds},
-        #"model_shape" : {"values": [[4, 4, 4, 4, 2]]}
     },
 }
 
@@ -72,6 +34,7 @@ run_config = Config(
     # sweeped
     model_shape=[4, 4, 4, 4, 2],  # is overwritten
     base_model_shape=[4, 4, 4, 4, 2],
+
     pipeline=Routines.imp,
     dataset=Datasets.CIRCLES_MOONS,
     model_class=MultiTaskBinaryMLP,
