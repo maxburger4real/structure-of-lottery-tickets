@@ -1,8 +1,8 @@
-\section{Experiments and Results}
+\chapter{Experiments and Results}
 Description generall
 limiations of work
 
-\subsection{Extending the network}
+\section{Extending the network}
 The first round of experiments is dedicated to find out what conditions are required, such that the network seperates.
 During a preliminary exploration phase, some scenarios where the network indeed seperates were found.
 Yet, they were sparse and could not be easily interpreted.
@@ -21,12 +21,17 @@ The chosen value, while somewhat arbitrary, was selected by promising results on
 \textcite{DBLP:conf/iclr/FrankleC19} used a pruning rate of $0.2$ in the original experiments for the fully connected feed forward network trained on the MNIST dataset.
 However with a larger pruning rate, a larger space of network sizes can be covered with the same number of iterations, which is why the larger pruning rate of $0.32$ was selected.
 
-\begin{table}
-    \caption{In this table, the parameter trajectories and the corresponding hidden dimension of the network are displayed for each extension level. Parameter trajectory is in each respective "param" column and the number of hidden neurons per hidden layer in the column "hidden dim". At the extension level zero, the base model values are displayed.}
-    \label{tab:trajectory}
+\begin{table}[ht]
+    {
+    \sffamily
+    \caption{
+    In this table, the parameter trajectories and the corresponding hidden dimension of the network are displayed for each extension level. 
+    Parameter trajectory is in each respective `param' column and the number of hidden neurons per hidden layer in the column `hidden dim'.
+    At the extension level zero, the base model values are displayed.
+    }\label{tab:trajectory}
     \begin{tabular}{rrrrrrr}
     \toprule
-    Lvl & shape(1) & param(1) & shape(2) & param(2) & shape(3) & param(3) \\
+    Lvl & shape (1) & param (1) & shape (2) & param (2) & shape (3) & param (3) \\
     \midrule
     0 & 20 & 120 & 8 & 112 & 6 & 108 \\
     1 & 29 & 174 & 10 & 160 & 8 & 176 \\
@@ -56,9 +61,10 @@ However with a larger pruning rate, a larger space of network sizes can be cover
     25 & - & - & 1310 & 1723960 & - & - \\
     \bottomrule
     \end{tabular}
-    \end{table}
+    }
+\end{table}
 
-\subsubsection{Two hidden layers}
+\subsection{Two hidden layers} \label{two-hidden}
 The first experiment was an extensive exploration of different model sizes by extending the network.
 The base network, which is the network that is used as a base for extending, has the shape 4-8-8-2.
 This architecture has 112 weights, which is also used as the pruning target.
@@ -67,7 +73,7 @@ The network is extended up to 25 times.
 At the extension level 25, the network has a shape of 4-1310-1310-2, with 1.723.960 weights.
 The number of extension levels corresponds to the number of pruning levels the network goes through.
 
-Over all pruning levels, the network might seperate into two network or lose one of the inputs or outputs, which is called 'degrading'.
+Over all pruning levels, the network might seperate into two network or lose one of the inputs or outputs, which is called `degrading'.
 For the experiments described here, the run is stopped as soon as the network degrades to avoid unnecessary computational effort.
 After each pruning level, the network is evaluated to check if it seperated or degraded.
 When looking at this over the the course of all pruning levels, there are four different scenario for a network:
@@ -109,7 +115,7 @@ Therefore it is also reasonable to assume that some of the networks that are sti
 Another interesting observation is that only after extension level 10, the networks begin to degrade.
 What follows from the data is, the more extension levels, the more likely it is that a network degrades, either before or after it seperated.
 
-One possible explanation for this is that at each pruning level, a certain number of 'inactive weights' are produced.
+One possible explanation for this is that at each pruning level, a certain number of `inactive weights' are produced.
 As noted in \autocite{HanEtAl15, AllAlivePruning}, this is a known phenomenon.
 However, since no regularisation is used in these experiments, the inactive weights do not decrease in magnitude.
 Rather, they are frozen with they last value.
@@ -143,7 +149,7 @@ For some networks that were extended 20 or more levels, the final percentage of 
 Techniques like L1-Regularisation used in \autocite{HanEtAl15} and ??\autocite{DBLP:conf/iclr/FrankleC19}?? or All-Alive-Pruning \autocite{AllAlivePruning} could counteract this effect of compounding inactive parameters.
 However, this is a topic for future research and not addressed in this thesis. 
 
-\subsubsection{When do networks seperate?}
+\subsection{When do networks seperate?}
 One question regarding the seperation of a network is, at what level it seperates.
 What is the number of available weights the network has at the level when it splits?
 How does the number of extension levels / the networks size influence the iteration when it splits?
@@ -174,7 +180,7 @@ It increases slightly but almost remains flat, covering a narrow range of around
 TODO: revise. Does this make any sense?
 This data indicate that the number of active weights is a central quantity to splitting.
 Since the active subgraph is indeed the graph on which the splitting is checked, this seems plausible.
-A certain 'barrier' might be inherent to each combination of network architecture, dataset and hyperparameters.
+A certain `barrier' might be inherent to each combination of network architecture, dataset and hyperparameters.
 Given a dataset where there is exactly zero correlation between the two tasks might move the barrier towards higher number of edges where the network is likely to split.
 A slight correltation, which is probably also the case in the Moons-Circles dataset and, might move the barrier lower.
 Some hyperparameters or optimizers also might move the barrier, through being better suited to remove weights that connect the tasks.
@@ -183,7 +189,7 @@ These are all questions for further research to tackle.
  
 TODO: look at the iteration where it degrades.
 
-\subsubsection{What makes the networks seperate?}
+\subsection{What makes the networks seperate?}
 As seen in figure \ref{fig:2laxer-histogram}, the network starts to split at 7 extension levels and a network shape of 4-38-38-2, with 1672 weights.
 However, it is not obvious what the main contributor for network splitting is.
 To gain a better understanding of that phenomenon an experiment was conducted that compares different combinations of pruning levels, network size and pruning rate.
@@ -241,7 +247,7 @@ The data indicates that more pruning levels with lower pruning rates are general
 It is reasonable to assume, that the same phenomenon takes place with regards to network splitting.
 Less pruning leves versus lower pruning rates represents a trade-off between favorable conditions and computational cost.
 
-\subsubsection{One and Three hidden layers}
+\subsection{One and Three hidden layers}
 To gain a wider picture of the effects studied with regards to the network with two hidden layers, the same experiments were conducted on networks with one and three hidden layers.
 As shown in \ref{tab:trajectory}, the networks were only extended for 15 and 17 levels instead of 25. 
 This is due to computational constraints. As the networks get larger and the number of pruning levels is higher, the computational effort increases significantly.
@@ -309,12 +315,104 @@ The networks at extension level 7 until 11 all split at the last pruning level, 
 The number of active weights is slightly lower than in the other experiments.
 Generally the same pattern can be seen, with a slightly more pronounced increase in active weights for larger networks.
 
-\subsubsection{Performance of Lottery tickets}
-are there differences in the performance of lottery tickets when they split?
+\subsection{How do networks seperate?}
+Another open question is, what the process of seperation looks like.
+In the beginning, it is not yet clear which weight and neuron belongs to which task.
+One option that is available however, is to view the network from the perspectives of the inputs and outputs.
+The input and output features are the only parts of the network that can already be ascribed to a task when it is fully connected.
+This enables us to determine the degree to which the neighbouring layers have seperated as well.
 
-compare 
+For instance regarding the simple Moons-Circles dataset, there are two output neuron.
+Each neuron in the penultimate layer has two outgoing connections: one to the Circles-output and one to the Moons-output.
+When one of the connections is pruned, the neuron and all its incoming connections are automatically part of the task the unpruned weight is connected to.
 
-\subsubsection{Conclusion: Network Extension}
+The number of neurons that are only connected to one the outputs of one task are denoted $N_{decided}$.
+The number of neurons that are connected to more all tasks are denoted $N_{undecided}$.
+The degree of seperation is determined by 
+$$
+\frac{N_{decided}}{N_{decided}+N_{undecided}}
+$$
+
+This calculation can be done from either the side of the inputs or the outputs and it works in the same way.
+Only if a layer has at least one neuron that has `decided' to which task it belongs, neurons in the next layer can `decide' as well.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.9\linewidth]{output-view.png}
+    \caption{TODO:}
+    \label{fig:outview}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.9\linewidth]{input-view.png}
+    \caption{TODO:}
+    \label{fig:inview}
+\end{figure}
+
+In figure \ref{fig:outview} the degree of seperation is displayed for each layer from the view of the outputs.
+The network in this case was taken from the experiment with three hidden layers.
+The network seperates at iteration 15.
+
+In the first iteration, none of the layers were seperated.
+Already by the second iteration, around $30$\% of the neurons in the last hidden layer (hidden-3) belong to only one task.
+This increase of the degree of seperation of this layer looks logarithmic.
+At iteration 7, where already ~$80$\% of neurons in the last hidden layer belong to a task, the penultimate hidden layer (hidden-2) starts to seperate.
+With one iteration delay, the next hidden layer (hidden-1) starts to seperate.
+It tracks the layer \textit{hidden-2} in its rapid, s-curve shaped growth.
+Only at iteration 14, when over $90$\% of neurons are already attributable to a task, the input layer seperates.
+In this case, the seperation describes the perspective from the outputs.
+It does not take into account the knowledge, which input neuron belongs to which task.
+
+The same network but from the view of the inputs is displayed in figure \ref{fig:inview}.
+In this case, the seperation is significantly slower in the beginning.
+After iteration 10, the seperation speeds up at at iteration 15, the network is completely seperated.
+The difference in the degree of seperation, depending on the point of view, could have several reasons.
+It could be that the slower seperation is due to the fact, that there are four inputs and only two outputs.
+Therefore, for the neurons to be only connected to the inputs of one task, two instead of one weights have to be pruned.
+Another possibility is that the weights in the first layer are higher in magnitude than the weights in the last layer.
+This would result in stronger pruning in the last layer.
+In the course of this thesis, these questions will not be further pursued.
+
+
+
+\subsection{Performance of Lottery tickets}
+One remaining question is if the networks still perform well when they split.
+Are they better, equal or worse in terms of the validation loss, compared to the other networks.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.9\linewidth]{performance.png}
+    \caption{TODO:}
+    \label{fig:performance}
+\end{figure}
+
+To investigate the performance, the validation loss from the experiment with two hidden layers \ref{two-hidden} was used.
+In figure \ref{fig:performance}, the validation loss is depicted on the y-axis.
+On the x-axis, the number of active weights is display.
+To get a better understanding of the performance of the networks, the loss was plotted at each iteration for each network.
+Namely, for a network extended 20 times there are 20 loss values, each plotted as a single point.
+The color of the point represents if the network was interconnected (yellow), seperated (green) or degraded (red) at the iteration the point refers to.
+The loss value is calculated after the training and before the pruning of each iteration, as shown in the code snippet ref CODE SNIPPET IMP.
+
+The bending line of yellow points demonstrates the consistent performance of the networks during the early iterations.
+Likely due to early splitting, the networks remain at validation loss of around $0.01$.
+The loss decreases slightly over the pruning iterations.
+A clearly visible cluster of green dots sits at the end of the yellow line.
+These dots represent the networks that are seperated.
+The iterations where the networks are seperated are amongst the networks with the lowest loss.
+This indicates that the seperation of the networks is not merely a consequence of pruning to extremely high sparsities.
+Rather, the seperated networks still represent a well performing function, even amongst the best performing networks overall.
+
+Interestingly, there is a second distinct cluster of networks.
+It sits at the same number of active weights, however with significantly higher loss.
+This cluster contains interconnected, seperated and degraded networks at seemingly even ratios.
+Since the experiments were stopped as soon as a network degrades, the red points refer to losses immediately after the network degraded.
+Even though the cluster looks compact along the y-axis it covers a fairly large range between 0.08 and 0.56 loss. These losses correspond to an accuracy of roughly $95$\% and $65$\% respectively.
+The seperated and interconnected networks still generally inhabit an area with lower loss than the degraded networks.
+
+
+\subsection{Conclusion: Network Extension}
 They always split
 
 multiple this have to be given

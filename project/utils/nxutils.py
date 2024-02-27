@@ -43,6 +43,8 @@ class GraphManager:
             task_description, self.in_features, self.out_features
         )
 
+        self.layerwise_split_metrics = {}
+
         self.graveyard = {}  # the pruned parameters are here
         self.catalogue: Dict[str, nx.Graph] = {}
 
@@ -101,6 +103,53 @@ class GraphManager:
         subnetworks = [
             G.subgraph(c) for c in nx.connected_components(G.to_undirected())
         ]
+
+        # WARNING: This only works for 2 tasks
+        self.layerwise_split_metrics = {}
+        if True and len(self.task_description) == 2:
+
+            t0_name, (t0_in, t0_out) = self.task_description[0]
+            t1_name, (t1_in, t1_out) = self.task_description[1]
+            
+            # from outputs
+            t0_nodes = nx.ancestors(G, t0_out[0])
+            t1_nodes = nx.ancestors(G, t1_out[0])
+            t0 = t0_nodes - t1_nodes # t0 and not t1
+            t1 =  t1_nodes - t0_nodes # t1 and not t0
+            t12 = t0_nodes & t1_nodes
+            
+            for layer in range(len(self.shape)-1):
+                n0 = len([n for n in t0 if G.nodes[n]['layer'] == layer])
+                n1 = len([n for n in t1 if G.nodes[n]['layer'] == layer])
+                n01 = len([n for n in t12 if G.nodes[n]['layer'] == layer])
+                ratio = (n0 + n1) / (n0 + n1 + n01)
+
+                self.layerwise_split_metrics[f'outview-{layer}-{t0_name}'] = n0
+                self.layerwise_split_metrics[f'outview-{layer}-{t1_name}'] = n1
+                self.layerwise_split_metrics[f'outview-{layer}-decided'] = n0 + n1
+                self.layerwise_split_metrics[f'outview-{layer}-undecided'] = n01
+                self.layerwise_split_metrics[f'outview-{layer}-p-decided'] = ratio
+
+            # FROM INPUTS
+            bottom_t0 = set()
+            bottom_t1 = set()
+            for tin in t0_in: bottom_t0.update(nx.descendants(G, tin))
+            for tin in t1_in: bottom_t1.update(nx.descendants(G, tin))
+
+            t0 = bottom_t0 - bottom_t1  
+            t1 =  bottom_t1 - bottom_t0 
+            t12 = bottom_t0 & bottom_t1
+            for layer in range(1, len(self.shape)):
+                n0 = len([n for n in t0 if G.nodes[n]['layer'] == layer])
+                n1 = len([n for n in t1 if G.nodes[n]['layer'] == layer])
+                n01 = len([n for n in t12 if G.nodes[n]['layer'] == layer])
+                ratio = (n0 + n1) / (n0 + n1 + n01)
+
+                self.layerwise_split_metrics[f'inview-{layer}-{t0_name}'] = n0
+                self.layerwise_split_metrics[f'inview-{layer}-{t1_name}'] = n1
+                self.layerwise_split_metrics[f'inview-{layer}-decided'] = n0 + n1
+                self.layerwise_split_metrics[f'inview-{layer}-undecided'] = n01
+                self.layerwise_split_metrics[f'inview-{layer}-p-decided'] = ratio
 
         # update the catalogue of subnetworks
         self.__update_catalogue(subnetworks)

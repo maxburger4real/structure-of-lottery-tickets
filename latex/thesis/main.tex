@@ -1,4 +1,6 @@
-\documentclass{article}
+%\documentclass{article}
+\documentclass[12pt,a4paper,notitlepage]{report}
+%\usepackage[ngerman,french,english]{babel}
 \input{preamble.tex}
 
 % some imports, settings etc.
@@ -9,16 +11,18 @@
 \author{Maximilian Burger\\{\small Advisor: Pieter-Jan Hoedt}}
 \date{March 2024}
 \begin{document}
+
 \sffamily
 \maketitle
-
 \input{abstract.tex}
+\tableofcontents
 % TODO: \input{kurzfassung.tex}
 \input{introduction.tex}
 \input{literature-review.tex}
 \input{methodology.tex}
 \input{experiments-and-results.tex}
 % TODO: \input{mnist-experiments.tex}
+\input{discussion.tex}
 \input{conclusion.tex}
-\printbibliography
+\printbibliography[title={Bibliography}, heading=bibintoc]
 \end{document}
