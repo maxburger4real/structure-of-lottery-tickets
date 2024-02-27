@@ -14,8 +14,8 @@ RUNS_DATA_DIR.mkdir(parents=True, exist_ok=True)
 # wandb
 wandb_kwargs = dict(
     entity="mxmn",
-    project='concat_moons',
-    # project='concat_mnist',
+    #project='concat_moons',
+    project='concat_mnist',
     #project="test",
     dir=WANDB_DIR,
 )
