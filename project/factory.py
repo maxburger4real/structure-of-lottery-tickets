@@ -112,7 +112,10 @@ class Factory:
 
     def make_graph_manager(self, model: torch.nn.Module) -> GraphManager:
         return GraphManager(
-            model, self.config.model_shape, self.config.task_description
+            unpruned_model=model, 
+            shape=self.config.model_shape, 
+            task_description=self.config.task_description, 
+            output_only=self.config.only_consider_out_features_for_degrading
         )
 
     def make_logger(self):

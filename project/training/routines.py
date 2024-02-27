@@ -122,6 +122,7 @@ def imp(
             graph_manager.update(model, level)
             graph_metrics = graph_manager.metrics()
             logger.metrics(graph_manager.layerwise_split_metrics, prefix='layersplit/')
+            logger.metrics(graph_manager.remaining_in_and_outputs, prefix='remaining_inout/')
 
         logger.metrics(graph_metrics, prefix="graph/")
         logger.metrics(train_eval_metrics, prefix="performance/")

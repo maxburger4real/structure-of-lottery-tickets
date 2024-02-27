@@ -22,10 +22,11 @@ STATE = "state"
 class GraphManager:
     """A class that manages the state over the pruning iterations"""
 
-    def __init__(self, unpruned_model, shape, task_description):
+    def __init__(self, unpruned_model, shape, task_description, output_only=False):
         """Initialize the contant values of the Network, that will remain true over pruning iterations."""
         self.is_connected = self.is_split = self.is_degraded = False
 
+        self.output_only = output_only
         self.shape = shape
 
         self.num_tasks = len(task_description) if task_description is not None else 1
@@ -105,23 +106,38 @@ class GraphManager:
         ]
 
         # WARNING: This only works for 2 tasks
+
+
         self.layerwise_split_metrics = {}
+        self.remaining_in_and_outputs = {}
         if True and len(self.task_description) == 2:
 
             t0_name, (t0_in, t0_out) = self.task_description[0]
             t1_name, (t1_in, t1_out) = self.task_description[1]
+
+            self.remaining_in_and_outputs[t0_name + '-out'] = len(set(t0_out).intersection(G.nodes))
+            self.remaining_in_and_outputs[t0_name + '-in'] =  len(set(t0_in).intersection(G.nodes))
+            self.remaining_in_and_outputs[t1_name + '-out'] = len(set(t1_out).intersection(G.nodes))
+            self.remaining_in_and_outputs[t1_name + '-in'] =  len(set(t1_in).intersection(G.nodes))
             
             # from outputs
-            t0_nodes = nx.ancestors(G, t0_out[0])
-            t1_nodes = nx.ancestors(G, t1_out[0])
-            t0 = t0_nodes - t1_nodes # t0 and not t1
-            t1 =  t1_nodes - t0_nodes # t1 and not t0
-            t12 = t0_nodes & t1_nodes
+            out_t0 = set()
+            out_t1 = set()
+            for tout in t0_out:
+                if G.has_node(tout):
+                    out_t0.update(nx.ancestors(G, tout))
+            for tout in t1_out: 
+                if G.has_node(tout):
+                    out_t1.update(nx.ancestors(G, tout))
+
+            t0 = out_t0 - out_t1 # t0 and not t1
+            t1 =  out_t1 - out_t0 # t1 and not t0
+            t12 = out_t0 & out_t1
             
             for layer in range(len(self.shape)-1):
-                n0 = len([n for n in t0 if G.nodes[n]['layer'] == layer])
-                n1 = len([n for n in t1 if G.nodes[n]['layer'] == layer])
-                n01 = len([n for n in t12 if G.nodes[n]['layer'] == layer])
+                n0 = len([n for n in t0 if G.has_node(n) and G.nodes[n]['layer'] == layer])
+                n1 = len([n for n in t1 if G.has_node(n) and G.nodes[n]['layer'] == layer])
+                n01 = len([n for n in t12 if G.has_node(n) and G.nodes[n]['layer'] == layer])
                 ratio = (n0 + n1) / (n0 + n1 + n01)
 
                 self.layerwise_split_metrics[f'outview-{layer}-{t0_name}'] = n0
@@ -133,16 +149,20 @@ class GraphManager:
             # FROM INPUTS
             bottom_t0 = set()
             bottom_t1 = set()
-            for tin in t0_in: bottom_t0.update(nx.descendants(G, tin))
-            for tin in t1_in: bottom_t1.update(nx.descendants(G, tin))
+            for tin in t0_in: 
+                if G.has_node(tin):
+                    bottom_t0.update(nx.descendants(G, tin))
+            for tin in t1_in: 
+                if G.has_node(tin):
+                    bottom_t1.update(nx.descendants(G, tin))
 
             t0 = bottom_t0 - bottom_t1  
             t1 =  bottom_t1 - bottom_t0 
             t12 = bottom_t0 & bottom_t1
             for layer in range(1, len(self.shape)):
-                n0 = len([n for n in t0 if G.nodes[n]['layer'] == layer])
-                n1 = len([n for n in t1 if G.nodes[n]['layer'] == layer])
-                n01 = len([n for n in t12 if G.nodes[n]['layer'] == layer])
+                n0 = len([n for n in t0 if G.has_node(n) and G.nodes[n]['layer'] == layer])
+                n1 = len([n for n in t1 if G.has_node(n) and G.nodes[n]['layer'] == layer])
+                n01 = len([n for n in t12 if G.has_node(n) and G.nodes[n]['layer'] == layer])
                 ratio = (n0 + n1) / (n0 + n1 + n01)
 
                 self.layerwise_split_metrics[f'inview-{layer}-{t0_name}'] = n0
@@ -178,7 +198,7 @@ class GraphManager:
 
     def __update_catalogue(self, subnetworks):
         # update the task matrix
-        self.task_matrix = task_matrix(subnetworks, self.task_description)
+        self.task_matrix = task_matrix(subnetworks, self.task_description, self.output_only)
 
         potential = np.sum(self.task_matrix) / len(self.task_description)
 
@@ -296,7 +316,7 @@ def subgraph_by_state(
     return g
 
 
-def task_matrix(subnetworks: List[nx.DiGraph], task_description):
+def task_matrix(subnetworks: List[nx.DiGraph], task_description, output_only: bool):
     L = len(task_description)
     N = len(subnetworks)
     X = np.ones(shape=(N, L)) * np.inf  # Just to be sure that it is always overwritten.
@@ -307,16 +327,13 @@ def task_matrix(subnetworks: List[nx.DiGraph], task_description):
             in_features_in_subnetwork = set(g.nodes()).intersection(in_features)
             out_features_in_subnetwork = set(g.nodes()).intersection(out_features)
 
-            # their product is the number of inout pairs in the network.
-            num_in_out_pairs = len(in_features_in_subnetwork) * len(
-                out_features_in_subnetwork
-            )
-
-            percentage_num_in_out_pairs = num_in_out_pairs / (
-                len(in_features) * len(out_features)
-            )
-
-            X[i, j] = percentage_num_in_out_pairs
+            if output_only:
+                X[i, j] = len(out_features_in_subnetwork) / len(out_features)
+            else:
+                X[i, j] = (
+                    (len(in_features_in_subnetwork) * len(out_features_in_subnetwork))/
+                    (len(in_features) * len(out_features))
+                )
 
     return X
 

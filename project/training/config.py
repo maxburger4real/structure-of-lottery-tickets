@@ -25,6 +25,7 @@ class Config:
     init_strategy_biases: str = None
     init_strategy_weights: str = None
 
+    only_consider_out_features_for_degrading: bool = False
     task_description: dict = None
     n_samples: int = 800
     data_seed: int = None
