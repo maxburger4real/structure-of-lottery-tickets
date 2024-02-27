@@ -31,7 +31,11 @@ class Datasets(Enum):
     MINI_MNIST = OrderedDict(mnist=(144, 3))
     MINI_FASHION = OrderedDict(fashion=(144, 3))
     TINY_FASHION_AND_MNIST = OrderedDict(mnist=(144, 2), fashion=(144, 2))
-    MINI_FASHION_AND_MNIST = OrderedDict(fashion=(288, 6))
+    TINY_FASHION_AND_MNIST_2 = OrderedDict(mnist=(196, 2), fashion=(196, 2))
+    MINI_FASHION_AND_MNIST = OrderedDict(mnist=(196, 3), fashion=(196, 3))
+    HALF_FASHION_AND_MNIST = OrderedDict(mnist=(196, 5), fashion=(196, 5))
+
+    #MINI_FASHION_AND_MNIST = OrderedDict(fashion=(288, 6))
 
     # TODO FINAL:
     FASHION = OrderedDict(mnist=(784, 10))
@@ -85,6 +89,33 @@ def make_dataset(name, n_samples, noise, seed, factor, scaler):
                 fashion_subset=(1,6),
                 train_size=1000, # per_class
                 test_size=200, # per class
+            )
+        case Datasets.TINY_FASHION_AND_MNIST_2:
+            return __make_minst_and_fashion_mnist(
+                scaler, 
+                transforms=torchvision.transforms.Resize((14, 14), antialias=True), 
+                mnist_subset=(0,1),
+                fashion_subset=(1,6),
+                train_size=2000, # per_class
+                test_size=200, # per class
+            )
+        case Datasets.MINI_FASHION_AND_MNIST:
+            return __make_minst_and_fashion_mnist(
+                scaler, 
+                transforms=torchvision.transforms.Resize((14, 14), antialias=True), 
+                mnist_subset=(0,1,2),
+                fashion_subset=(1,6,7),
+                train_size=3000, # per_class
+                test_size=300, # per class
+            )
+        case Datasets.HALF_FASHION_AND_MNIST:
+            return __make_minst_and_fashion_mnist(
+                scaler, 
+                transforms=torchvision.transforms.Resize((14, 14), antialias=True), 
+                mnist_subset=(0,1,2,3,4),
+                fashion_subset=(0,1,2,3,4),
+                train_size=3000, # per_class
+                test_size=300, # per class
             )
         case _:
             raise ValueError(f"Unknown dataset {name}")
@@ -214,6 +245,7 @@ def __balanced_subset(x,y,n):
     x, y = x[subset_indices], y[subset_indices]
     return x,y
 
+
 def __concat_datasets(list_of_datasets):
     list_of_x, list_of_y = list(zip(*list_of_datasets))
     x = torch.Tensor(np.concatenate(list_of_x, axis=1))
@@ -222,6 +254,7 @@ def __concat_datasets(list_of_datasets):
     y = torch.Tensor(np.concatenate(list_of_y_unsqueezed, axis=1))
 
     return x, y
+
 
 def __scale_dataset(x_train, x_test, scaler):
     """Scale the dataset featurewise."""

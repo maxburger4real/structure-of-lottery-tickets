@@ -200,26 +200,34 @@ class GraphManager:
         # update the task matrix
         self.task_matrix = task_matrix(subnetworks, self.task_description, self.output_only)
 
-        potential = np.sum(self.task_matrix) / len(self.task_description)
+        potential = np.sum(self.task_matrix) / self.num_tasks
 
         # has full potential
         if np.isclose(potential, 1):
-            assert all(
-                i.is_integer() for i in self.task_matrix.flatten()
-            ), f"values must be integers. got {self.task_matrix}"
-            self.task_matrix = self.task_matrix.astype(int)
+            
+            # more networks than tasks, but all outputs connected
+            if self.num_tasks < self.task_matrix.shape[0]:
+                print('More networks than tasks.')
+                # hack
+                self.untapped_potential = -0.001
+            else:
+                # number of values larger than 1
+                assert all(
+                    i.is_integer() for i in self.task_matrix.flatten()
+                ), f"values must be integers. got {self.task_matrix}"
+                self.task_matrix = self.task_matrix.astype(int)
+                num_tasks_per_network = np.sum(self.task_matrix, axis=1)
+                splits_remaining = np.sum(num_tasks_per_network - 1)
+                self.untapped_potential = splits_remaining
 
-            # number of values larger than 1
-            num_tasks_per_network = np.sum(self.task_matrix, axis=1)
-            splits_remaining = np.sum(num_tasks_per_network - 1)
-            self.untapped_potential = splits_remaining
+                if (
+                    self.untapped_potential == 0
+                    and self.split_iteration is None
+                    and self.num_tasks > 1
+                ):
+                    self.split_iteration = self.iteration
 
-            if (
-                self.untapped_potential == 0
-                and self.split_iteration is None
-                and self.num_tasks > 1
-            ):
-                self.split_iteration = self.iteration
+            
 
         # changed
         elif self.untapped_potential != potential - 1:
