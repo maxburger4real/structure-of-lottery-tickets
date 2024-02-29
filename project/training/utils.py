@@ -18,7 +18,7 @@ def evaluate(model, loader, device) -> Dict[str, Any]:
             loss = model.loss(logits, y)
             accuracy = model.accuracy(logits, y)
 
-            assert accuracy.shape == loss.shape, "Metrics must have the same size"
+            #assert accuracy.shape == loss.shape, "Metrics must have the same size"
 
             accs.append(accuracy)
             losses.append(loss)

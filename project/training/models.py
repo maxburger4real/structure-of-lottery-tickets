@@ -204,4 +204,4 @@ class MultiTaskMultiClassMLP(MLP):
             accuracy = accuracy_score(_targets, _preds, normalize=True)
             accs.append(accuracy)
             a = b
-        return torch.tensor(accs).mean()
+        return torch.tensor(accs) #.mean()

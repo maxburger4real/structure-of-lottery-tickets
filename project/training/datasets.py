@@ -26,6 +26,7 @@ class Datasets(Enum):
 
     CIRCLES_MOONS = OrderedDict(circles=(2, 1), moons=(2, 1))
     MNIST = OrderedDict(mnist=(784, 10))
+    FASHION = OrderedDict(mnist=(784, 10))
 
     # mini datasets
     MINI_MNIST = OrderedDict(mnist=(144, 3))
@@ -34,13 +35,9 @@ class Datasets(Enum):
     TINY_FASHION_AND_MNIST_2 = OrderedDict(mnist=(196, 2), fashion=(196, 2))
     MINI_FASHION_AND_MNIST = OrderedDict(mnist=(196, 3), fashion=(196, 3))
     HALF_FASHION_AND_MNIST = OrderedDict(mnist=(196, 5), fashion=(196, 5))
-
-    #MINI_FASHION_AND_MNIST = OrderedDict(fashion=(288, 6))
-
-    # TODO FINAL:
-    FASHION = OrderedDict(mnist=(784, 10))
-    MNIST_FASHION = OrderedDict(mnist=(1568, 20))
-
+    RESIZE_FULL_FASHION_AND_MNIST = OrderedDict(mnist=(196, 10), fashion=(196, 10))
+    FULL_FASHION_AND_MNIST = OrderedDict(mnist=(784, 10), fashion=(784, 10))
+    LARGEST_FASHION_AND_MNIST = OrderedDict(mnist=(784, 10), fashion=(784, 10))
 
 class Scalers(Enum):
     MinMaxZeroMean = "min-max-zero-mean"
@@ -116,6 +113,25 @@ def make_dataset(name, n_samples, noise, seed, factor, scaler):
                 fashion_subset=(0,1,2,3,4),
                 train_size=3000, # per_class
                 test_size=300, # per class
+            )
+        case Datasets.RESIZE_FULL_FASHION_AND_MNIST:
+            return __make_minst_and_fashion_mnist(
+                scaler, 
+                transforms=torchvision.transforms.Resize((14, 14), antialias=True), 
+                train_size=2000, # per_class
+                test_size=200, # per class
+            )        
+        case Datasets.FULL_FASHION_AND_MNIST:
+            return __make_minst_and_fashion_mnist(
+                scaler, 
+                train_size=2000, # per_class
+                test_size=200, # per class
+            )
+        case Datasets.LARGEST_FASHION_AND_MNIST:
+            return __make_minst_and_fashion_mnist(
+                scaler, 
+                train_size=5421, # min number of least common mnist digit
+                test_size=892,  # same
             )
         case _:
             raise ValueError(f"Unknown dataset {name}")
@@ -200,10 +216,8 @@ def __make_fashion_mnist(scaler, transforms=None, subset=None):
         # remap targets to [0-n]
         unique_numbers = sorted(set(train.targets.tolist()))
         mapping = {num: i for i, num in enumerate(unique_numbers)}
-        # map
         train.targets = torch.tensor([mapping[num.item()] for num in train.targets])
         test.targets = torch.tensor([mapping[num.item()] for num in test.targets])
-
 
     x_train = torch.flatten(train.data, start_dim=1)
     x_test = torch.flatten(test.data, start_dim=1)
@@ -234,6 +248,8 @@ def __make_minst_and_fashion_mnist(scaler, train_size: int, test_size: int, tran
 
 # helpers
 def __balanced_subset(x,y,n):
+    if n is None: return x, y
+
     class_indices = [torch.where(y == i)[0] for i in y.unique()]
     subset_indices = torch.cat([
         indices[torch.randperm(len(indices))[:n]] 
