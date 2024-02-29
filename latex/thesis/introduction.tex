@@ -1,13 +1,41 @@
 \chapter{Introduction}
-\section{Motivation}
-\section{Structure of the Thesis}
-\section{Seminar}
 Neural Networks have achieved remarkable success in various tasks, however, their increasingly large size leads to high computational and memory requirements.
 Neural Network Pruning \autocite{LeCun, OptimalBrainSurgeon, HanEtAl15, PruningFiltersForEfficientConvets} has been proposed to reduce the number of parameters after the network is trained, while maintaining accuracy.
 This leads to a reduction in size \autocite{HanEtAl15} and energy consumption \autocite{YangCS17} in the resulting subnetworks during inference.
+
 To increase efficiency during training as well, the smaller networks need to be trained from the beginning. Attempts to train smaller networks discovered by pruning from scratch did not yield convincing results \autocite{HanEtAl15, PruningFiltersForEfficientConvets}.
+
 The Lottery Ticket Hypothesis by \textcite{DBLP:conf/iclr/FrankleC19} has shown that there exist small, well-initialized subnetworks that can be trained in isolation to reach the same accuracy as the unpruned networks. 
 In contrast to previous attempts where the subnetwork structure after pruning is randomly reinitialized \autocite{HanEtAl15, PruningFiltersForEfficientConvets}, \textcite{DBLP:conf/iclr/FrankleC19} reinitialize the subnetworks with their respective initial weights from before training.
 The subnetwork structure is uncovered by an algorithm called Iterative Magnitude Pruning (IMP).
-This paper surveys the recent advancements in finding well-performing subnetworks and the characteristics of these networks. 
-Different approaches for discovering small, well-performing subnetworks are presented, including Supermasks \autocite{DBLP:conf/nips/ZhouLLY19}, Edge Popup \autocite{DBLP:conf/cvpr/RamanujanWKFR20}, and Gem-Miner\autocite{RareGems}.
+Different approaches for discovering small, well-performing subnetworks were developed \autocite{DBLP:conf/nips/ZhouLLY19}, Edge Popup \autocite{DBLP:conf/cvpr/RamanujanWKFR20}, and Gem-Miner\autocite{RareGems}.
+
+However, the structure of the underlying sparse subnetwork is rarely discussed.
+Since the networks are sparse, often to a high degree, the structure might give valuable insights into the functionality of the subnetwork.
+Yet, analysing the structure of network is not an easy undertaking.
+
+To generate insights about the structure of lottery tickets, the problem is approach from the other side.
+One could take a problem with a known structure and test if the resulting sparse networks resembles that structure in a way.
+For instance, given a problem that consists of two independent subproblems may result in two independent subnetworks. 
+One for each subproblem, or task.
+
+\section{Motivation}
+The study of lottery tickets itself has broad ramifications.
+At its ultimate, it could reduce the size of the neural networks significantly during training.
+This would result in lower computational and memory requirements and therefore cost and energy savings.
+It could also enable us to train models larger than prevousily possible, due to an increased efficiency of each parameter.
+Studying the structure of lottery tickets might produce valuable insights that further advance the field.
+
+Further, since the lottery tickets are highly sparse, they represent a very reduced function that solves the problem.
+This might turn out valuable for network interpretation.
+The structure of the network might yield information about how the network solves a task.
+This could enrich the current ecosystem of techniques to interpret neural networks.
+
+\section{Structure of the Thesis}
+In the first section a literature review is conducted, where relevant topics to this thesis are described.
+
+The next chapter explains the methodology.
+The dataset, neural network architecture and training process is outlined, as well as other algorithms used in the experiments.
+The following chapter walks through the conducted expirements.
+It contains the experiment setup, the results and interpretation of those.
+The thesis is concluded with a discussion of of future research in this direction.

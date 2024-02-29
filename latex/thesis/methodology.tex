@@ -155,7 +155,6 @@ Concretely, on the left side, the coordinates represent $x_1$ and $x_2$, but the
 On the right side on the other hand, $x_2$ and $x3$ are displayed with the colors defined by $y_1$.
 There is no clear visible pattern discernible from these dataset given on their own.
 
-
 \section{The Network}
 The neural network used to train on this task was inspired by the original lottery ticket experiments \autocite{DBLP:conf/iclr/FrankleC19}. 
 A fully connected feed forward neural network was used.
@@ -313,7 +312,7 @@ Furhter, all edges that are connected to a zombie node are classified as a zombi
 
 An active subgraph $\mathcal{G}_{active}$, where all nodes are connected to at least one input node and at least one output node.
 
-\subsection{Matching Networks and Tasks}
+\subsection{Matching Networks and Tasks}\label{sec:taskmatch}
 The active graph $\mathcal{G}_{active}$ is used to find seperate components in the graph.
 Conveniently, this can be done with a single networkx function.
 \begin{lstlisting}[language=Python]
@@ -482,3 +481,74 @@ TODO write about model extension.
 
 Extending the model means to add parameters to the model, such that pruning it once with the set pruning rate would result in the same number as paraemter
 
+\section{The MNIST-Fashion-MNIST Dataset}\label{sec:mnist}
+To test the network splitting on a slightly more realistic problem, the MNIST-Fashion-MNIST dataset was created.
+This dataset is created in the same way as described in paragraph~\ref{sec:independece_dataset}.
+But contrary to the toy datasets used from the previous chapter, the MNIST dataset \autocite{mnist} and the fashion-mnist \autocite{fashion}.
+The MNIST dataset is a well known dataset of handwritten digits. 
+The training set consists of 60000 images and the test set of 10000.
+It contains all digits from zero to nine in hanwritten form, on a $28 \times 28$ pixel grayscale image.
+This dataset was also used in the experiments original lottery ticket experiments \autocite{DBLP:conf/iclr/FrankleC19}.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=1.0\linewidth]{mnist-fashion-mnist.png}
+    \caption{
+        This figure depicts the mnist-fasion-mnist dataset. 
+        Seven randomly selected samples are displayed next to each other.
+        On top of each image, the handwritten digit is displayed. 
+        On the bottom, the fashion item.
+        Each sample consists of one random digit and one random fashion item.
+    }\label{fig:mnist_fashion}
+\end{figure}
+
+As the name suggests, the fashion-MNIST dataset \autocite{fashion} is similar to the MNIST dataset.
+However, instead of handwritten digits, different items of clothing are displayed on the $28 \times 28$ grayscale image.
+It contains the same number of images for the test set and the training set.
+Both datasets contain 10 classes.
+
+In the same way as described in paragraph~\ref{sec:independece_dataset}, the datasets are concatenated into one.
+Both datasets are shuffled and each sample from the MNIST dataset is concatenated with a random sample from the Fashion-MNIST dataset.
+The class labels are also concatenated.
+
+The result is a dataset with 60000 training samples and 1000 evaluation samples.
+Through the concatenation, each image has an aspect ratio of $28 \times 56$, where each half corresponds to one of the datasets.
+
+Contrary to the previous task, this dataset contains significantly more input features.
+Each dataset has 784 input features, which results in 1586 input features for the concatenated dataset.
+Further, the previous task was a combination of two binary classification tasks.
+Now, each dataset represents a multiclass classification problem with 10 classes.
+
+\subsubsection{Loss Function}
+To enable training with this dataset, the loss has to adapted.
+For classification with more than two classes, the categorical cross entropy can be used.
+For each of the tasks in the concatenated dataset the loss is computed seperately.
+The total loss is simply the sum of the losses from each task.
+
+Concretely, let $\mathbf{\hat y_{mnist}} = \left[\hat y_1, \dots, \hat y_{10}\right]$ be the output logits of the network that relate to the MNIST datset and $\mathbf{\hat y_{fashion}} = \left[\hat y_{11}, \dots, \hat y_{20}\right]$ to the Fashion-MNIST dataset.
+The labels are denoted fashion $\mathbf{y_{mnist}}$ and $\mathbf{y_{fashion}}$ respectively.
+Together, the form the network output $\mathbf{\hat y} = \left[\hat y_1, \dots, \hat y_{20}\right]$
+
+Let, $\mathcal{L} (\mathbf{\hat y}, \mathbf{y})$ be the loss of the network output and the true labels $\mathbf{y}$.
+
+The total loss of the network $\mathcal{L}$ is calculated as follows:
+
+$$
+\mathcal{L}  (\mathbf{\hat y}, \mathbf{y})
+= \ell  (\mathbf{\hat y_{mnist}}, \mathbf{y_{mnist}})
++ \ell (\mathbf{\hat y_{fashion}}, \mathbf{y_{fashion}})
+$$
+
+,where $\ell$ represents the categorical cross entropy loss.
+
+\subsubsection{Adapting Network Degradation}
+Previously, network seperation and network degradation was introduced.
+When trained on the Moons-Circles dataset from paragraph~\ref{sec:independece_dataset}, a network counts as degraded when any of the inputs or outputs are cut off from the network, since all inputs and outputs are relevant for the networks success.
+However, regarding the MNIST-Fashion-MNIST dataset, this is not the case.
+Many of the input features do not carry information, i.e.: the outer frame of the MNIST images.
+Therefore, it is to be expected that all connections to these inputs may be pruned.
+This would likely lead to unwanted network degradation.
+
+Therefore, the network only counts as degraded, if an output neuron is completely cut off.
+This requires only a small change in the calculation of the coverage as shown in paragraph~\ref{sec:taskmatch}.
+The terms relating to the inputs of the tasks, namely $C_{in}$ and $T_{in}$, are simply to be exchanged for one.
