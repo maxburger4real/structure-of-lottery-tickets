@@ -25,7 +25,7 @@ Numpy~\autocite{numpy}, a package to work with matrices in python, is used throu
 \section{The Independence Dataset}\label{sec:independece_dataset}
 \textcite{BIMT} executed the experiements on symbolic regression datasets.
 These are simple toy datasets where the labels are computed with a symbolic formula. 
-For instance regarding the independence task, the inputs are $x_1, x_2, x_3, x_4$ and the outputs are $y_1={x_2}^2 + \sin{(\pi*x_4)}$ and $y_2=(x_1+x_3)^3$
+For instance regarding the independence task, the inputs are $x_1, x_2, x_3, x_4$ and the outputs are $y_1={x_2}^2 + \sin{(\pi*x_4)}$ and $y_2={(x_1+x_3)}^3$
 In this case the independence is obvious, as $y_1$ depends only on $x_1$ and $x_3$, and $y_2$ depends only on $x_2$ and $x_4$.
 However with regards to lottery tickets, the existing literature focuses on classification tasks, while this is a regression task.
 
@@ -129,8 +129,8 @@ The final, normalized dataset is depicted in figure~\ref{fig:moons_circles}
 To create a single dataset out of the two seperate datasets, the input features as well as the labels are concatenated.
 Concretely, one sample of the concatenated dataset $\hat x$ contains one randomly selected sample from the two moons dataset and one randomly selected sample from the circles dataset.
 The label $\hat y$ of the sample $\hat x$ also consist of the respective concatenated labels.
-$$\hat x = \begin{pmatrix} x_1 & x_2 & x_3 & x_4 \end{pmatrix}$$
-$$\hat y = \begin{pmatrix} y_1 & y_2 \end{pmatrix}$$
+\[\hat x = \begin{pmatrix} x_1 & x_2 & x_3 & x_4 \end{pmatrix}\]
+\[\hat y = \begin{pmatrix} y_1 & y_2 \end{pmatrix}\]
 
 In this way, the whole dataset is concatenated.
 Afterwards, the dataset is randomly split in half into a training set and a test set.
@@ -160,7 +160,7 @@ The neural network used to train on this task was inspired by the original lotte
 A fully connected feed forward neural network was used.
 The network has four input neurons, two output neurons and between one and three hidden layers.
 Throughout the thesis, experiments with varying numbers of hidden layers are conducted.
-The input neurons correspond to $x_1, x_2, x_3, x_4$ defined in the previous section~\ref{sec:independece_dataset}.
+The input neurons correspond to $x_1, x_2, x_3, x_4$ defined in the previous paragraph~\ref{sec:independece_dataset}.
 The network outputs correspond to $y_1$ and $y_2$.
 
 As non-linearity, the Rectified Linear Unit (ReLU) is used.
@@ -211,6 +211,8 @@ The networks are trained with the ADAM optimizer.
 The learning rate is set to 0.001 and a batch size of 64 is used.
 These values were selected based on their effectiveness in preliminary experiments. However it is important to note that they are somewhat arbitrary and may be suboptimal.
 Further, throughout the experiments, early stopping is used to reduce the computational time.
+Early stopping is implemented with a patience of 30 levels and the metric that is watched is the validation loss.
+This means, if the validation does not improve for 30 consequtive epochs, the training of the level is stopped and the next level is started.
 
 As a pruning target for the experiments with the Moons-Circles dataset, values between 100 and 120 were selected.
 The pruning target is, in many experiments, derived from the model architecture which will be described in detail in a later chapter.
@@ -335,31 +337,31 @@ Further, each subnetwork contains a set of input nodes $N^{(j)}_{in}$ and a set 
 
 The intersection of the task inputs and the input nodes of the network denoted input coverage set $C^{(ij)}_{in}$ and output coverage set $C^{(ij)}_{out}$ for the outputs respectively.
 
-$$
+\[
 C^{(i,j)}_{out} = N^{(j)}_{out} \cap T^{(i)}_{out}
-$$
-$$
+\]
+\[
 c^{(i,j)}_{out} = \frac{| C^{(i,j)}_{out} |}{|T^{(i)}_{out}|}
-$$
+\]
 
-$$
+\[
 C^{(i,j)}_{in}  = N^{(j)}_{in}  \cap T^{(i)}_{in}
-$$
-$$
+\]
+\[
 c^{(i,j)}_{in} = \frac{| C^{(i,j)}_{in} |}{|T^{(i)}_{in}|}
-$$
+\]
 
 For evaluating the coverage the the subnetworks as a whole, the number of paths from inputs to outputs are considered.
 The total number of paths for a task is given by the product of the cardinatlity of the inputs set and the cardinality of the output set.
 Similarly, the number of paths available in the subnetwork is given by the cardinality of theinput coverage set and the cardinatlity of the output coverage set.
 The total coverage $c^{(i,j)}$ is defined as the ratio between the products.
-$$
+\[
 c^{(ij)} = \frac{
     | C^{(i,j)}_{in}| * | C^{(i,j)}_{out} |
     }{
     |T^{(i)}_{in}| * |T^{(i)}_{out}|
 }
-$$
+\]
 The total coverage is 1 when the task is completely covered by the subnetwork.
 It is 0, if either no input or no output of the task is covered by the subnetwork.
 It is between 0 and 1, if at least one input and at least one output of the task is covered, but at least one input or output is not covered.
@@ -378,17 +380,17 @@ The circles-task $T^{(2)}$ is associated with the inputs $T^{(2)}_{in} = \{x_3,x
 The input, output or total coverage can be collected in a matrix $C$ of size $\tau \times j$, where $\tau$ is the number of tasks and $j$ the number of subnetworks. 
 $c_{i,j}$ represents the value at the $i$-th row and the $j$-th column and $0 \leq c_{i,j} \leq 1$ holds.
 Further, the sum of the matrix is upper bound by the number of tasks.
-$$
+\[
 \sum^{i} \sum^{j} c_{i,j} \leq \tau
-$$
+\]
 
 
 Given an unpruned network and a dataset with two tasks the matrix would look like the following 
-$$
+\[
 C = \begin{pmatrix}
     1 \\ 1
 \end{pmatrix}
-$$
+\]
 Each task would be completely covered by the same network.
 Since the network per definition covers all tasks before the first pruning level, the matrix will be a unit vector with as many entries as there are tasks.
 
@@ -396,29 +398,29 @@ After several pruning iterations, there network might contain two disconnected s
 In this case, an additional row is added to the matrix.
 For instance, let the subnetworks perfectly match the tasks such that every task is completely covered by one subnetwork.
 The matrix $C$ might look like the following.
-$$
+\[
 C = \begin{pmatrix}
     1 & 0 \\ 0 & 1
 \end{pmatrix}
-$$
+\]
 After further pruning the network, all the connections to one of the input nodes might be pruned.
 Then, one of the subnetworks would not be completely covered anymore.
 Assuming there are one output node and two input nodes for task 1 and the subnetwork 2 covers all nodes except one input.
 The resulting coverage would be 
-$$
+\[
 c^{(1,2)} =  \frac{
     | C^{(1,2)}_{in}| * | C^{(1,2)}_{out} |
     }{
     |T^{(1)}_{in}| * |T^{(1)}_{out}|
 } = \frac{1}{2}
-$$
+\]
 and the resulting matrix $C$ would look like the following
 
-$$
+\[
 C = \begin{pmatrix}
     1 & 0 \\ 0 & 0.5
 \end{pmatrix}
-$$
+\]
 
 If the sum of $C$ is equal to the number of tasks and the number of subnetworks is equal to the number of tasks, then the network is perfectly split.
 
@@ -439,29 +441,29 @@ A technique used to create models that are comparable on the basis of prunable p
 
 To compare networks over pruning levels, a significant quantity is the number of prunable parameters the networks has left at each iteration.
 For instance, comparing two networks with 1000 and 1200 prunable parameters in the beginning, 6 pruning levels and a pruning rate of $0.2$, the following parameter trajectories $t_{1000}$ and $t_{1200}$ would form.
-$$
+\[
 t_{1000} = [1000, 800, 640, 512, 409, 327, 262]
-$$
-$$
+\]
+\[
 t_{1200} = [1200, 960, 768, 614, 491, 393, 314]
-$$
+\]
 The first problem is that the pruning target is not aligned.
 Therefore, let the pruning rate be variable and the pruning target is fixed.
 The pruning rate can be calculated with 
-$$
+\[
 p = 1 - \sqrt[L]{\frac{T}{P}}
-$$
+\]
 where $L$ is the number of pruning levels, $P$ equals the number of prunable parameters before pruning and $T$ denotes the pruning target.
 
 Let the pruning target be $200$ with 6 pruning levels.
 The pruning rates are $p_{1000} = 0.235$ and $p_{1200} = 0.258$ respectively.
 The resulting parameter trajectories are as follows.
-$$
+\[
 t_{1000} = [1000, 764, 584, 447, 341, 261, 200]
-$$
-$$
+\]
+\[
 t_{1200} = [1200, 890, 660, 489, 363, 269, 200]
-$$
+\]
 
 With this change, the pruning targets are aligned and are comparable.
 However at no point during the trajectory values are aligned.
@@ -533,11 +535,11 @@ Let, $\mathcal{L} (\mathbf{\hat y}, \mathbf{y})$ be the loss of the network outp
 
 The total loss of the network $\mathcal{L}$ is calculated as follows:
 
-$$
+\[
 \mathcal{L}  (\mathbf{\hat y}, \mathbf{y})
 = \ell  (\mathbf{\hat y_{mnist}}, \mathbf{y_{mnist}})
 + \ell (\mathbf{\hat y_{fashion}}, \mathbf{y_{fashion}})
-$$
+\]
 
 ,where $\ell$ represents the categorical cross entropy loss.
 
@@ -545,7 +547,7 @@ $$
 Previously, network seperation and network degradation was introduced.
 When trained on the Moons-Circles dataset from paragraph~\ref{sec:independece_dataset}, a network counts as degraded when any of the inputs or outputs are cut off from the network, since all inputs and outputs are relevant for the networks success.
 However, regarding the MNIST-Fashion-MNIST dataset, this is not the case.
-Many of the input features do not carry information, i.e.: the outer frame of the MNIST images.
+Many of the input features do not carry information, for example the outer frame of the MNIST images.
 Therefore, it is to be expected that all connections to these inputs may be pruned.
 This would likely lead to unwanted network degradation.
 
