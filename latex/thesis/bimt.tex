@@ -20,10 +20,10 @@ Although the pruned networks performed well, they could not successfully be trai
 
 To address this issue
 
-The Lottery Ticket Hypothesis by \textcite{DBLP:conf/iclr/FrankleC19} has shown that there exist small, well-initialized subnetworks that can be trained in isolation to reach the same accuracy as the unpruned networks. 
+The Lottery Ticket Hypothesis by \textcite{LTH} has shown that there exist small, well-initialized subnetworks that can be trained in isolation to reach the same accuracy as the unpruned networks. 
 
-In contrast to previous attempts where the subnetwork structure after pruning is randomly reinitialized \autocite{HanEtAl15, PruningFiltersForEfficientConvets}, \textcite{DBLP:conf/iclr/FrankleC19} reinitialize the subnetworks with their respective initial weights from before training.
+In contrast to previous attempts where the subnetwork structure after pruning is randomly reinitialized \autocite{HanEtAl15, PruningFiltersForEfficientConvets}, \textcite{LTH} reinitialize the subnetworks with their respective initial weights from before training.
 The subnetwork structure is uncovered by an algorithm called Iterative Magnitude Pruning (IMP).
 This paper surveys the recent advancements in finding well-performing subnetworks and the characteristics of these networks. 
-Different approaches for discovering small, well-performing subnetworks are presented, including Supermasks \autocite{DBLP:conf/nips/ZhouLLY19}, Edge Popup \autocite{DBLP:conf/cvpr/RamanujanWKFR20}, and Gem-Miner\autocite{RareGems}.
+Different approaches for discovering small, well-performing subnetworks are presented, including Supermasks \autocite{Supermasks}, Edge Popup \autocite{DBLP:conf/cvpr/RamanujanWKFR20}, and Gem-Miner\autocite{RareGems}.
 

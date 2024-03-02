@@ -5,10 +5,10 @@ This leads to a reduction in size \autocite{HanEtAl15} and energy consumption \a
 
 To increase efficiency during training as well, the smaller networks need to be trained from the beginning. Attempts to train smaller networks discovered by pruning from scratch did not yield convincing results \autocite{HanEtAl15, PruningFiltersForEfficientConvets}.
 
-The Lottery Ticket Hypothesis by \textcite{DBLP:conf/iclr/FrankleC19} has shown that there exist small, well-initialized subnetworks that can be trained in isolation to reach the same accuracy as the unpruned networks. 
-In contrast to previous attempts where the subnetwork structure after pruning is randomly reinitialized \autocite{HanEtAl15, PruningFiltersForEfficientConvets}, \textcite{DBLP:conf/iclr/FrankleC19} reinitialize the subnetworks with their respective initial weights from before training.
+The Lottery Ticket Hypothesis by \textcite{LTH} has shown that there exist small, well-initialized subnetworks that can be trained in isolation to reach the same accuracy as the unpruned networks. 
+In contrast to previous attempts where the subnetwork structure after pruning is randomly reinitialized \autocite{HanEtAl15, PruningFiltersForEfficientConvets}, \textcite{LTH} reinitialize the subnetworks with their respective initial weights from before training.
 The subnetwork structure is uncovered by an algorithm called Iterative Magnitude Pruning (IMP).
-Different approaches for discovering small, well-performing subnetworks were developed \autocite{DBLP:conf/nips/ZhouLLY19}, Edge Popup \autocite{DBLP:conf/cvpr/RamanujanWKFR20}, and Gem-Miner\autocite{RareGems}.
+Different approaches for discovering small, well-performing subnetworks were developed \autocite{Supermasks}, Edge Popup \autocite{DBLP:conf/cvpr/RamanujanWKFR20}, and Gem-Miner\autocite{RareGems}.
 
 However, the structure of the underlying sparse subnetwork is rarely discussed.
 Since the networks are sparse, often to a high degree, the structure might give valuable insights into the functionality of the subnetwork.
