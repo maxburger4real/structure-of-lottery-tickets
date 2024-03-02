@@ -1,8 +1,6 @@
 \chapter{Methodology}
 Introduction goes here, no headline
 train lottery tickets on simple task that contains independence.
-
-\section{Idea}
 The structure of lottery tickets is still mysterious. 
 Analyzing the structure of a large and sparse Directed acyclic graph is not an easy task. 
 However, one could approach the problem the other way around. 
@@ -19,10 +17,9 @@ PyTorch~\autocite{pytorch}, a commonly used machine learning library, is used to
 NetworkX~\autocite{networkx}, a well known library for working with mathematical graphs, is used to transform the pytorch model into a directed graph and analyse it.
 Scikit-Learn~\autocite{sklearn} which is also a popular machine learning library, is used to generate the datasets.
 Matplotlib~\autocite{matplotlib} is used to generate the plots to visualize the results of the experiments.
-Sympy~\autocite{sympy} is a python package for symbolic computing. It is used to solve equations regarding the pruning trajectories.
 Numpy~\autocite{numpy}, a package to work with matrices in python, is used throughout this thesis to manipulate vectors and matrices.
 
-\section{The Independence Dataset}\label{sec:independece_dataset}
+\section{The Moons-Circles Dataset}\label{sec:independece_dataset}
 \textcite{BIMT} executed the experiements on symbolic regression datasets.
 These are simple toy datasets where the labels are computed with a symbolic formula. 
 For instance regarding the independence task, the inputs are $x_1, x_2, x_3, x_4$ and the outputs are $y_1={x_2}^2 + \sin{(\pi*x_4)}$ and $y_2={(x_1+x_3)}^3$
@@ -437,18 +434,21 @@ For mnist, we use the output coverage, since it is expected that the network wil
 Then the output coverage is used. Also between 0 and 1. Works the same way as with the total coverage in the previous case.
 
 \section{Model Extension}
-A technique used to create models that are comparable on the basis of prunable parameters is termed `model extension'. First, the problem is described which model extension is intended to solve, then the technique is described in detail.
-
-To compare networks over pruning levels, a significant quantity is the number of prunable parameters the networks has left at each iteration.
-For instance, comparing two networks with 1000 and 1200 prunable parameters in the beginning, 6 pruning levels and a pruning rate of $0.2$, the following parameter trajectories $t_{1000}$ and $t_{1200}$ would form.
+Model extension is a technique used to create models that are comparable on the basis of prunable parameters. 
+First, the problem is described which model extension is intended to solve, then the technique is described in detail.
+\subsection{The Problem}
+To compare networks over different pruning levels, a significant quantity is the number of prunable parameters the networks has left at each iteration.
+For instance, comparing two networks with 1000 and 1200 prunable parameters in the beginning, 6 pruning levels and a pruning rate of $0.2$, the following parameter trajectories $t_{1000}$ and $t_{1200}$ define the training.
 \[
 t_{1000} = [1000, 800, 640, 512, 409, 327, 262]
 \]
 \[
 t_{1200} = [1200, 960, 768, 614, 491, 393, 314]
 \]
+Let $f_{1000}$ and $f_{1200}$ be the associated networks.
 The first problem is that the pruning target is not aligned.
-Therefore, let the pruning rate be variable and the pruning target is fixed.
+The final networks cannot be so easily compared, because they have different amounts of parameters available to them.
+Therefore, let the pruning rate be variable. The pruning target set to the same value for both networks.
 The pruning rate can be calculated with 
 \[
 p = 1 - \sqrt[L]{\frac{T}{P}}
@@ -465,23 +465,100 @@ t_{1000} = [1000, 764, 584, 447, 341, 261, 200]
 t_{1200} = [1200, 890, 660, 489, 363, 269, 200]
 \]
 
-With this change, the pruning targets are aligned and are comparable.
-However at no point during the trajectory values are aligned.
-For instance, the network that has $1000$ prunable parameters in the beginning might split after iteration 5, where it has $341$ prunable parameters left. 
-The other network might split at iteration after 6, where it has $269$.
-However, since they are not aligned one cannot ignore the possibility that the second network would also have split at $341$, but not at $363$. 
-The second network would only split earlier if it would split with 22 additional parameters.
-When scaling up networks, the intervals at which the had the possibility to split are spaced further from each other, making this effect even more pronounced.
+With this change, the pruning targets are aligned and therefore, the final networks are comparable in a more fair way.
+However, the number of available parameters is \textit{only} aligned at the very end.
+Consider the follwing situation.
+The network $f_{1000}$ seperates after the fourth pruning level, where it has $341$ prunable parameters left. 
+The other network $f_{1200}$ seperates at iteration after the fifth level, where it has $269$.
+At first glance, one could say that the network $f_{1000}$ seperated earlier.
+It seperated when it had more parameters available than the other network.
+However, this misses part of the picture.
+Given that the networks can only seperate at the predefined trajectory, the network $f_{1200}$ would have had to seperate at $363$ parameters.
+Therefore, the $f_{1200}$ \textit{maybe would} seperate earlier than $f_{1000}$.
+In the range of $363$ to $341$ where the $f_{1200}$ would have more parameters than $f_{1000}$, is not checked anymore.
+This makes it hard to compare the networks during their pruning trajectory.
+Especially regariding the pruning level when they split, as they cannot be compared fairly.
 
 Ideally, different networks would have parameter trajectory that are shared, such that they can be compared at every step.
 To achieve this on can `extend the model'.
 
-Let a network with $n$ prunable parameters be the base of the extension.
-The network is pruned for any number of pruning levels with a given pruning rate $p$.
+\subsection{The Solution}
+The objective is to create networks, that share the parameter trajectory.
+To achieve this, we will starts with a small network which will be referred to as the base model.
+Let the base model be a network with the shape $(4, 8, 8, 2)$.
+This network has $112$ weights and $18$ biases.
+To extend this network, a pruning rate $p$ must be defined.
+The task now is to find a larger network, which will have the same number of unpruned parameters \textit{after} it was pruned with the defined pruning rate.
 
-TODO write about model extension.
+To extend the model now for one level, a new architecture has to be found, which, when pruned once with a pruning rate of $p=0.32$, has $112$ remaining parameters.
+To extend the base model for two levels, the same method is used, but the resulting network must be pruned twice to reach the desired number of parameters, $112$ in this case.
+To keep the task simple, the network architecture is restricted to a fixed number of hidden layers where each layer contains the same number of neurons.
+Further, for the experiments in this thesis, only the weights are considered, since biases are not pruned.
+However, the technique is easily extensible to take the biases into account.
 
-Extending the model means to add parameters to the model, such that pruning it once with the set pruning rate would result in the same number as paraemter
+Concretely, let $N$ be the number of weights in a network.
+The equation to calculate the number of weights is given as follows
+
+\begin{equation} \label{eq:num_params}
+    d_h d_{in}+(m-1)d_h^2 + d_h d_{out} = N
+\end{equation}
+
+, where $d_{in}$ and $d_{out}$ refer to the input and output dimension respectively, $m$ to the number of hidden layers and
+$d_h$ to the number of neurons per hidden layer.
+For the base model with shape $(4, 8, 8, 2)$ the values are $d_h=8$, 
+$d_{in}=4$, $d_{out}=2$ and $m=2$.
+ 
+To extend the model with a given pruning rate $p=0.32$, the number of parameters is updated to a target value denoted $\hat N$.
+The value $\hat N$ should have the property that, when pruned with a pruning rate of $p$, it should again be $N$.
+
+Therefore, for one extension level:
+\[
+\hat N = {(\frac{N}{1-p})}
+\]
+And generalising for any number of extension levels
+
+\[
+\hat N = {\frac{N}{{(1-p)}^L}}
+\]
+,where $L$ refers to the number of extension levels.
+
+$\hat N$ now represents the target number of parameters. 
+To find a network architecture that has this amount of parameters, one needs to insert $\hat N$ in the equation~\ref{eq:num_params}.
+All parameters except for $d_h$ are set to a fixed value and the equation is solved for $d_h$.
+Equation~\ref{eq:num_params} can be reformulated to a standard quadratic equation.
+
+\[
+    (m-1)d_h^2 + (d_{out} + d_{in}) d_h - \hat N = 0
+\]
+and therefore solved for $d_h$ with 
+\[
+    d_h = \frac{
+        - d_{out} - d_{in} \pm \sqrt{  {(d_{out} + d_{in})}^2 + 4 \hat N (m-1) } 
+    }{
+        2(m-1)
+    }
+\]
+
+The result of $d_h$ refers to the target number of hidden neurons in each layer.
+However, it most likely is not an integer directly.
+Therefore, the value is simply rounded to the nearest integer.
+
+In the case of the network with $112$ weights and a pruning rate of $0.32$, $\hat N$ evaluates to $164.706$.
+Entering $\hat N$ into the equation and solving for $d_h$, the two solutions are $d_h=10.1795$ and $d_h=-16.1795$.
+Only positive solutions are of interest, therefore the second solution can be omitted.
+Rounded to the nearest integer, the number of hidden neurons in each layer is set to $10$.
+
+Through rounding the pruning rate is slightly different at every iteration.
+This is generally the case when a pruning rate is given as a percentage, since the number of weights that are actually pruned are always discrete.
+In the previous example, the actual pruning rate would be calculated as follows:
+The number of weights for the architecture extended by one level, would be $160$.
+The effective pruning rate is therefore $p_{eff}=1-\frac{112}{160}=0.3$.
+
+A network can be extended an arbitrary number of times.
+Importantly, the number of weights are fixed for each extension level.
+The number of weights a network has at level one does not change, independent of the number of total extension levels.
+Therefore, the networks share the same parameter trajectory as long as they are extended from the same base model with the same pruning rate.
+This enables comparing networks of different sizes throughout all pruning levels they share.
 
 \section{The MNIST-Fashion-MNIST Dataset}\label{sec:mnist}
 To test the network splitting on a slightly more realistic problem, the MNIST-Fashion-MNIST dataset was created.

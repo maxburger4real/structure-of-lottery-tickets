@@ -130,8 +130,8 @@ def make_dataset(name, n_samples, noise, seed, factor, scaler):
         case Datasets.LARGEST_FASHION_AND_MNIST:
             return __make_minst_and_fashion_mnist(
                 scaler, 
-                train_size=5421, # min number of least common mnist digit
-                test_size=892,  # same
+                train_size=None, #5421, # min number of least common mnist digit
+                test_size=None, #892,  # same
             )
         case _:
             raise ValueError(f"Unknown dataset {name}")
