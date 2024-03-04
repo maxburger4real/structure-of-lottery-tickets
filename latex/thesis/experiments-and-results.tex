@@ -179,15 +179,8 @@ The earlier the network separates in terms of pruning levels, the more unpruned 
 However, when looking at the number of active weights the networks have at the iteration they split, the curve does not have the same exponential growth trajectory.
 It increases slightly but almost remains flat, covering a narrow range of around 80 to 120 weights.
 
-TODO: revise. Does this make any sense?
 This data indicates that the number of active weights is an important quantity to splitting.
 Since the active subgraph is indeed the graph on which the splitting is checked, this seems plausible.
-A certain `barrier' might be inherent to each combination of network architecture, dataset, and hyperparameters.
-Given a dataset where there is exactly zero correlation between the two tasks might move the barrier towards a larger number of edges where the network is likely to split.
-A slight correlation, which is probably also the case in the Moons-Circles dataset, might move the barrier lower.
-Some hyperparameters or optimizers also might move the barrier, by being better suited to remove weights that connect the tasks.
-For instance, techniques like L1 regularisation might move the barrier up, due to more efficient removal of weights that do not increase in magnitude, but also do not decrease on their own.
-These are all questions for further research to tackle.
  
 \subsection{What makes the networks separate?}
 As seen in figure~\ref{fig:2laxer-histogram}, the network starts to split at 7 extension levels and a network shape of $(4,38,38,2)$, with 1672 weights.
@@ -492,26 +485,44 @@ Since the tasks are not the same, it is to be expected that they do not exhibit 
 The accuracy achieved on the MNIST task is more than $10$ percent higher than on the Fashion MNIST task.
 Interestingly, when the number of parameters gets lower, the performance on the MNIST task worsens significantly faster than for the Fashion MNIST task.
 
-The performance of the network is not satisfactory anymore at the time it separates.
+The performance of the network is not competitive anymore at the time it separates.
 However, the experiments shown here are only preliminary.
 The networks indeed separate consistently, and they do far beyond trivial accuracies.
 This gives reason to believe, that the separation can be achieved at competitive accuracy with improved hyperparameters or slight adaptations to the training.
 This, however, is not pursued in the scope of this thesis.
 The separation by itself, at non-trivial accuracy is considered a useful insight into the structure of the network.
 
-\subsection{What does the model }
+\subsection{What the network }
 
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=1.\linewidth]{input-connections-iteration-18.png}
+    \caption{
+        The figure depicts the connectivity of a network with regard to the input.
+        Each figure represents a heatmap of the connectivity to each pixel of the input.
+        Pixels with no remaining connections are colored black.
+    }\label{fig:input-heatmap}
+\end{figure}
 
-\subsection{Conclusion: Network Extension}
-They always split
+The connectivity of the network to the inputs is displayed in figure~\ref{fig:input-heatmap}.
+The number of input connections per input pixel is displayed.
+The heatmap has a shape of $28\times56$ pixels, where the top half represents the MNIST image and the bottom half the Fashion-MNIST image.
+On the left, the connections are displayed at iteration $11$, where $\sim20000$ weights are active in the network.
+On the top half, many of the pixel on the outer frame have been completely disconnected from the network.
+This was also hypothesized by \textcite{LTH}, because the outer frame of the MNIST digits are always black and do not contain any information.
+On the bottomm half where the Fashion-MNIST image would be, there is no frame visible.
+This however is also to be expected, because the Fashion-MNIST dataset does not have a padding around the objects that are displayed. 
+A larger portion of the image is used.
+If the Fashion-MNIST dataset were to be scaled down slightly and a padding would be added, a similar pattern would likely emerge.
 
-multiple this have to be given
+At iteration 18, where the network separated, the connectivity is already highly sparse.
+Only around half of the input pixels are used and the connectivity to the remaining input pixels is reduced to values between 1 and 3 connectiosn pixel.
+This also demenstrates that the separation indeed occurs very late in the pruning process, where the function of the network almost collapses.
 
-enough overparameterization
-pruning rate low enough
-enough pruning levels
+\subsection{Conclusion}
+In this section, the experiments on the Moons-Circles dataset as well as the MNIST-Fashion-MNIST dataset were explained in detail.
+Over different network sizes, different architectures with varying numbers of hidden layers as well as different pruning rates, the networks separate quite reliably, given the right conditions.
+The experiments where the network did not separate either had too small networks, to few pruning levels and too high of a pruning rate.
+Also for the more complicated MNIST-Fashion-MNIST dataset, the networks separated with the standard training iterative pruning method.
 
-Not clear how the splitting happens
-Maybe unzipping?
-What about the reguriating tickets interpretation?
-What about regularization, weight decay and so on?
+The results indicate, that iterative magnitude pruning indeed produces lottery tickets with seperate subnetworks for independent tasks.
