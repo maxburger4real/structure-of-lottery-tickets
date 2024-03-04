@@ -1,22 +1,29 @@
-\chapter{Discussion}
-Lottery Tickets are a young research only phenomenon.
-Only small networks.
-For practical purposes not so relevant
+\chapter{Conslusion}
 
-But they work really well.
-Maybe they can help for Inerpretable Machine Learning
+The lottery ticket hypothesis sparked many directions of research in the field of sparse network training and pruning in general.
+However, how and why they work remains elusive.
 
-\section{Interpretable Machine Learning }
-This could help finding the undderlying learned algorithm of neural nets given a problem.
-Similar to what bimt tries to do.
-Future work to test other data with Compositionality and weight sharing.
-Or analyse data where there is no clear structure and see if the model develops independent modules
+In this thesis, an empirical analysis was conducted on the relationship between the semantic structure of the data and the structure of the sparse lottery ticket subnetwork.
+In the experiments conducted, it was shown that networks trained with \textit{Iterative Magnitude Pruning}, produced two independent subnetworks on datasets with independent tasks.
+Systematic experiments were conducted on the `Moons-Circles' dataset, a simplistic toy dataset that contains two independent tasks.
+Due to the success of the method on the toy task, experiments were also conducted on the `MNIST-Fashion-MNIST' dataset, which is significantly more realistic.
+In both cases, neural networks were found to separate with non-trivial accuracy.
 
-\section{Alternatives to Iterative Magnitude Pruning}
-In this thesis I used IMP
-But IMP is very inefficient and computationally expensive.
-Maybe the other ways that are able to find lottery tickets can perform similar tasks and find structures.
-With less omputational requirements.
+\section{Limitations}
+The findings of this thesis are empirical, and due the the scope and scale of the thesis, there are numerous untested scenarios.
+The experiments were only conducted on toy datasets and on MNIST and Fashion-MNIST which might also be counted as a toy task.
+If the findings remain true for larger and more realistic tasks remains to be seen.
 
-\section{Beyond Toy Datasets}
-The seperation of the function the network implements would be really nice for larger networks, not only for toy tasks.
+\section{Discussion}
+The experiments in this thesis demonstrate that iterative magnitude pruning finds independent subnetworks.
+This can be valuable for understanding what the structure of lottery tickets represents.
+Further, it could also be valuable for machine learning interpretability.
+A lottery ticket could be trained and if independent networks occur, it could hint at independence in the dataset.
+The same might be true for other types of semantic structure, like feature sharing or compositionality.
+
+\section{Future Work}
+An interesting avenue for future research in this line of work would be to examine the numerous other variants for finding sparse subnetworks.
+Would they also separate? And if so, would they separate earlier or with better performance still?
+Also, an investigation into the influence of things that worked well for lottery tickets, like learning rate schedules and resetting, as well as L1 or L2-regularisation.
+Similar to the work in \autocite{BIMT}, other semantic structures of the data might be considered, like compositionality or weight sharing.
+Finally, examine the methods on larger and more realistic datasets like CIFAR \autocite{cifar} or ImageNet \autocite{imagenet}, as well as translating the findings into convolutional neural net architectures.

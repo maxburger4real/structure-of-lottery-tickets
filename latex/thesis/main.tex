@@ -1,28 +1,70 @@
-%\documentclass{article}
 \documentclass[12pt,a4paper,notitlepage]{report}
 %\usepackage[ngerman,french,english]{babel}
 \input{preamble.tex}
+\addbibresource{bibliography.bib}
 
-% some imports, settings etc.
-\addbibresource{bibliography.bib} 
 
-% File metadata
-\title{Winning the Lottery Twice}
-\author{Maximilian Burger\\{\small Advisor: Pieter-Jan Hoedt}}
-\date{March 2024}
 \begin{document}
-
 \sffamily
-\maketitle
+
+
+% Title Page
+\begin{titlepage}
+\normalfont\sffamily \centering
+\includegraphics[width=5.7cm]{logo.png}
+\begin{center}
+\vspace*{1cm}
+\LARGE{Masters Thesis}\\
+\vspace*{1cm}
+\huge\textbf{Winning the Lottery Twice}\\
+\large\vspace*{2cm}
+\textbf{zur Erlangung des akademischen Grades}\\
+Master of Science (MSc) \\
+\vspace*{1cm}
+\textbf{an der \\ Johannes Kepler Universität Linz}\\
+Institut für Machine Learning\\
+\vspace{1cm}
+\textbf{unter der Anleitung von:} \\
+Assoc.Prof.\ Mag.\ Dr.\ Günter Klambauer\\
+Dipl.-Ing. Pieter-Jan Hoedt \\
+\vspace{1cm}
+\textbf{eingereicht von:} \\
+Maximilian Burger, BSc.\\
+\vspace{1cm}
+Linz, 04. März 2024
+\end{center}
+\end{titlepage}
+
+% Thesis requirements
+\pagenumbering{roman}
+\include{erklaerung.tex}
+\include{vorwort.tex}
+
+% start of the thesis
+\pagenumbering{arabic}
 \input{abstract.tex}
+\input{kurzfassung.tex}
+\newpage
+
+% start of the main part
 \tableofcontents
-% TODO: \input{kurzfassung.tex}
 \input{introduction.tex}
 \input{literature-review.tex}
 \input{methodology.tex}
 \input{experiments-and-results.tex}
-% TODO: \input{mnist-experiments.tex}
 \input{discussion.tex}
 \input{conclusion.tex}
 \printbibliography[title={Bibliography}, heading=bibintoc]
+
+% additional stuff
+\pagenumbering{roman}
+\newpage
+\listoffigures
+\addcontentsline{toc}{chapter}{List of Figures}
+\newpage
+\listoftables
+\addcontentsline{toc}{chapter}{List of Tables}
+%\newpage
+%\listofmyequations
+%\addcontentsline{toc}{chapter}{List of Formulas}
 \end{document}

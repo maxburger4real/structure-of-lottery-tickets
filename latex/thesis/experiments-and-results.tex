@@ -454,10 +454,10 @@ Therefore, the pruning target was set to 600.
 For the training, 20 pruning levels were selected, which resulted in a pruning rate of $p=0.3247$, similar to the experiments on the Moons-Circles dataset.
 Further, for the first experiments, the data was normalized like the Moons-Circles dataset, namely to zero mean and unit variance.
 
-With the described setup, the network was trained with three differnet seeds for the weight initialization.
+With the described setup, the network was trained with three different seeds for the weight initialization.
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=1.0\linewidth]{mnist-acc-largest-784-392.png}
+    \includegraphics[width=.7\linewidth]{mnist-acc-largest-784-392.png}
     \caption{
         This figure shows the accuracy of three runs with the same hyperparameters but different seeds on the MNIST-Fashion-MNIST dataset.
         On the x-axis, the number of active weights is displayed.
@@ -465,7 +465,6 @@ With the described setup, the network was trained with three differnet seeds for
         The dataset was normalized to zero mean and unit variance.
         Each line represents one run.
         The star indicates where the networks separated.
-        
     }\label{fig:mnist-acc}
 \end{figure}
 
@@ -474,28 +473,34 @@ The red star shows where the networks separate.
 The iteration where the networks separate is also always the last because after separation occurs, the training is stopped to save time.
 When the networks split, the accuracy already is significantly lower than at the peak.
 The best accuracy of a separated network amongst the shown runs is $\sim86$ percent.
-Be
 
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=.7\linewidth]{taskwise-acc.png}
+    \caption{
+        This figure shows the accuracy of the two tasks.
+        Each line is an average of the three runs with different seeds.
+        The error bars indicate minimum and maximum values.
+        On the x-axis, the number of active weights is displayed.
+        On the y-axis, the accuracy is shown.
+    }\label{fig:taskwise-acc}
+\end{figure}
 
-In the beginning, the network has $1859648$ weights.
-With 20 pruning levels, this results in an effective pruning rate of $\sim0.331$\%.
-The full parameter trajectory is displayed in table
+The accuracy shown in figure~\ref{fig:mnist-acc} represents the average accuracy of both tasks.
+The data in figure~\ref{fig:taskwise-acc} shows the accuracy of the tasks separately.
+Since the tasks are not the same, it is to be expected that they do not exhibit the same performance.
+The accuracy achieved on the MNIST task is more than $10$ percent higher than on the Fashion MNIST task.
+Interestingly, when the number of parameters gets lower, the performance on the MNIST task worsens significantly faster than for the Fashion MNIST task.
 
-\[
-\big[1859648, 1189791, 761221, 487025, 311595, 
-\]
-\[
-199357, 127547, 81604, 52210, 33403,21371,
-\]
-\[
-13673, 8748, 5597, 3581, 2291, 1466, 938, 600\big]    
-\]
+The performance of the network is not satisfactory anymore at the time it separates.
+However, the experiments shown here are only preliminary.
+The networks indeed separate consistently, and they do far beyond trivial accuracies.
+This gives reason to believe, that the separation can be achieved at competitive accuracy with improved hyperparameters or slight adaptations to the training.
+This, however, is not pursued in the scope of this thesis.
+The separation by itself, at non-trivial accuracy is considered a useful insight into the structure of the network.
 
+\subsection{What does the model }
 
-
-
-
-This network contains
 
 \subsection{Conclusion: Network Extension}
 They always split

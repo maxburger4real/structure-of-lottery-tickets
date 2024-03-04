@@ -1,6 +1,12 @@
-\begin{abstract}
-\noindent Pruning neural networks is a successful technique to reduce parameter count whilst maintaining accuracy of neural networks. 
-Training the pruned subnetworks from scratch however, does not result in compelling accuracy. 
-(\cite{LTH}) show that the initialization makes all the difference and that they can indeed train to full accuracy. Based on this insight, they state the lottery ticket hypothesis.
-Well performing subnetworks were found in different scenarios with Iterative Magnitude Pruning and resetting the resulting sparse network with the weights at initialization. These subnetworks are called winning tickets. Alternative methods for finding well-performing subnetworks without any weight training (\cite{DBLP:conf/cvpr/RamanujanWKFR20}), or with rewinding the weights to an early state of training (\cite{LinearModeConnectivity}) are described. These methods are the basis for a recent method called Gem-Miner (\cite{RareGems}), which finds well-performing subnetworks in a more efficient manner. 
-\end{abstract}
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+The \textbf{Lottery Ticket Hypothesis}~\autocite{LTH} has sparked a novel field of research that concerns itself with sparse neural networks.
+One key method in this field, `Iterative Magnitude Pruning'(IMP) is successful in finding the sparse subnetworks that can be trained to high performance, the \textit{Winning Tickets}.
+Many aspects of why and how this procedure works and where its success comes from, remain elusive.
+One way to learn more about lottery tickets would be to study their network graph.
+Since they are usually highly sparse, their graph may contain valuable insights into its functionality.
+To learn more about the structure of the sparse `Winning Tickets', experiments inspired by \textcite{BIMT} were conducted.
+A dataset with two independent tasks was constructed and a lottery ticket was derived from it with \textit{IMP}.
+The question is: Will the winning ticket contain two independent subnetworks, one for each of the independent tasks?
+And indeed, it does.
