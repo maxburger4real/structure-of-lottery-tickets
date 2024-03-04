@@ -5,9 +5,10 @@ from training.models import Init
 from training.routines import Routines
 
 pruning_levels, shape, batch_size, lr = 18, [1568, 784, 784, 20], 128 ,0.001
+pruning_levels, shape, batch_size, lr = 20, [1568, 784, 392, 20], 512 ,0.001
 
 run_config = Config(
-    model_seed=1, # 0 nice
+    model_seed=0, # 0 nice
     pipeline=Routines.imp,
     dataset=Datasets.LARGEST_FASHION_AND_MNIST,
     scaler=Scalers.StandardUnitVariance,
@@ -22,7 +23,7 @@ run_config = Config(
     optimizer="adam",
 
     # early stop
-    early_stop_patience=30,
+    early_stop_patience=10,
     early_stop_delta=0.0,
 
     # newly added
