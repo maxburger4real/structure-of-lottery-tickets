@@ -1,50 +1,53 @@
 \chapter{Introduction}
-Neural Networks have achieved remarkable success in various tasks, however, their increasingly large size leads to high computational and memory requirements.
-Neural Network Pruning \autocite{LeCun, OptimalBrainSurgeon, HanEtAl15, PruningFiltersForEfficientConvets} has been proposed to reduce the number of parameters after the network is trained while maintaining accuracy.
-This leads to a size reduction \autocite{HanEtAl15} and energy consumption \autocite{YangCS17} in the resulting subnetworks during inference.
-To increase efficiency during training as well, the smaller networks need to be trained from the beginning. Attempts to train smaller networks discovered by pruning from scratch did not yield convincing results \autocite{HanEtAl15, PruningFiltersForEfficientConvets}.
 
-The Lottery Ticket Hypothesis by \textcite{LTH} has shown that there exist small, well-initialized subnetworks that can be trained in isolation to reach the same accuracy as the unpruned networks. 
-In contrast to previous attempts where the subnetwork structure after pruning is randomly reinitialized \autocite{HanEtAl15, PruningFiltersForEfficientConvets}, \textcite{LTH} reinitialize the subnetworks with their respective initial weights from before training.
-The subnetwork structure is uncovered by an algorithm called Iterative Magnitude Pruning (IMP).
-The reason why these lottery ticket networks perform so well, or why they can be trained in isolation remains elusive.
-Since the lottery ticket networks are sparse, their structure might give valuable insights into their functionality.
+Neural Networks have achieved remarkable success in various tasks, however, their increasingly large size leads to high computational and memory requirements.
+The Lottery Ticket Hypothesis by \textcite{LTH} has shown that there exist small, well-initialized subnetworks that can be trained in isolation to reach the same accuracy as the larger dense networks.
+These small subnetworks, the so-called \textit{Winning Tickets}, are created by iterative training and pruning a fully connected dense network.
+This process is called \textit{Iterative Magnitude Pruning}.
+The work by \textcite{LTH} defines a promising avenue towards the ability to train smaller sparse networks from the beginning.
+However, a deep understanding of why the winning tickets can learn so well and why iterative magnitude pruning can uncover them is missing.
+
+Although there is plenty of research in the field, the structure of the winning tickets is rarely discussed.
+Since the winning ticket networks are sparse, their structure might give valuable insights into their functionality.
+In this thesis, the structure of winning tickets is studied and how it relates to the function of the network.
 
 \section{Motivation}
-The study of lottery tickets itself has broad ramifications.
-At its ultimate, it could reduce the size of the neural networks significantly during training.
-This would result in lower computational and memory requirements and therefore cost and energy savings.
-It could also enable us to train models larger than previously possible, due to an increased efficiency of each parameter.
-Studying the structure of lottery tickets might produce valuable insights that further advance the field.
+Understanding more about the structure of winning tickets can lead to numerous advances.
+Studying it can generate insights about the algorithms like iterative magnitude pruning, that are used to generate the winning tickets.
+Potential drawbacks of the algorithm can be discovered by analyzing weaknesses in the network structure.
 
-Further, since the lottery tickets are highly sparse, they represent a very reduced function that solves the problem.
-This might turn out valuable for network interpretation.
-The structure of the network might yield information about how the network solves a task.
-This could enrich the current ecosystem of techniques to interpret neural networks.
+Further, the structure could give insights into the function the network has learned.
+Due to the high sparsity of winning tickets, the network structure might reflect the higher-level semantic structure of the learned function.
+This in turn can be instrumental for network interpretation.
+Winning tickets could be used to find substructures in the functions they learn, which in turn could improve the interpretability.
 
-\section{Objective}
-The objective of this thesis is to attain knowledge about the structure of lottery ticket subnetworks.
-Since the structure of a lottery ticket, which is a sparse neural network, is a directed acyclic graph with larger numbers of nodes and edges, analyzing such a structure is difficult.
-Therefore, the problem is approached from a different direction.
-One could take a dataset with a known structure and test if the resulting sparse networks resemble that structure in any way.
-For instance, a problem that consists of two independent subproblems may result in a lottery ticket containing two independent subnetworks, one for each task. 
-Within this thesis, this question is empirically studied.
+% Objective
+The objective of this thesis is to find out more about the structure of winning tickets and whether they contain meaningful features.
 
-\section{Research Question}
-A general research question that follows from the objective is: \textit{``Does the structure of a lottery ticket subnetwork exhibit features of the semantic structure of the data it was trained on?''}
-This question defines the overarching idea pursued in this thesis.
-A more concrete and restricted question, which could be considered a subquestion of the one previously stated:
-
+\section{Research Questions and Scope}
+The general research question that follows from the objective is: 
 \begin{quote}
-\textit{``Does a lottery ticket that was trained on a dataset with two independent tasks contain two independent subnetworks?''}
+\textit{Do winning tickets contain meaningful structures?}
 \end{quote}
 
-The experiments in this thesis aim to answer this very question.
+This question serves as the main direction of the research.
+Due to the generality of the question, it is narrowed down for this thesis to be approachable.
+Only standard fully connected feed-forward neural networks are used to derive winning tickets.
+To uncover the winning tickets, iterative magnitude pruning is employed.
+This results in a narrower research question:
+
+\begin{quote}
+\textit{Do winning tickets of fully connected feed-forward networks derived with iterative magnitude pruning contain meaningful structures?}
+\end{quote}
+
+This thesis contains empirical research that aims to answer this very question.
+
 
 \section{Structure of the Thesis}
-In the first chapter, a literature review is conducted, where topics relevant to this thesis are described.
-The next chapter explains the methodology.
+In chapter~\ref{literature_review}, a literature review is conducted, where topics relevant to this thesis are described.
+
+Chapter~\ref{chapter:method} explains the methodology.
 The dataset, neural network architecture, and training process are outlined, as well as other algorithms used in the experiments.
-The following chapter walks through the experiments that were conducted during this thesis.
+Chapter~\ref{chapter:experiments}  walks through the experiments that were conducted during this thesis.
 Further, the results are discussed and interpreted.
-The thesis is concluded with a discussion and possible future research in this direction.
+The thesis is concluded with a discussion and possible future research in this direction in chapter~\ref{chapter:conclusion}.
