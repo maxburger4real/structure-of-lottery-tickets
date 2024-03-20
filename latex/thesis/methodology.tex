@@ -353,29 +353,45 @@ In blue, inactive parameters that are not connected to any output are shown.
 The rest of the network consists of active parameters in yellow, which are connected to both input and output.
 Pruned parameters are not actively visualized, since they are removed from the network.
 
-\subsection{Finding Subnetworks}
+\subsection{Finding Subnetworks}\label{sec:FindSubnet}
 To find independent subnetworks in the network, the previously defined categories are assigned to each parameter after every pruning level.
 
 First, after a network is pruned, each newly pruned weight is tagged as such.
 From the directed acyclic graph of the network $\mathcal{G}$ that contains the parameters of all categories a subgraph is created.
-The subgraph $\mathcal{G}_{unpruned}$ excludes all pruned weights.
+Concretely, let $\mathcal{G}$ be defined as the pair $\{V, E\}$, where $V$ is the set of all vertices or nodes and $E$ is the set of all edges.
+The set $E_p$ is a subset of $E$, containing all pruned edges of the graph.
+The set of unpruned edges is
+\[ E_{\neg p} = E - E_p \]
+Since biases are not pruned, the set of unpruned nodes is simply $V_{\neg p} = V$
+With the vertices $V$ and the unpruned edges $E_{\neg p}$ a subgraph of $\mathcal{G}$ is created, denoted $\mathcal{G}_{\neg p}$.
 
-On this subgraph, $\mathcal{G}_{unpruned}$, inactive nodes and edges are found and assigned their category.
+On this subgraph, $\mathcal{G}_{\neg p}$, inactive nodes and edges are found and assigned their category.
 To find inactive parameters, each node except the output nodes is examined.
 A node is inactive, if it does not have a valid path to any of the output neurons.
 Since the graph is directed, the path is only allowed along the direction of the edge.
 Consequently, all incoming edges of an inactive node are also inactive.
 
-% GO ONO
-Then, a subgraph $\mathcal{G}_{active/zombies}$ is created, excluding all pruned and inactive weights.
-On $\mathcal{G}_{active/zombies}$ zombie parameters are found and assigned to their category. 
-All nodes that are not connected to any input feature are classified as a zombie parameter. 
-Further, all edges that are connected to a zombie node are classified as a zombie parameter.
+The set $E_i$ is a subset of $E_{\neg p}$, and it contains all the inactive edges.
+Similarly, the set $V_i$ is a subset of $V$ and contains all the inactive nodes.
+All nodes and edges that are neither pruned nor inactive are collected in the sets $V_{\neg i}$ and $E_{\neg i}$ respectively.
+They are defined as:
+\[ V_{\neg pi} = V_{\neg p} - V_i \]
+\[ E_{\neg pi} = E_{\neg p} - E_i \]
 
-An active subgraph $\mathcal{G}_{active}$ is created, where all nodes have a path to at least one input node and at least one output node.
-The active graph $\mathcal{G}_{active}$ is used to find separate components in the graph.
+The subgraph of $\mathcal{G}_{\neg p}$, which contains only the nodes in $V_{\neg pi}$ and the edges in $E_{\neg pi}$ is denoted $\mathcal{G}_{\neg pi}$.
 
-\begin{figure}[ht]
+On the subgraph $\mathcal{G}_{\neg pi}$, which neither contains pruned nor inactive parameters, all zombie parameters are collected.
+All nodes, where there is no path from any input to the node, are collected in the set $V_z$.
+Further, all edges to or from nodes in the set $V_z$ are collected in $E_z$.
+The sets of nodes and edges are defined as:
+\[ V_a = V_{\neg piz} = V_{\neg pi} - V_z \]
+\[ E_a = E_{\neg piz} = E_{\neg pi} - E_z \]
+Because all categories of parameters except for active ones are removed from the sets, they are simply denoted $E_a$ and $V_a$ for short.
+
+With the sets $V_a$ and $E_a$, a new subgraph is created, that represents the active part of the graph $\mathcal{G}$, called $\mathcal{G}_a$.
+This active subgraph $\mathcal{G}_a$ is further used to find separated components of the network.
+
+\begin{figure}[ht] % find connected components
 \centering
 \begin{minipage}{\linewidth}
 \begin{lstlisting}[
@@ -383,7 +399,7 @@ The active graph $\mathcal{G}_{active}$ is used to find separate components in t
     captionpos=b, 
     label={code:split},
     caption={
-    Find independent subnetworks; pseudo code
+    Find independent subnetworks; Python pseudo code
     },
 ]
 import torch
@@ -395,127 +411,138 @@ model: torch.nn.module  #  the neural network
 G: nx.DiGraph = transform_to_digraph(model)
 
 # remove pruned, inactive, and zombie parameters
-G_unpruned = remove_pruned_parameters(G)
-G_active_zombies = remove_inactive_parameters(G_unpruned)
-G_active = remove_zombie_parameters(G_active_zombies)
+G_not_p = remove_pruned_parameters(G)
+G_not_pi = remove_inactive_parameters(G_not_p)
+G_a = G_not_piz = remove_zombie_parameters(G_not_pi)
 
 # check for independent subgraphs in the active graph
 subnetworks = []
-for c in nx.connected_components(G_active.to_undirected()):
-    subnetwork = G_active.subgraph(c)
+for c in nx.connected_components(G_a.to_undirected()):
+    subnetwork = G_a.subgraph(c)
     subnetworks.append(subnetwork)
 \end{lstlisting}
 \end{minipage}
 \end{figure}
 
 The code snippet~\ref{code:split} outlines the process of finding the subnetworks.
-First, the PyTorch model is converted into a networkx graph.
-As described previously, the active subgraph \lstinline{G_active} is created.
-With the function \lstinline{connected_components}, components inside the graph that are not connected are found.
-Each node or edge of $\mathcal{G}_{active}$ is contained in exactly one of the subnetworks.
-There is no overlap between the subnetworks.
+A neural network first is converted into a directed acyclic graph.
+The network is implemented with PyTorch~\autocite{pytorch}, a commonly used machine learning library and converted into a graph which is further processed with NetworkX~\autocite{networkx}, a well-known library for working with mathematical graphs.
+As described previously, the active subgraph \lstinline{G_a} is created.
+Connected components of the graph, if there are more than one, are obtained.
+A connected component is a subgraph of a graph, where every node is connected via a path to every other node.
+Therefore, if the graph is separated, there exist at least two connected components.
+The function \lstinline{nx.connected_components}, provided by NetworkX, retrieves all the connected components, which are collected in a list.
 
+\section{Datasets with Independent Tasks}\label{sec:taskmatch}
+In this thesis, one area of interest is to see if the network separates given that there exist independent tasks in the dataset.
+Critically, it is important to know if the network separates such that it is connected to one task but not the other.
+This section explains how the connected components obtained via the methods described in section~\ref{sec:FindSubnet} are then matched to the tasks of the dataset.
 
+\subsection{Definition of Tasks in Datasets}
+Consider the dataset $\mathcal{D}$ with its set of input features $\mathcal{D}_X$ and output features or labels $\mathcal{D}_Y$.
+Let $T$ be a task, which is defined by the inputs $T_X$ and outputs $T_Y$ that belong to the task, where $T_X$ is a subset of $\mathcal{D}_X$ and $T_Y$ a subset of $\mathcal{D}_Y$.
+The tasks $T$ is said to be independent if the set of inputs $T_X$ and outputs $T_Y$ are not shared with any other task.
+Independent tasks must not overlap.
+Classical machine learning datasets like MNIST~\textcite{mnist} contain one independent task because all input features may be necessary to predict all labels.
 
-\section{Matching Tasks to Subnetworks}\label{sec:taskmatch}
+However, there can exist datasets with more than one independent task.
+Concretely, consider a task $T^{(1)}$ with inputs $T^{(1)}_X$ and outputs $T^{(1)}_Y$ and task $T^{(2)}$ with inputs $T^{(2)}_X$ and outputs $T^{(2)}_Y$.
+The sets of inputs $T^{(1)}_X$ and $T^{(2)}_X$ are both subsets of $\mathcal{D}_X$, but are disjoint $T^{(1)}_X \cap T^{(2)}_X = \emptyset$.
+The same is true for the input sets.
+The set $T^{(1)}_X$ contains information that is relevant to compute the outputs $T^{(1)}_Y$, but no helpful information to compute $T^{(2)}_Y$.
+Similarly, the set $T^{(2)}_X$ does not contain information that is useful to compute $T^{(1)}_Y$.
+To be able to match networks with tasks, the inputs and outputs of the tasks must be defined alongside the dataset.
+Datasets that contain two independent tasks will be created in chapter~\ref{chapter:experiments}.
 
-% TODO: describe how datasets must have defined tasks. 
-
-The subnetworks that are found with the methods described in the previous paragraph now must be matched with the tasks.
-In order to check if the networks match the tasks, each task must be associated with certain input and output features of the data.
+\subsection{Matching Subnetworks with Tasks}
+The subnetworks that are found with the methods described in section~\ref{sec:FindSubnet} now must be matched with the tasks.
 For each subnetwork and each task in the dataset, the inputs and outputs of the network are compared to the inputs and labels of the task.
 
-Let $T$ be a task that has associated inputs and outputs.
-The input features of the task are in the set $T_{in}$ and the output features in $T_{out}$.
-Further, the input and output neurons of a network are referred to as $N_{in}$ and $N_{out}$ respectively.
+Let $T^{(i)}$ be an independent task that has associated input features in the set $T^{(i)}_X$ and the output features in $T^{(i)}_Y$.
+Further, the input and output neurons of a network $j$ are referred to as $N^{(j)}_X$ and $N^{(j)}_Y$ respectively.
 For each network and each task, the amount to which the network covers the inputs or outputs of the task can be calculated.
-Regarding the inputs, this quantity $C_{in}$ is referred to as input-coverage. The output-coverage is denoted as $C_{out}$.
+Regarding the inputs, this quantity $c^{(i)}_X$ is referred to as input-coverage. The output-coverage is denoted as $c^{(i)}_Y$.
 
-The number of features that are covered by the network can be as the cardinality of the intersection of the network features and the task features $ |N \cap T|$, where  $|A|$ denotes the cardinality of set $A$.
+The number of features that are covered by the network is calculated as the cardinality of the intersection of the network features and the task features $ |N \cap T|$, where  $|A|$ denotes the cardinality of set $A$.
 To attain the coverage, the number of features covered by the network is divided by the number of features the task contains.
 Then, the coverage is calculated for inputs and outputs as 
 
 \[
-c_{in} = \frac{|N_{in}  \cap T_{in} |}{|T_{in} |}
+c^{(i)}_X = \frac{|N^{(j)}_X  \cap T^{(i)}_X |}{|T^{(i)}_X|} \quad\textit{,where}\quad 0 \leq c^{(i)}_{X} \leq 1\
 \]
 \[
-c_{out} = \frac{|N_{out}  \cap T_{out} |}{|T_{out}|}
+c^{(i)}_Y = \frac{|N^{(j)}_Y  \cap T^{(i)}_Y |}{|T^{(i)}_Y|} \quad\textit{,where}\quad 0 \leq c^{(i)}_{Y} \leq 1\
 \]
+Both coverage terms evaluate to $1$ if the network covers all the inputs or outputs of the task.
+If the network does not cover any of the inputs or outputs, the input- or output coverage evaluates to $0$ respectively.
+The total coverage $c^{(i)}_{XY}$ of the task can be calculated as the product of the input and output coverage.
+\[ c^{(i)}_{XY} = c^{(i)}_{X} * c^{(i)}_{Y} \quad\textit{,where}\quad 0 \leq c^{(i)}_{XY} \leq 1\]
+The value of the total coverage evaluates to $1$ if both input and outputs are completely covered.
+It evaluates to $0$, as soon as either the inputs or outputs are not covered at all.
+Depending on the dataset, either of the coverage terms might be used to assess the extent to which the network matches the task.
+Consider a scenario where all the inputs and outputs of the task are strictly necessary for the network to perform properly.
+Then, the total coverage is a valuable measure.
+In a scenario where all outputs are necessary to perform, but not all inputs are important, the output-coverage might be the better measure.
 
-In a scenario where all inputs and all outputs are important, the combined input- and output-coverage might be considered.
-The coverage should keep the characteristics of the input- and output-coverage, namely, that it is one when all features are covered, zero when no features are covered, and between one and zero if some but not all features are covered.
-This can be achieved by multiplying the coverages.
-Therefore, the overall coverage $c_{inout}$ is defined as:
+\subsection{Separation, Degradation and Interconnectedness}
+Now with the coverages calculated, the network can be categorized.
+First, a coverage term that is used for the categorization must be selected.
+Consider the network $N$ with $J$ subnetworks $\{N_1, \dots, N_J\}$ and a dataset $\mathcal{D}$ with $K$ tasks $\{T_1, \dots, N_K\}$.
+Either the input-, output- or total coverage can be used and will be referred to as $c^{(k)}$ for short, in this section.
 
-\[
-    c_{inout} = c_{in} * c_{out}
-\]
+The network $N$ is assigned to one of three categories, depending on the coverage of its subnetworks:
+\begin{itemize}
+    \item \textbf{interconnected}: the network is considered interconnected if the coverage of each task is $1$, but the networks are not separated. Therefore, the number of tasks $K$ is greater than the number of subnetworks $J$.
+    An unpruned, fully-connected network is per definition interconnected.
+    \[ c^{(k)} = 1; \quad\forall\quad k \in [1, \dots, K]\]
+    \[ K > J \]
 
-A network is considered \textbf{separated} if and only if each of its subnetworks has coverage of exactly one and there are as many subnetworks as there are tasks.
-If one of the subnetworks has coverage of less than one, the whole network is considered \textbf{degraded}, even though some other networks might cover the tasks perfectly.
+    \item \textbf{separated}: the network is considered separated if the coverage of each task is $1$, and there is an equal number of subnetworks and tasks.
+    \[ c^{(k)} = 1; \quad\forall\quad k \in [1, \dots, K]\]
+    \[ K = J \]
 
-Concretely, consider the dataset in paragraph~\ref{sec:independece_dataset}.
-The overall coverage $c_{inout}$ is used since all inputs and outputs are essential for the network to function well.
-It contains two tasks: the `Moons'-task and the `Circles'-task. 
-The moons-task $T^{(1)}$ is associated with the inputs $T^{(1)}_{in} = \{x_1,x_2\}$ and the output $T^{(1)}_{out} = \{y_1\}$.
-The circles-task $T^{(2)}$ is associated with the inputs $T^{(2)}_{in} = \{x_3,x_4\}$ and the output $T^{(1)}_{out} = \{y_4\}$.
+    \item \textbf{degraded}: the network is considered degraded if the coverage of at least one task is less than $1$.
+    \[ c^{(k)} \leq 1; \quad\textit{for any}\quad k \in [1, \dots, K]\]
+\end{itemize}
 
-The coverages can be collected in a matrix $C$ of size $J \times K$, where $J$ is the number of tasks and $K$ is the number of subnetworks. 
-$c_{j,k}$ represents the value at the $i$-th row and the $j$-th column and $0 \leq c_{j,k} \leq 1$ holds.
-The sum of the matrix is upper bound by the number of tasks.
-\[
-\sum^{i} \sum^{j} c_{j,k} \leq J
-\]
-
+Concretely, consider a dataset that contains two tasks, $T^{(1)}$ and $T^{(2)}$, with their accociated input sets $T^{(1)}_X$, $T^{(2)}_X$ and output sets $T^{(1)}_Y$, $T^{(2)}_Y$.
+Let $J$ denote the number of subnetworks.
+The coverages can be collected in a matrix $C$ of size $J \times K$, where $K=2$. 
+$c_{j,k}$ represents the value at the $j$-th row and the $k$-th column and $0 \leq c_{j,k} \leq 1$ holds.
+The sum of the matrix is upper bound by the number of tasks $K$.
+\[ \sum^{i} \sum^{j} c_{j,k} \leq K \]
 Given an unpruned network and a dataset with two tasks the matrix would look like the following 
-\[
-C = \begin{pmatrix}
-    1 \\ 1
-\end{pmatrix}
-\]
+\[ C = \begin{pmatrix} 1 & 1 \end{pmatrix} \]
 Each task would be completely covered by the same network.
 Since the network per definition covers all tasks before the first pruning level, the matrix will be a unit vector with as many entries as there are tasks.
+This network is \textbf{interconnected}.
 
 After several pruning iterations, the network might contain two disconnected subnetworks.
 In this case, an additional row is added to the matrix.
 For instance, let the subnetworks perfectly match the tasks such that every task is completely covered by one subnetwork.
-The matrix $C$ might look like the following.
-\[
-C = \begin{pmatrix}
-    1 & 0 \\ 0 & 1
-\end{pmatrix}
-\]
-After further pruning the network, all the connections to one of the input nodes might be pruned.
+This network is considered \textbf{separated} and the matrix $C$ might look like the following.
+\[ C = \begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix} \]
+
+After the network is pruned further, all the connections to one of the input nodes might be pruned.
 Then, one of the subnetworks would not be completely covered anymore.
-Assuming that the input feature $x_2$ of the `Moons'-task $T^{(1)}$ is completely disconnected, the input-coverage would be evaluated as 
-\[
-    c_{in} = \frac{|N_{in}  \cap T_{in} |}{|T_{in} |} = \frac{|\{x_1\} \cap \{x_1, x_2\}|}{|\{x_1, x_2\}|} = \frac{1}{2}
-\]
+This network is considered \textbf{degraded}.
+Assuming that half of the features of interest of a given task are not covered anymore, the resulting matrix $C$ would look like the following.
+\[ C = \begin{pmatrix} 1 & 0 \\ 0 & 0.5 \end{pmatrix} \]
 
-and the resulting matrix $C$ would look like the following
-
-\[
-C = \begin{pmatrix}
-    1 & 0 \\ 0 & 0.5
-\end{pmatrix}
-\]
-
-If the sum of $C$ is equal to the number of tasks and the number of subnetworks is equal to the number of tasks, then the network is perfectly split.
+If the sum of $C$ is equal to the number of tasks and the number of subnetworks is equal to the number of tasks, then the network is (perfectly) separated.
 If the sum of $C$ is equal to the number of tasks, but there are fewer subnetworks than tasks, the network still needs to split.
 The number of splits that are required can be the difference between the number of tasks and the number of subnetworks.
 
-If the sum of $C$ is less than the number of tasks, the network already has lost one input or output.
-This scenario is referred to as a `degraded' network.
+If the sum of $C$ is less than the number of tasks, the network already has lost at least one input or output.
+This scenario is referred to as a degraded network.
 Once a network is degraded, a perfect separation cannot be reached anymore.
 Generally, throughout this thesis, the training is stopped as soon as the network is degraded to save computational resources.
-
-
 
 \section{Software Stack - Move into captions}
 All software developed within the scope of this thesis is written in Python~\autocite{python}.
 Several freely available Python packages are used.
-PyTorch~\autocite{pytorch}, a commonly used machine learning library, is used to define neural networks and train them.
-NetworkX~\autocite{networkx}, a well-known library for working with mathematical graphs, is used to transform the PyTorch model into a directed graph and analyze it.
+, is used to define neural networks and train them.
+
 Scikit-Learn~\autocite{sklearn} which is also a popular machine learning library, is used to generate the Moons-Circles dataset.
 Torchvision, a package related to PyTorch is employed to generate the MNIST-Fashion-MNIST dataset.
 Matplotlib~\autocite{matplotlib} is used to generate the plots to visualize the results of the experiments.

@@ -1,14 +1,17 @@
 \chapter{Experiments and Results}\label{chapter:experiments} 
+intro
 
 \section{Datasets}
-\subsection{Moons and Circles}\label{sec:independece_dataset}
-\textcite{BIMT} executed the experiments on symbolic regression datasets.
+\textcite{BIMT} executed experiments on symbolic regression datasets.
 These are simple toy datasets where the labels are computed with a symbolic formula. 
 For instance regarding the independence task, the inputs are $x_1, x_2, x_3, x_4$ and the outputs are $y_1={x_2}^2 + \sin{(\pi*x_4)}$ and $y_2={(x_1+x_3)}^3$.
 In this case, the independence is obvious, as $y_1$ depends only on $x_1$ and $x_3$, and $y_2$ depends only on $x_2$ and $x_4$.
 However, concerning lottery tickets, the existing literature focuses on classification tasks, while this is a regression task.
-Therefore instead of using the independence dataset from \autocite{BIMT}, a classification dataset with independence is created.
-Two classic toy datasets are concatenated into one dataset.
+Therefore instead of using the independence dataset from \autocite{BIMT}, 
+two classification datasets that contain independent tasks are created in the scope of this thesis, which are described in the following sections.
+
+\subsection{Moons and Circles}\label{sec:independece_dataset}
+The first dataset is a combination of two classic toy datasets, which are concatenated into one dataset.
 The two selected datasets are the Two-Moons dataset and the Circles dataset, depicted in figure~\ref{fig:moons_circles}.
 Both datasets can be interpreted as a two-dimensional plane, where the inputs describe the coordinates of points on the plane. 
 The labels of the dataset relate to the class.
@@ -69,9 +72,9 @@ x_test = scaler.transform(x_test)
 \end{minipage}
 \end{figure}
 
-The classic machine learning library `scikit-learn' is used to generate the data. 
+The classic machine learning library Scikit-Learn~\autocite{sklearn} is used to generate the data. 
 The code snippet~\ref{code:data} outlines the generation process as Python-flavoured pseudo code.
-The previously described sampling strategies for the data relate to the implementation in the `scikit-learn' Python library.
+The previously described sampling strategies for the data relate to the implementation in the Scikit-Learn Python library.
 The data is generated with the \lstinline{makemoons}, and \lstinline{makecircles} functions, respectively.
 Since the ranges of values of the datasets are different due to their sampling strategy, each feature is normalized individually to have zero mean and unit variance.
 The final, normalized dataset is depicted in figure~\ref{fig:moons_circles}
@@ -108,12 +111,11 @@ The generation procedure of the datasets is outlined in the Python-flavoured pse
 First, both datasets are individually generated.
 The samples and labels are then concatenated into one dataset, which is then randomly split into the training and test set.
 Finally, the data is normalized to zero mean and unit variance, based on the training set.
-
 The generated dataset will be referred to as the `Moons-Circles' dataset.
 
 \subsection{MNIST-Fashion-MNIST}\label{sec:mnist}
 To test the network splitting on a slightly more realistic problem, the MNIST-Fashion-MNIST dataset was created.
-The dataset is created similarly to the Moons-Circles dataset described in paragraph~\ref{sec:independece_dataset}, but the MNIST dataset \autocite{mnist} and the fashion-mnist \autocite{fashion} dataset are used as tasks.
+The dataset is created similarly to the Moons-Circles dataset described in paragraph~\ref{sec:independece_dataset}, but the MNIST dataset \autocite{mnist} and the Fashion-MNIST~\autocite{fashion} dataset are used as tasks.
 The MNIST dataset is a well-known dataset of handwritten digits. 
 The training set consists of 60000 images and the test set of 10000.
 It contains all digits from zero to nine in handwritten form, on a $28 \times 28$ pixel grayscale image.
@@ -256,7 +258,6 @@ The number of extension levels corresponds to the number of pruning levels the n
 Over the course of the pruning levels, the network might separate into two networks or lose one of the inputs or outputs, which is called `degrading'.
 For the experiments described here, the training run is stopped as soon as the network degrades to avoid unnecessary computational effort.
 After each pruning level, the network is evaluated to check if it is separated or degraded.
-
 When considering all pruning levels, there are four different scenarios for a network:
 
 \begin{enumerate}
@@ -277,7 +278,7 @@ The result is a single network that contains all input and output nodes of all t
     \centering
     \includegraphics[width=1.0\linewidth]{2-layer-histogram-split-behaviour.png}
     \caption{
-        Separate/Degrade Histogram: Two hidden layers
+        Separate/Degrade Proportional Stacked Area Chart: Two hidden layers
         }\label{fig:2laxer-histogram}
 \end{figure}
 
@@ -429,7 +430,7 @@ It has a similar number of weights compared to the base network with two layers.
 \begin{figure}[ht]
     \centering
     \includegraphics[width=1.0\linewidth]{1-layer-histogram-split-behaviour.png}
-    \caption{Separate/Degrade histogram: One hidden layer
+    \caption{Separate/Degrade Proportional Stacked Area Chart: One hidden layer
     }\label{fig:1layer-histogram}
 \end{figure}
 
@@ -463,7 +464,7 @@ Regarding the network with three hidden layers, the results are similar.
     \centering
     \includegraphics[width=1.0\linewidth]{3-layer-histogram-split-behaviour.png}
     \caption{
-        Separate/Degrade histogram: Three hidden layers
+        Separate/Degrade Proportional Stacked Area Chart: Three hidden layers
     }\label{fig:3layer-histogram}
 \end{figure}
 
