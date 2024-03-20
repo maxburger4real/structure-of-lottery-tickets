@@ -1,5 +1,11 @@
 \chapter{Conslusion}\label{chapter:conclusion} 
 
+Over different network sizes, different architectures with varying numbers of hidden layers as well as different pruning rates, the networks separate quite reliably, given the right conditions.
+The experiments where the network did not separate either had too small networks, too few pruning levels and too high of a pruning rate.
+Also for the more complicated MNIST-Fashion-MNIST dataset, the networks separated with the standard training iterative pruning method.
+
+The results indicate, that iterative magnitude pruning indeed produces lottery tickets with separate subnetworks for independent tasks.
+
 The lottery ticket hypothesis sparked many directions of research in the field of sparse network training and pruning in general.
 However, how and why they work remains elusive.
 
