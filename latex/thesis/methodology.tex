@@ -145,8 +145,7 @@ Then, it can be defined with the pruning target.
 In a different scenario, the networks may need the same number of iterations and pruning rate, but the pruning target does not need to be fixed.
 
 \begin{minipage}{\linewidth} % IMP pseudo code
-\begin{lstlisting}[language=Python,caption={
-    Iterative magnitude pruning with parameter resetting; Python pseudo code
+\begin{lstlisting}[language=Python,caption={[Iterative Magnitude Pruning]Iterative magnitude pruning with parameter resetting, using PyTorch~\autocite{pytorch}; Python pseudo code
 },captionpos=b, label={code:imp}]
 model # the freshly initialized neural network 
 parameter_trajetory: List[int] # defines the pruning process
@@ -341,8 +340,8 @@ After each pruning level, each parameter is reevaluated and labeled with the app
 \begin{figure}[ht] % example zombie active inactive
     \centering
     \includegraphics[width=.5\linewidth]{active-example.png}
-    \caption{
-        Active (yellow), inactive (blue) and zombie (magenta) parameters
+    \caption[Active, inactive and zombies example]{
+    A sample network with active (yellow), inactive (blue) and zombie (magenta) parameters.
     }\label{fig:parameter_categories}
 \end{figure}
 
@@ -398,8 +397,8 @@ This active subgraph $\mathcal{G}_a$ is further used to find separated component
     language=Python,
     captionpos=b, 
     label={code:split},
-    caption={
-    Find independent subnetworks; Python pseudo code
+    caption={[Finding independent subnetworks]
+    Finding independent subnetworks in a neural network with PyTorch~\autocite{networkx} and networkx~\autocite{networkx}; Python pseudo code
     },
 ]
 import torch
@@ -537,13 +536,3 @@ If the sum of $C$ is less than the number of tasks, the network already has lost
 This scenario is referred to as a degraded network.
 Once a network is degraded, a perfect separation cannot be reached anymore.
 Generally, throughout this thesis, the training is stopped as soon as the network is degraded to save computational resources.
-
-\section{Software Stack - Move into captions}
-All software developed within the scope of this thesis is written in Python~\autocite{python}.
-Several freely available Python packages are used.
-, is used to define neural networks and train them.
-
-Scikit-Learn~\autocite{sklearn} which is also a popular machine learning library, is used to generate the Moons-Circles dataset.
-Torchvision, a package related to PyTorch is employed to generate the MNIST-Fashion-MNIST dataset.
-Matplotlib~\autocite{matplotlib} is used to generate the plots to visualize the results of the experiments.
-Numpy~\autocite{numpy}, a package to work with matrices in Python, provides crucial functionality throughout this thesis to manipulate vectors and matrices.

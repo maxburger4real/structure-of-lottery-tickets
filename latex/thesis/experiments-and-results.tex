@@ -1,5 +1,8 @@
 \chapter{Experiments and Results}\label{chapter:experiments} 
-intro
+In this paragraph, an empirical investigation into the structure of winning tickets is conducted.
+First, the datasets that were used are described in detail.
+Then, experiments were conducted that attempt to find separate subnetworks in the winning ticket, for both datasets.
+Finally, the connectivity of the network to the network input is examined.
 
 \section{Datasets}
 \textcite{BIMT} executed experiments on symbolic regression datasets.
@@ -18,11 +21,9 @@ The labels of the dataset relate to the class.
 Each point belongs to one class: red or blue.
 
 \begin{figure}[ht]
-    \centering
-    \includegraphics[width=1.0\linewidth]{moons-circles.png}
-    \caption{
-        The `Two Moons' dataset (left) and the `Circles' dataset (right), normalized. 
-    }\label{fig:moons_circles}
+\centering \includegraphics[width=1.0\linewidth]{moons-circles.png}
+\caption[Two-Moons and Circles Dataset]{
+    The Two-Moons-dataset (left) and the Circles-dataset (right); normalized to zero mean and unit variance.}\label{fig:moons_circles}
 \end{figure}
 
 Concretley, let $( x_1 , x_2 )$ be the inputs of the two-moons dataset and $y_1 \in \{0,1\}$ the class label.
@@ -43,7 +44,7 @@ The values of noise and the size of the inner circle are selected, such that the
     language=Python,
     captionpos=b, 
     label={code:data},
-    caption={Generation of Moons-Circles dataset; pseudo code},
+    caption={[Dataset Generation]Generation of Moons-Circles dataset with scikit-learn~\autocite{sklearn}; pseudo code},
 ]
 from sklearn import make_circles, make_moons
 from sklearn.model_selection import train_test_split
@@ -93,10 +94,9 @@ This dataset contains two separate and independent tasks.
 For each task, only the respective inputs contain valuable information for the prediction of the class.
 
 \begin{figure}[ht]
-    \centering
-    \includegraphics[width=1.0\linewidth]{moons-circles-inverted.png}
-    \caption{
-        The `Two Moons' dataset (left) with `Circles' labels, and the `Circles' dataset (right) with `Two-Moons' labels. 
+    \centering\includegraphics[width=1.0\linewidth]{moons-circles-inverted.png}
+    \caption[Two-Moons and Circles Dataset, inverted labels]{
+        The Two-Moons-dataset (left) with Circles labels, and the Circles-dataset (right) with Two-Moons labels. 
     }\label{fig:moons_circles_inverted}
 \end{figure}
 
@@ -122,10 +122,9 @@ It contains all digits from zero to nine in handwritten form, on a $28 \times 28
 This dataset was also used in the experiments original lottery ticket experiments \autocite{LTH}.
 
 \begin{figure}[ht]
-    \centering
-    \includegraphics[width=1.0\linewidth]{mnist-fashion-mnist.png}
-    \caption{
-        MNIST-Fashion-MNIST dataset
+    \centering\includegraphics[width=1.0\linewidth]{mnist-fashion-mnist.png}
+    \caption[MNIST-Fashion-MNIST dataset]{
+        The MNIST-Fashion-MNIST dataset; Each sample contains a random MNIST image (top) and a random Fashion-MNIST image (bottom).
     }\label{fig:mnist_fashion}
 \end{figure}
 
@@ -150,39 +149,6 @@ The Moons-Circles dataset only has four input features and two output features.
 Further, the previous task was a combination of two binary classification tasks.
 Now, each dataset represents a multiclass classification problem with 10 classes.
 
-\subsubsection{Loss Function}
-To enable training with this dataset, the loss has to be adapted.
-For classification with more than two classes, the categorical cross entropy can be used.
-For each of the tasks in the concatenated dataset, the loss is computed separately.
-The total loss is simply the sum of the losses from each task.
-
-Concretely, let $\mathbf{\hat y_{mnist}} = \left[\hat y_1, \dots, \hat y_{10}\right]$ be the output logits of the network that relates to the MNIST dataset and $\mathbf{\hat y_{fashion}} = \left[\hat y_{11}, \dots, \hat y_{20}\right]$ to the Fashion-MNIST dataset.
-The labels are denoted fashion $\mathbf{y_{mnist}}$ and $\mathbf{y_{fashion}}$ respectively.
-Together, they form the network output $\mathbf{\hat y} = \left[\hat y_1, \dots, \hat y_{20}\right]$
-
-Let, $\mathcal{L} (\mathbf{\hat y}, \mathbf{y})$ be the loss of the network output $\mathbf{\hat y}$ and the true labels $\mathbf{y}$.
-The total loss $\mathcal{L}$ of the network is calculated as follows:
-
-\[
-\mathcal{L}  (\mathbf{\hat y}, \mathbf{y})
-= \ell  (\mathbf{\hat y_{mnist}}, \mathbf{y_{mnist}})
-+ \ell (\mathbf{\hat y_{fashion}}, \mathbf{y_{fashion}})
-\]
-
-, where $\ell$ represents the categorical cross-entropy loss.
-
-\subsubsection{Adapting Network Degradation}
-In paragraph~\ref{sec:taskmatch} network separation and network degradation were introduced.
-When trained on the Moons-Circles dataset from paragraph~\ref{sec:independece_dataset}, a network counts as degraded when any of the inputs or outputs are cut off from the network, since all inputs and outputs are relevant for the success of the network.
-However, regarding the MNIST-Fashion-MNIST dataset, this is not the case.
-Many of the input features do not carry information, for example, the outer frame of the MNIST images.
-Therefore, it is to be expected that all connections to these inputs may be pruned.
-This would likely lead to unwanted network degradation.
-
-Therefore, the network only counts as degraded, if an output feature is completely cut off, meaning that it has no incoming connections anymore.
-This requires only a small change in the calculation of the coverage as shown in paragraph~\ref{sec:taskmatch}.
-The terms relating to the inputs of the tasks, namely $C_{in}$ and $T_{in}$, are simply to be exchanged for one.
-
 \section{Experiments on the Moons-Circles Dataset}
 The first round of experiments is dedicated to finding out what conditions are required, such that the network separates.
 During a preliminary exploration phase, some scenarios where the network indeed separates were found.
@@ -205,7 +171,7 @@ However, with a larger pruning rate, a larger space of network sizes can be cove
 \begin{table}[ht]
     {
     \sffamily
-    \caption{
+    \caption[Parameter Trajectories of different network sizes]{
     In this table, the parameter trajectories and the corresponding hidden dimension of the network are displayed for each extension level. 
     The parameter trajectory is in each respective `param' column and the number of hidden neurons per hidden layer is in the column `hidden dim'.
     At the extension level zero, the base model values are displayed.
@@ -283,8 +249,9 @@ The result is a single network that contains all input and output nodes of all t
 \begin{figure}[ht] % Stacked Area d=2
     \centering
     \includegraphics[width=1.0\linewidth]{2-layer-histogram-split-behaviour.png}
-    \caption{
-        Separate/Degrade Proportional Stacked Area Chart: Two hidden layers
+    \caption[Separation/Degradation Stacked Area Chart (2 hidden layers)]{
+        A proportional stacked area chart showing the ratio of training runs in each category.
+        The x-axis shows the extension level, and the y-axis shows the relative amount of networks in each category, stacked. (2 hidden layers)
         }\label{fig:2laxer-histogram}
 \end{figure}
 
@@ -314,8 +281,9 @@ This effectively makes the network smaller, which in turn makes it more likely t
 \begin{figure}[ht] % Less active more pruning
     \centering
     \includegraphics[width=1.0\linewidth]{2-layer-compund-damage.png}
-    \caption{
-        Active weights at the end of the training run: Two hidden layers
+    \caption[Correlation extension levels and rate of active weights]{
+    The correlation between the number of extension levels and the percentage of active weights in the network.
+    Each dot is a single training run, the colors indicate the category of the training run. (2 hidden layers)
     }\label{fig:collateral_damage}
 \end{figure}
 
@@ -344,8 +312,10 @@ It has a similar number of weights compared to the base network with two layers.
 \begin{figure}[ht] % Stacked Area d=1
     \centering
     \includegraphics[width=1.0\linewidth]{1-layer-histogram-split-behaviour.png}
-    \caption{Separate/Degrade Proportional Stacked Area Chart: One hidden layer
-    }\label{fig:1layer-histogram}
+    \caption[Separation/Degradation Stacked Area Chart (1 hidden layer)]{       
+        A proportional stacked area chart showing the ratio of training runs in each category.
+        The x-axis shows the extension level, and the y-axis shows the relative amount of networks in each category, stacked; (1 hidden layer)
+        }\label{fig:1layer-histogram}
 \end{figure}
 
 In figure~\ref{fig:1layer-histogram}, the same plot as for the two-layer experiment is presented.
@@ -363,11 +333,12 @@ However, this mystery is not answered in the course of this thesis.
 
 Regarding the network with three hidden layers, the results are similar.
 \begin{figure}[ht] % Stacked Area d=3
-    \centering
-    \includegraphics[width=1.0\linewidth]{3-layer-histogram-split-behaviour.png}
-    \caption{
-        Separate/Degrade Proportional Stacked Area Chart: Three hidden layers
-    }\label{fig:3layer-histogram}
+\centering
+\includegraphics[width=1.0\linewidth]{3-layer-histogram-split-behaviour.png}
+\caption[Separation/Degradation Stacked Area Chart (3 hidden layers)]{
+A proportional stacked area chart showing the ratio of training runs in each category.
+The x-axis shows the extension level, and the y-axis shows the relative amount of networks in each category, stacked. (2 hidden layers)
+}\label{fig:3layer-histogram}
 \end{figure}
 In figure~\ref{fig:3layer-histogram} the splitting behaviour is depicted.
 A similar effect occurs but unlike the single-layer network, the network does not stop to separate in the range that was tested. 
@@ -381,11 +352,16 @@ Interestingly, when extending the network to higher levels, it tends to split in
 This results in an increased number of available weights to the network at the iteration they separated.
 \begin{figure}[ht] % Active/Available d=2
     \centering
-    \includegraphics[width=.5\linewidth]{2-layer-active-available-at-split-log.png}
-    \caption{Active vs. available weights: Two hidden layers}\label{fig:2l-active-split}
+    \includegraphics[width=.6\linewidth]{2-layer-active-available-at-split-log.png}
+    \caption[Comparing active and available weights (2 hidden layers)]{
+    The number of active weights (blue) and the number of available weights (orange).
+    Each dot is an average of four training runs.
+    The error bars indicate the minimum and maximum of the runs.
+    Log scale. (2 hidden layers)
+    }\label{fig:2l-active-split}
 \end{figure}
 Figure~\ref{fig:2l-active-split} depicts the number of available/unpruned weights in orange and the number of active weights in blue, for the different extension levels of networks with two hidden layers.
-Each dot represents the average numberof active or available weights at the exact iteration where the network separated.
+Each dot represents the average number of active or available weights at the exact iteration where the network is separated.
 Only training runs where the network separates are taken into account.
 For each extension level, the training run was repeated with four different seeds for the initialization of the network weights.
 On the x-axis, the extension level of the network is displayed, which is also the number of pruning levels the network goes through.
@@ -393,37 +369,47 @@ The more extension levels, the larger the network.
 The error bars indicate the maximum and minimum values of the different runs.
 The graph is shown on a logarithmic scale, and the increase follows almost an exponential curve.
 
-A clearly visible trend, is the exponential increase of the number of available weights at the level where the network separates (orange).
+A visible trend is the exponential increase of the number of available weights at the level where the network separates (orange).
 This comes from the fact that the networks separate in earlier iterations, where there are more available weights.
-Interestingly, the number of active weights does not experience a comparable growth when the network is extended more.
+Interestingly, the number of active weights does not experience comparable growth when the network is extended more.
 Active weights are the weights that are contained in the active subgraph $\mathcal{G}_a$, that was introduced in chapter~\ref{chapter:method}.
 It increases slightly but almost remains flat, covering a narrow range of around $80$ to $120$ weights, while the available weights grow from $120$ to almost $1000$.
 This data indicates that the number of active weights might be an important quantity to splitting.
-Since the active subgraph $\mathcal{G}_a$ is indeed the graph which is used to evaluate network separation, this seems plausible.
+Since the active subgraph $\mathcal{G}_a$ is indeed the graph that is used to evaluate network separation, this seems plausible.
  
 % 1 hidden layer
 \begin{figure}[ht] % Active/Available d=1
     \centering
-    \includegraphics[width=0.5\linewidth]{1-layer-active-available-at-split-log.png}
-    \caption{Active vs. available weights: One hidden layer}\label{fig:1layer-active}
+    \includegraphics[width=0.6\linewidth]{1-layer-active-available-at-split-log.png}
+    \caption[Comparing active and available weights (1 hidden layer)]{
+    The number of active weights (blue) and the number of available weights (orange).
+    Each dot is an average of four training runs.
+    The error bars indicate the minimum and maximum of the runs.
+    Log scale.  (1 hidden layer)
+}\label{fig:1layer-active}
 \end{figure}
 When looking at the graph of the architectures with one hidden layer, this effect is even more dramatic, which is shown in figure~\ref{fig:1layer-active}
 Similarly to the experiment with two layers, the networks separate in earlier iterations when they are larger and have more pruning levels.
 The number of active weights remains in a fairly tight range between $70$ and $120$ active weights, while the number of available weights goes from around $125$ to over $1400$.
-Notably, as shown in figure~\ref{fig:1layer-histogram}, the netowork does not separate anymore after the 13th extension level.
+Notably, as shown in figure~\ref{fig:1layer-histogram}, the network does not separate anymore after the 13th extension level.
 At the 13th level, only around $10$ percent of the weights in the network are active at the separation iteration.
 
 \begin{figure}[ht] % Active/Available d=1
     \centering
     \includegraphics[width=0.5\linewidth]{3-layer-active-available-at-split-log.png}
-    \caption{Active vs. available weights: Three hidden layers}\label{fig:3layer-active}
+    \caption[Comparing active and available weights (3 hidden layers)]{
+    The number of active weights (blue) and the number of available weights (orange).
+    Each dot is an average of four training runs.
+    The error bars indicate the minimum and maximum of the runs.
+    Log scale.  (3 hidden layers)
+    }\label{fig:3layer-active}
 \end{figure}
-When considering the network with three hidden layer, a similar effect is visible, however significanlty less pronounced.
-Figure~\ref{fig:3layer-active} the number of active weights and the number of available weights of the three layer architectures with different extension levels.
+When considering the network with three hidden layers, a similar effect is visible, however significantly less pronounced.
+Figure~\ref{fig:3layer-active} the number of active weights and the number of available weights of the three-layer architectures with different extension levels.
 The networks at extension level 7 until 11 all split at the last pruning level, which can be deducted by the number of available parameters which is equal to the pruning target of 108.
 The number of active weights is slightly lower than in the other experiments.
-The data indicates that separating a three layer network with the same number of available parameters is less likely than a two or a one layer network, because the number of available weights does not grow as quickly.
-Also when looking at the number of active weights at the separation-iteration, the numbers are significantly lower compared to the other architectures.
+The data indicates that separating a three-layer network with the same number of available parameters is less likely than a two or a one-layer network because the number of available weights does not grow as quickly.
+Also when looking at the number of active weights at the separation iteration, the numbers are significantly lower compared to the other architectures.
 
 \subsection{What makes the networks separate?}
 As seen in figure~\ref{fig:2laxer-histogram}, the networks with two hidden layers starts to split at 7 extension levels and a network shape of $(4,38,38,2)$, with 1672 weights.
@@ -443,7 +429,10 @@ Each training run with a combination of network size and number of pruning level
 \begin{figure}[ht] % what influences separation : size
     \centering
     \includegraphics[width=1.0\linewidth]{grid-2-layer-eval-abs.png}
-    \caption{Influence of network size: Two hidden layers}\label{fig:grid-1}
+    \caption[Influence of network size on separation]{
+        The influence of network size on separation is shown.
+        Each dot is a single training run, color-coded by category.
+        }\label{fig:grid-1}
 \end{figure}
 
 In figure~\ref{fig:grid-1} the impact of network size is demonstrated.
@@ -460,7 +449,9 @@ A certain level of overparameterization seems to be necessary for the network to
 \begin{figure}[ht] % what influences separation : plevels
     \centering
     \includegraphics[width=1.0\linewidth]{grid-2-layer-pruning-rate-48-hd.png}
-    \caption{Influence of pruning levels: Two hidden layers
+    \caption[Influence of pruning rate on separation]{
+        The influence of pruning rate on separation is shown.
+        Each dot is a single training run, color-coded by category.
     }\label{fig:grid-2}
 \end{figure}
 
@@ -502,16 +493,20 @@ Only if a layer has at least one neuron that has `decided' to which task it belo
 \begin{figure}[ht] % Layer separation from outputs
     \centering
     \includegraphics[width=0.9\linewidth]{output-view.png}
-    \caption{
-    Degree of separation from the output side: Three hidden layers
+    \caption[Separation from the view of output neurons]{
+    The degree to which neurons in hidden layers can be attributed to a task over the pruning levels; calculated by the connectivity to the output neurons.
+    Each line shows the percentage of weights attributable to a task.
+    The x-axis shows the pruning levels from 0, where the network is fully connected to 15, where the network separated.
     }\label{fig:outview}
 \end{figure}
 
 \begin{figure}[ht] % Layer separation from inputs
     \centering
     \includegraphics[width=0.9\linewidth]{input-view.png}
-    \caption{    
-        Degree of separation from input side: Three hidden layers
+    \caption[Separation from the view of input neurons]{
+        The degree to which neurons in hidden layers can be attributed to a task over the pruning levels; calculated by the connectivity to the input features.
+        Each line shows the percentage of weights attributable to a task.
+        The x-axis shows the pruning levels from 0, where the network is fully connected to 15, where the network separated.
     }\label{fig:inview}
 \end{figure}
 
@@ -547,8 +542,10 @@ Are they better, equal, or worse in terms of the validation loss, compared to th
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.9\linewidth]{performance.png}
-    \caption{
-        Performance at all iterations: Two hidden layers
+    \caption[Performance of winning tickets]{
+        The performance of winning tickets, color-coded by category.
+        Winning tickets that separated are shown in green.
+        Log scale. (2 hidden layers)
     }\label{fig:performance}
 \end{figure}
 
@@ -588,8 +585,10 @@ With the two-layer architectures extended over several levels as shown in table~
 \begin{figure}[ht]
     \centering
     \includegraphics[width=.7\linewidth]{inactive-abs-2l.png}
-    \caption{
-        The number of inactive weights over the training runs. Each line represents a different extension level
+    \caption[Inactive Weights during training runs, absolute]{
+        The number of inactive weights over the training runs. 
+        Each line represents a different extension level. 
+        The x-axis shows the available weights and the y-axis shows the absolute number of inactive weights.
     }\label{fig:inactive-abs}
 \end{figure}
 
@@ -606,11 +605,13 @@ However, due to the reduction in the overall network size, this is to be expecte
 \begin{figure}[ht]
     \centering
     \includegraphics[width=.7\linewidth]{inactive-rel-2l.png}
-    \caption{
-        The relative amount of inactive weights of all unpruned weights. Each line represents a different extension level
-    }\label{fig:inactive-rel}
+    \caption[Inactive Weights during training runs, relative]{
+        The number of inactive weights over the training runs. 
+        Each line represents a different extension level. 
+        The x-axis shows the available weights and the y-axis shows the relative number of inactive weights.
+        }\label{fig:inactive-rel}
 \end{figure}
-The same graph, however with the relative amount of inactive weights in shown in figure~\ref{fig:inactive-rel}.
+The same graph, however with the relative amount of inactive weights is shown in figure~\ref{fig:inactive-rel}.
 Here, a different trend is visible.
 As the number of weights in the network decreases, the percentage of inactive weights generally increases.
 Interestingly, this increase is not steady.
@@ -623,8 +624,10 @@ With smaller networks, this pattern cannot be seen.
 \begin{figure}[ht]
     \centering
     \includegraphics[width=.7\linewidth]{zombie-abs-2l.png}
-    \caption{
-        The number of zombie weights over the training runs. Each line represents a different extension level
+    \caption[Zombie weights during training runs, absolute]{
+    The number of zombie weights over the training runs. 
+    Each line represents a different extension level. 
+    The x-axis shows the available weights and the y-axis shows the absolute number of zombie weights.
     }\label{fig:zombie-abs}
 \end{figure}
 When examining the number of zombie weights in the network, a different pattern is visible.
@@ -635,8 +638,10 @@ However, the number of zombie weights is significantly less than the number of i
 \begin{figure}[ht]
     \centering
     \includegraphics[width=.7\linewidth]{zombie-rel-2l.png}
-    \caption{
-        The relative amount of zombie weights of all unpruned weights. Each line represents a different extension level
+    \caption[Zombie weights during training runs, relative]{
+        The number of zombie weights over the training runs. 
+        Each line represents a different extension level. 
+        The x-axis shows the available weights and the y-axis shows the relative number of zombie weights.
     }\label{fig:zombie-rel}
 \end{figure}
 Again, a more interesting view is the relative amount of zombie weights at each iteration.
@@ -645,7 +650,6 @@ The relative amount of zombie weight generally increases, the more the network i
 Interestingly, the values do not seem to tail off as the ratio of inactive weights in figure~\ref{fig:inactive-rel}.
 When comparing zombie weights and inactive weights, it is clear that inactive weights represent a significantly larger fraction of all weights of the network.
 Why this is the case is an interesting research direction for future work.
-
 
 \section{Experiments on the MNIST-Fashion-MNIST Dataset}
 Due to the success of the method in separating the neural network on the Moons-Circles dataset, the same was attempted on the more realistic MNIST-Fashion-MNIST dataset described in paragraph~\ref{sec:mnist}.
@@ -665,15 +669,52 @@ Therefore, the pruning target was set to 600.
 For the training runs, 20 pruning levels were selected, which resulted in a pruning rate of $p=0.3247$, similar to the experiments on the Moons-Circles dataset.
 For the first experiments, the data was normalized like the Moons-Circles dataset, namely to zero mean and unit variance.
 
+\subsubsection{Adapting Loss Function}
+To enable training with this dataset, the loss has to be adapted.
+For classification with more than two classes, the categorical cross entropy can be used.
+For each of the tasks in the concatenated dataset, the loss is computed separately.
+The total loss is simply the sum of the losses from each task.
+
+Concretely, let $\mathbf{\hat y_{mnist}} = \left[\hat y_1, \dots, \hat y_{10}\right]$ be the output logits of the network that relates to the MNIST dataset and $\mathbf{\hat y_{fashion}} = \left[\hat y_{11}, \dots, \hat y_{20}\right]$ to the Fashion-MNIST dataset.
+The labels are denoted fashion $\mathbf{y_{mnist}}$ and $\mathbf{y_{fashion}}$ respectively.
+Together, they form the network output $\mathbf{\hat y} = \left[\hat y_1, \dots, \hat y_{20}\right]$
+
+Let, $\mathcal{L} (\mathbf{\hat y}, \mathbf{y})$ be the loss of the network output $\mathbf{\hat y}$ and the true labels $\mathbf{y}$.
+The total loss $\mathcal{L}$ of the network is calculated as follows:
+
+\[
+\mathcal{L}  (\mathbf{\hat y}, \mathbf{y})
+= \ell  (\mathbf{\hat y_{mnist}}, \mathbf{y_{mnist}})
++ \ell (\mathbf{\hat y_{fashion}}, \mathbf{y_{fashion}})
+\]
+
+, where $\ell$ represents the categorical cross-entropy loss.
+
+\subsubsection{Adapting Network Degradation}
+In paragraph~\ref{sec:taskmatch} network separation and network degradation were introduced.
+When trained on the Moons-Circles dataset from paragraph~\ref{sec:independece_dataset}, a network counts as degraded when any of the inputs or outputs are cut off from the network, since all inputs and outputs are relevant for the success of the network.
+However, regarding the MNIST-Fashion-MNIST dataset, this is not the case.
+Many of the input features do not carry information, for example, the outer frame of the MNIST images.
+Therefore, it is to be expected that all connections to these inputs may be pruned.
+This would likely lead to unwanted network degradation.
+
+Therefore, the network only counts as degraded, if an output feature is completely cut off, meaning that it has no incoming connections any more.
+This requires only a small change in the calculation of the coverage as shown in paragraph~\ref{sec:taskmatch}.
+The terms relating to the inputs of the tasks, namely $C_{in}$ and $T_{in}$, are simply to be exchanged for one.
+
+\subsection{Results}
 With the described setup, the network was trained with three different seeds for the weight initialization.
+
 \begin{figure}[ht]
     \centering
     \includegraphics[width=.7\linewidth]{mnist-acc-largest-784-392.png}
-    \caption{
-        Separation and performance on the MNIST-Fashion-MNIST dataset
+    \caption[Performance and Separation on MNIST-Fashion-MNIST]{The performance of three training runs with different seeds. 
+    Each line represents one training run, where the hyperparameters are the same.
+    The performance where the network separates is indicated by the red star.
+    The x-axis shows the number of available/unpruned weights on a logarithmic scale.
+    The y-axis shows the accuracy.
     }\label{fig:mnist-acc}
 \end{figure}
-
 Figure~\ref{fig:mnist-acc} shows the accuracy of three runs with the same hyperparameters but different seeds on the MNIST-Fashion-MNIST dataset.
 On the x-axis, the number of active weights is displayed.
 On the y-axis, the accuracy is shown.
@@ -686,8 +727,10 @@ The best accuracy of a separated network amongst the shown runs is $\sim86$ perc
 \begin{figure}[ht]
     \centering
     \includegraphics[width=.7\linewidth]{taskwise-acc.png}
-    \caption{
-        Performance per task
+    \caption[Taskwise performance]{
+        The performance of the separate tasks in the network.
+        Each line shows the average, minimum and maximum accuracy of the three repeated training runs.
+        The lines show the accuracy of the MNIST task (blue), the Fashion-MNIST task (green) and the average of both (dark blue).
     }\label{fig:taskwise-acc}
 \end{figure}
 
@@ -708,31 +751,36 @@ This gives reason to believe, that the separation can be achieved at competitive
 This, however, is not pursued in the scope of this thesis.
 The separation by itself, at non-trivial accuracy is considered a useful insight into the structure of the network.
 
-
 \subsection{Connectivity of the input layer}
 An interesting finding of \textcite{LTH} was, that certain neurons in the input layer retain significantly more incoming connections than others.
 They find this to be the case with winning tickets trained on MNIST and attribute this to the fact that certain pixels of the MNIST dataset do not contain any information.
 \begin{figure}[ht] % mnist variance
     \centering \includegraphics[width=.7\linewidth]{mnist_mean_variance.png}
-    \caption{MNIST pixelwise mean and variance}\label{fig:mnist-input-variance}
+    \caption[Mean and Variance MNIST]{
+    The mean (left) and variance (right) of each pixel in the MNIST dataset
+    }\label{fig:mnist-input-variance}
 \end{figure}
 
 In figure~\ref{fig:mnist-input-variance} the pixelwise mean and variance of the MNIST dataset is shown.
 Since the digits are centered in the image, there is a frame where there is little to no variance and where the values are on average close to zero.
 \begin{figure}[ht] % fashion variance
     \centering \includegraphics[width=.7\linewidth]{fashion_mnist_mean_variance.png}
-    \caption{Fashion pixelwise mean and variance}\label{fig:fashion-input-variance}
+    \caption[Mean and Variance Fashion-MNIST]{
+        The mean (left) and variance (right) of each pixel in the Fashion-MNIST dataset
+        }\label{fig:fashion-input-variance}
 \end{figure}
 
 A similar effect is visible with the Fashion MNIST dataset as seen in figure~\ref{fig:fashion-input-variance}.
 For the Fashion dataset, the frame is notably smaller and there are pixels with significant mean and variance that lie on the outermost pixel row of the image.
 
 For each of the datasets, a neural network with the same architecture as in \autocite{LTH} was used, namely the LeNet-5 architecture with a shape of $(784,300,100,10)$.
-The networks were pruned for 18 pruning levels to a pruning target of $600$, which results in an effective pruning rate of $0.26$TODO.
+The networks were pruned for 18 pruning levels to a pruning target of {$600$}.
 
 \begin{figure}[ht] % MNIST attention heatmap
     \centering\includegraphics[width=1.\linewidth]{mnist_input_attention_active.png}
-    \caption{MNIST pixelwise connectivity heatmap}\label{fig:mnist-heatmap}
+    \caption[Pixel connectivity MNIST]{
+        Heatmap of the number of outgoing connections of each input pixel of the MNIST dataset, over several pruning levels.
+        }\label{fig:mnist-heatmap}
 \end{figure}
 
 Figure~\ref{fig:mnist-heatmap} shows the connectivity to the input layer at different pruning iterations.
@@ -746,7 +794,9 @@ Due to the probabilistic nature of training and network initialization, there ma
 
 \begin{figure}[ht] % Fashion attention heatmap
     \centering\includegraphics[width=1.\linewidth]{fashion_input_attention_active.png}
-    \caption{Fashion pixelwise connectivity heatmap}\label{fig:fashion-heatmap}
+    \caption[Pixel connectivity Fashion-MNIST]{
+        Heatmap of the number of outgoing connections of each input pixel of the Fashion-MNIST dataset, over several pruning levels.
+        }\label{fig:fashion-heatmap}
 \end{figure}
 
 Figure~\ref{fig:fashion-heatmap} shows this for the Fashion dataset.
@@ -768,7 +818,8 @@ This might indicate, that the Fashion dataset is harder to learn for the {MLP}, 
 \begin{figure}[ht] % mnist-fashion-mnist connectivity
     \centering
     \includegraphics[width=1.\linewidth]{mnist_fashion_mnist_input_attention_active.png}
-    \caption{MNIST-Fashion-MNIST pixelwise connectivity heatmap}\label{fig:mnist-fashion-map}
+    \caption[Pixel connectivity MNIST-Fashion-MNIST]{
+    Heatmap of the number of outgoing connections of each input pixel of the MNIST-Fashion-MNIST dataset, over several pruning levels.}\label{fig:mnist-fashion-map}
 \end{figure}
 
 When examining a training run on the MNIST-Fashion-MNIST set with a network of shape $(1568, 784, 392, 20)$, the same patterns emerge.
