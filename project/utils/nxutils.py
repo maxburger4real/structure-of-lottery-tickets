@@ -100,7 +100,6 @@ class GraphManager:
         # tag the parameters based on new pruning mask
         tag_parameters(self.G, model, self.in_features, self.out_features)
 
-        # split the network into subnetworks
         G = subgraph_by_state(self.G, include=[ParamState.active])
         subnetworks = [
             G.subgraph(c) for c in nx.connected_components(G.to_undirected())
@@ -111,7 +110,7 @@ class GraphManager:
 
         self.layerwise_split_metrics = {}
         self.remaining_in_and_outputs = {}
-        if True and len(self.task_description) == 2:
+        if False and len(self.task_description) == 2:
 
             t0_name, (t0_in, t0_out) = self.task_description[0]
             t1_name, (t1_in, t1_out) = self.task_description[1]
@@ -191,9 +190,18 @@ class GraphManager:
                 del G.nodes[node]['state']
         for edge in G.edges():
             if 'state' in G.edges[edge]:
-                del G.edges[edge]['state']
-                
-        nx.write_graphml(G, f'file{iteration}.graphml')
+                del G.edges[edge]['state']    
+        nx.write_graphml(G, f'active-{iteration}.graphml')
+
+        G = subgraph_by_state(self.G, exclude=[ParamState.pruned]).copy()
+        for node in G.nodes():
+            if 'state' in G.nodes[node]:
+                del G.nodes[node]['state']
+        for edge in G.edges():
+            if 'state' in G.edges[edge]:
+                del G.edges[edge]['state']    
+        nx.write_graphml(G, f'unpruned-{iteration}.graphml')
+
 
 
     def fig(

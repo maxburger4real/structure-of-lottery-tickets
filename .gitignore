@@ -20,6 +20,7 @@ wandb/
 *.aux
 *.lof
 *.log
+*.lol
 *.lot
 *.fls
 *.out
