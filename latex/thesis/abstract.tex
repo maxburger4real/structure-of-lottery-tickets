@@ -1,11 +1,11 @@
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
 
-The \textbf{Lottery Ticket Hypothesis}~\autocite{LTH} has sparked a novel field of research that concerns itself with sparse neural networks.
-One key method in this field, `Iterative Magnitude Pruning' (IMP) is successful in finding the sparse subnetworks that can be trained to high performance, the \textit{Winning Tickets}.
-Many aspects of why and how this procedure works and where its success comes from, remain elusive.
-One way to learn more about lottery tickets would be to study their network graph.
-Since they are usually highly sparse, their graph may contain valuable insights into its functionality.
-To learn more about the structure of the sparse `Winning Tickets', experiments inspired by \textcite{BIMT} were conducted.
-A dataset with two independent tasks was constructed and a lottery ticket was derived from it with \textit{IMP}.
-The question is: Will the winning ticket contain two independent subnetworks, one for each of the independent tasks?
+The \textbf{Lottery Ticket Hypothesis} by \textcite{LTH} has sparked a novel field of research that concerns itself with well-trainable sparse neural networks.
+One key method in this field is called \textit{Iterative Magnitude Pruning}, which is successful in finding sparse subnetworks that can be trained to high performance. These networks are called \textit{Winning Tickets}.
+Many aspects of why and how this procedure works and what characteristics of the winning tickets make them successful remain elusive.
+One way to learn more about lottery tickets would be to study their network structure.
+Since they are usually highly sparse, their structure may contain valuable insights into their functionality.
+In this thesis, the structure of winning ticket networks is analyzed and how it relates to the data the network was trained on.
+The experiments in this thesis are conducted on datasets that contain two independent tasks \rule[0.5ex]{.5em}{0.5pt} a simple toy dataset and a combination of the MNIST and Fashion-MNIST datasets.
+On both datasets, winning tickets derived with iterative magnitude pruning are found that contain separate, independent subnetworks where each subnetwork solves one task.

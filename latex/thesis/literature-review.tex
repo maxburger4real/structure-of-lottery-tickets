@@ -1,20 +1,18 @@
-\chapter{Literature Review}
+\chapter{Literature Review}\label{literature_review}
 In this chapter, the prerequisites and related research are reviewed and discussed.
 Neural network pruning and the lottery ticket hypothesis, as well as relevant follow-up work, are covered in detail.
 Alternative methods to find lottery tickets are also outlined.
 Further, aspects of the lottery ticket network itself are covered, such as the numerical characteristics of the parameters and the structure of the network graph.
 
-\section{Deep Learning}
+\section{Neural Network Pruning}
 The field of deep learning is largely responsible for the advances of modern machine learning applications.
 With increasing amounts of available data and computational resources, the size of neural networks has increased drastically, as well as their performance.
 However, this increase in size poses challenges in constrained environments.
 Larger and deeper networks tend to require more memory and computational resources, which can be problematic for inference on constrained devices.
 Also, larger models typically require more time and more energy for training as well as for inference.
-Neural Network Pruning \autocite{LeCun, OptimalBrainSurgeon, HanEtAl15, PruningFiltersForEfficientConvets} has been proposed as a tool to reduce network size for inference while maintaining accuracy.
 
-\section{Neural Network Pruning}
-Neural Network Pruning is a category of methods that eliminate components of the network whilst aiming to minimally impact its performance.
-Pruning algorithms can reduce parameter count by up to 90\% without harming accuracy.
+Neural Network Pruning \autocite{LeCun, OptimalBrainSurgeon, HanEtAl15, PruningFiltersForEfficientConvets} has been proposed as a tool to reduce network size for inference while maintaining accuracy.
+Pruning algorithms can reduce parameter count by up to 90 percent without harming accuracy.
 \autocite{LeCun, OptimalBrainSurgeon, HanEtAl15, PruningFiltersForEfficientConvets}
 Pruning can be done in a single step, where the network is trained once and then pruned.
 It can also be done iteratively. 
@@ -22,8 +20,7 @@ The network is repeatedly trained and pruned over several iterations.
 It has been shown that iterative pruning can further reduce network size significantly whilst maintaining performance \autocite{HanEtAl15}.
 The resulting sparse subnetwork can represent an equally accurate function with significantly fewer parameters. 
 The question arises: If it can represent the function, why not train the sparse network directly?
-An examination into training pruned networks from the beginning was performed by \textcite{PruningFiltersForEfficientConvets} and \textcite{HanEtAl15}.
-The subnetwork is randomly reinitialized and trained in isolation.
+\textcite{PruningFiltersForEfficientConvets} and \textcite{HanEtAl15} attempted to train the pruned networks from scratch after they have been randomly reinitialized.
 With this approach, the subnetworks did not reach comparable accuracy to the unpruned networks.
 These findings seemingly demonstrate the difficulty of training sparse neural networks.
 An investigation into this apparent shortcoming of sparse networks was conducted by \textcite{LTH}.
@@ -37,110 +34,65 @@ The basis of the field of lottery tickets is the work of~\cite{LTH}.
 They show that dense neural networks consistently contain subnetworks that can be trained in isolation to comparable accuracy.
 They find these well-performing subnetworks, which they call \textit{winning tickets}, in a variety of scenarios.
 They are found with fully connected neural networks on the MNIST dataset~\autocite{mnist} and with convolutional neural networks~\autocite{cnn} on the CIFAR-10 dataset~\autocite{cifar}.
-Further, they are found with different optimizers (ADAM~\autocite{ADAM}, Stochastic Gradient Descent, with and without momentum) and different regularization techniques.
+Further, they are found with different optimizers and different regularization techniques.
 Based on these findings, the authors propose:
 
 \begin{quote}
 \textbf{The Lottery Ticket Hypothesis}: \textit{A randomly-initialized, dense neural network contains a subnetwork that is initialized such that—when trained in isolation—it can match the test accuracy of the original network after training for at most the same number of iterations.}~\cite{LTH}
 \end{quote}
 
-To identify the winning tickets, a network is trained to convergence and pruned to a desired sparsity. 
-The bottom $p$\% of weights in each layer with the lowest magnitudes are removed. 
-The remaining weights of the network are reset to the respective values of the weights at initialization.
-The result is a sparse subnetwork, a \textit{winning ticket}.
 
-More formally, consider a neural network $f(x, \theta)$ with randomly initialized weights $\theta$ and the network input $x$.
-This network is trained to convergence, producing the updated weights $\hat \theta$. The test accuracy of the resulting network is denoted $\hat a$.
-Then a pruning function is used to create a mask $m \in {\{0,1\}}^{|\theta|}$, where $|\theta|$ denotes the number of parameters in $\theta$.
-This mask is multiplied element-wise with the initial weights, producing the subnetwork weights denoted $\theta_{wt} = m \odot \theta$, where $\odot$ denotes the element-wise product.
-A neural network is initialized with the weights $\theta_{wt}$ and trained to convergence, resulting in the trained weights $\hat \theta_{wt}$. 
-The test accuracy of the resulting trained subnetwork is denoted $\hat a_{wt}$.
+The authors primarily use a method called \textit{Iterative Magnitude Pruning} (IMP).
+The state of the network at initialization is stored.
+Then, the network is trained to convergence. 
+After training, a fixed percentage of weights with the lowest magnitudes is pruned (set to zero).
+Following the pruning step, the unpruned parameters of the network are reset to the values it had at initialization.
+This process of training, pruning and resetting is repeated iteratively until the final desired sparsity is reached.
+The result is a sparse subnetwork and, if it can be trained to comparable performance,  a \textit{winning ticket}.
 
-The subnetwork is considered a winning ticket, if:
-\begin{enumerate}
-  \item  $\hat a_{wt} \geq \hat a$:  the accuracy of the trained subnetwork is larger than or equal to the accuracy of the trained dense network.
-  \item $|\theta_{wt}| \ll |\theta|$: the subnetwork has significantly fewer parameters than the dense network.
-\end{enumerate}
+The experiments of \autocite{LTH} show that iterative magnitude pruning as described above suffices for finding winning tickets in small architectures.
+Concretely, for LeNet \autocite{cnn} and convolutional neural networks that are smaller variants of VGG \autocite{SimonyanZisserman}.
 
-The authors use an iterative approach to identify winning tickets, called Iterative Magnitude Pruning (\textit{IMP}).
-They show that the iterative approach results in better-performing winning tickets compared to so-called \textit{One-Shot} pruning, where the network is trained to convergence once and then pruned once.
-
-Concretely, consider a function  $\textit{P} : \mathbb{R}^{|\theta|} \to {\{0,1\}}^{|\theta|}$.
-The output of the function is a pruning mask for a given set of parameters.
-It masks out the $p^{\frac{1}{N}}$\% of unmasked weights in each layer with the lowest magnitudes, where $p$ is the desired final pruning percentage and $N$ the number of iterations of \textit{IMP}.
-
-Now, a neural network with initial weights $\theta^{(0)}$ is trained to convergence, resulting in the trained parameters $\hat \theta^{(0)}$.
-Then, the function $\textit{P}$ is applied to the trained parameters, resulting in the mask $m^{(0)} = \textit{P}(\hat \theta^{(0)})$.
-The mask is multiplied element-wise with the initial weights, producing the weights for the next iteration $\theta^{(1)} = m^{(0)} \odot \theta^{(0)}$.
-These weights are used to initialize the network, which is then trained to convergence resulting in $\hat \theta^{(1)}$ and the whole process repeats.
-
-This procedure is repeated $N$-times, resulting in the update rules:
-
-\[
-m^{(i)} = \textit{P}(\hat \theta^{(i)}); \quad i \in (0,N-1)
-\]
-
-\[
-\theta^{(i+1)} = \theta^{(0)} \odot \prod_{j=0}^{i}m^{(j)}; \quad i \in (0,N-1)
-\] 
-
-where $\prod$ denotes the element-wise product and $\hat \theta^{(i)}$ denotes the updated weights after training a network with weights $\theta^{(i)}$.
-
-Because all masks are multiplied with the initial weights, the resulting winning ticket subnetwork can be expressed as:
-
-\[
-\theta_{wt} = \theta^{(N)} = \theta^{(0)} \odot \prod_{j=0}^{N-1}m^{(j)}
-\]
-In the final winning wicket weights, $p$\% of the weights are masked out.
-
-The experiments of \autocite{LTH} show that \textit{IMP} as described above suffices for finding winning tickets in small architectures.
-Concretely, for LeNet\footnote{\cite{cnn}} and CNNs that are smaller variants of VGG\footnote{\cite{SimonyanZisserman}}.
-Experiments were also conducted on larger, more commonly used networks for CIFAR-10. For \textit{IMP} to obtain winning tickets in VGG-19\footnote{\cite{Liu19}} and ResNet-18\footnote{\cite{ResidualConnect}}, the following adaptations were required. 
+Experiments were also conducted on larger, more commonly used networks for CIFAR-10. For \textit{IMP} to obtain winning tickets in VGG-19 \autocite{Liu19} and ResNet-18 \autocite{ResidualConnect}, the following adaptations were required. 
 \begin{enumerate}
   \item  Pruning is no longer done layer-wise but globally, as it results in smaller winning tickets. 
   \item Learning rate warm-up is employed. The learning rate increases linearly from 0 to the specified final learning rate in the first $k$ iterations. For VGG-19 and ResNet-18, $k$ is 10000 and 20000 respectively.
 \end{enumerate}
 
-In follow-up work by \textcite{LinearModeConnectivity}, the authors address the problems that arise at scale. Experiments done by \textcite{Liu19, Gale19} show that in more challenging settings, subnetworks obtained with \textit{IMP} do not perform better than randomly sampled subnetworks. To understand this phenomenon, \textcite{LinearModeConnectivity} propose a tool for understanding the failings of \textit{IMP} in uncovering winning tickets. For that, the authors introduce \textit{Instability analysis}.
+In follow-up work by \textcite{LinearModeConnectivity}, the authors address the problems that arise at scale.
+Experiments done by \textcite{Liu19, Gale19} show that in more challenging settings, subnetworks obtained with \textit{IMP} do not perform better than randomly sampled subnetworks.
+To understand this phenomenon, \textcite{LinearModeConnectivity} propose a tool for understanding the failings of \textit{IMP} in uncovering winning tickets.
+For that, the authors introduce \textit{Instability Analysis}.
 
 Instability refers to the network being susceptible to noise of Stochastic Gradient Descent (SGD).
 SGD introduces noise by stochastically selecting the order of mini-batches for the network training.
 To determine if a network is stable to this noise, first, the network has to be duplicated.
 The two identical networks are then trained with different SGD noise, realized with different random seeds.
 After training, there are two sets of weights, $\theta_A$ and $\theta_B$.
-Between both sets of weights, a linear path is defined. Along this path, the weights are linearly interpolated with $\theta_\alpha = \alpha \theta_A + (1 - \alpha \theta_B)$, where $\alpha \in (0,1)$. 
+Between both sets of weights, a linear path is defined.
+Along this path, the weights are linearly interpolated with $\theta_\alpha = \alpha \theta_A + (1 - \alpha \theta_B)$, where $\alpha \in (0,1)$. 
 For each of the interpolated sets of weights $\theta_\alpha$, the performance, or error, is measured.
 The highest increase in the error of the interpolated weight sets $\theta_\alpha$ relative to the mean of the error of the original weights $\theta_A$ and $\theta_B$ is called the \textit{error barrier height}. 
 If the error barrier height is smaller than a specified threshold, the network is considered linear mode connected and, hence, \textit{stable}.
-The authors use a threshold of 2\% as the threshold in their experiments, intended to tolerate noise. The implementation of the linear interpolation between the two weight sets is realized with 30 evenly spaced values of $\alpha$.
+The authors use a threshold of 2 percent as the threshold in their experiments, intended to tolerate noise. 
+The implementation of the linear interpolation between the two weight sets is realized with 30 evenly spaced values of $\alpha$.
 
-\textcite{LinearModeConnectivity} conduct Instability Analysis on unpruned dense networks with different architectures and datasets at initialization as well as during training. For this experiment, they examined LeNet\footnote{\cite{cnn}} trained on MNIST, ResNet-20\footcite{ResidualConnect} and VGG-16\footcite{SimonyanZisserman} trained on CIFAR-10 as well as ResNet-50\footcite{ResidualConnect} and Inception-v3\footcite{inceptionv3} on ImageNet\footcite{imagenet}. They find that only LeNet is stable at initialization, however all other networks become stable early in training.
-Furthermore and more interestingly, the authors conduct Instability Analysis on subnetworks uncovered by \textit{IMP}.
-In Addition, for this purpose the \textit{IMP}-algorithm is generalized to rewind the weights to any iteration $k$ in training.
+\textcite{LinearModeConnectivity} conduct instability analysis on unpruned dense networks with different architectures and datasets at initialization as well as during training.
+For this experiment, they examined LeNet trained on MNIST, ResNet-20 and VGG-16 trained on CIFAR-10 as well as ResNet-50 and Inception-v3 \autocite{inceptionv3} on ImageNet \autocite{imagenet}. 
+They find that only LeNet is stable at initialization, however all other networks become stable early in training.
+Furthermore and more interestingly, the authors conduct instability analysis on subnetworks uncovered by \textit{IMP}.
+In Addition, for this purpose the \textit{IMP}-algorithm is generalized to rewind the weights to any step $k$ in training.
 
-Concretely, consider a neural network with initial weights $\theta^{(0)}$. The network is trained for $k$-iterations resulting in the weights $\theta_k^{(0)}$. Then it is further trained to convergence, resulting in the trained parameters $\hat \theta^{(0)}$.
-The function $P$ that generates the mask is again applied to the trained weights, resulting in the mask $m^{(0)} = \textit{P}(\hat \theta^{(0)})$.
+As described before in this paragraph, the network state at initialization is saved in order to reset the network after pruning, which represents $k=0$.
 
-This procedure is repeated $N$-times, resulting in the update rules:
+This notion is generalized to any step $k$, where the state of the network after $k$ update steps is stored for resetting.
+Networks derived with \textit{IMP} and $k > 0$ are technically not winning tickets, since the condition for them is that the parameters are from initialization, meaning $k=0$.
+Networks with parameters from later steps $k > 0$ are called \textit{matching} \autocite{LinearModeConnectivity}
 
-\[
-m^{(i)} = \textit{P}(\hat \theta^{(i)}); \quad i \in (0,N-1)
-\]
-
-\[\theta^{(i+1)} = \theta_k^{(0)} \odot \prod_{j=0}^{i}m^{(j)}; \quad i \in (0,N-1)\] where $\prod$ denotes the element-wise product and $\hat \theta^{(i)}$ denotes the updated weights after training a network with weights $\theta^{(i)}$.
-
-The resulting subnetwork can be written as:
-\[
-\theta_{match} = \theta_{k}^{(0)}\prod_{j=1}^{N-1}m_j
-\]
-, where $N$ refers to the number of iterations of \textit{IMP}.
-
-The condition for winning tickets is, that the weights are from initialization, meaning $k=0$. 
-Networks with weights from iteration $k > 0$ are called \textit{matching} \autocite{LinearModeConnectivity}, hence, $\theta_{match}$.
-The Instability Analysis at initialization shows that the subnetworks are only stable if they match.
-Subsequently, the authors apply Instability Analysis to multiple subnetworks created from the same dense network over multiple values for the reset iteration $k$.
-These experiments show that the subnetworks that are not stable when $k=0$ become stable when they are rewound to a later iteration $k$.
-The iteration $k$ when they get stable closely coincides with the iteration where the subnetworks become matching, which suggests a tight link between the two concepts.
+The instability analysis at initialization shows that the subnetworks are only stable if they match.
+Subsequently, the authors apply instability analysis to multiple subnetworks created from the same dense network over multiple values for the reset step $k$.
+These experiments show that the subnetworks that are not stable when $k=0$ become stable when they are rewound to a later step $k$.
+The step $k$ when they get stable closely coincides with the step where the subnetworks become matching, which suggests a tight link between the two concepts.
 The experiments were only done with dense networks and extremely sparse networks, namely between 1.5\% and 16.8\% for the smaller networks, 30\% for ResNet-50, and InceptionNet \autocite{LinearModeConnectivity}.
 
 \subsection{Pruning Strategies}
