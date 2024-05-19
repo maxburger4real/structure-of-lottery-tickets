@@ -372,58 +372,48 @@ There is no overlap between the subnetworks.
 Next, the subnetworks are matched to the tasks, which are defined by the dataset.
 For each subnetwork and each task in the dataset, the inputs and outputs of the network are compared to the inputs and labels of the task.
 
-Concretely, each task is associated with a set of inputs $T^{(i)}_{in}$ and a set of outputs $T^{(i)}_{out}$.
-Further, each subnetwork contains a set of input nodes $N^{(j)}_{in}$ and a set output nodes $N^{(j)}_{out}$.
+Let $T$ be a task that has associated inputs and outputs.
+The input features of the task are in the set $T_{in}$ and the output features in $T_{out}$.
+Further, the input and output neurons of a network are referred to as $N_{in}$ and $N_{out}$ respectively.
 
-The intersection of the task inputs and the input nodes of the network denoted input coverage set $C^{(i,j)}_{in}$ and output coverage set $C^{(i,j)}_{out}$ for the outputs respectively.
+For each network and each task, the amount to which the network covers the inputs or outputs of the task can be calculated.
+Regarding the inputs, this quantity $C_{in}$ is referred to as input-coverage. The output-coverage is denoted as $C_{out}$.
+
+The number of features that are covered by the network can be as the cardinality of the intersection of the network features and the task features $ |N \cap T|$, where  $|A|$ denotes the cardinality of set $A$.
+To attain the coverage, the number of features covered by the network is divided by the number of features the task contains.
+Then, the coverage is calculated for inputs and outputs as 
 
 \[
-C^{(i,j)}_{out} = N^{(j)}_{out} \cap T^{(i)}_{out}
+c_{in} = \frac{|N_{in}  \cap T_{in} |}{|T_{in} |}
 \]
 \[
-c^{(i,j)}_{out} = \frac{| C^{(i,j)}_{out} |}{|T^{(i)}_{out}|}
+c_{out} = \frac{|N_{out}  \cap T_{out} |}{|T_{out}|}
 \]
+
+In a scenario where all inputs and all outputs are important, the combined input- and output-coverage might be considered.
+The coverage should keep the characteristics of the input- and output-coverage, namely, that it is one when all features are covered, zero when no features are covered, and between one and zero if some but not all features are covered.
+This can be achieved by multiplying the coverages.
+Therefore, the overall coverage $c_{inout}$ is defined as:
 
 \[
-C^{(i,j)}_{in}  = N^{(j)}_{in}  \cap T^{(i)}_{in}
-\]
-\[
-c^{(i,j)}_{in} = \frac{| C^{(i,j)}_{in} |}{|T^{(i)}_{in}|}
+    c_{inout} = c_{in} * c_{out}
 \]
 
-For evaluating the coverage the the subnetworks as a whole, the number of paths from inputs to outputs is considered.
-The total number of paths for a task is given by the product of the cardinality of the input set and the cardinality of the output set.
-Similarly, the number of paths available in the subnetwork is given by the cardinality of the input coverage set and the cardinality of the output coverage set.
-The total coverage $c^{(i,j)}$ is defined as the ratio between the products.
-\[
-c^{(ij)} = \frac{
-    | C^{(i,j)}_{in}| * | C^{(i,j)}_{out} |
-    }{
-    |T^{(i)}_{in}| * |T^{(i)}_{out}|
-}
-\]
-The total coverage is 1 when the task is completely covered by the subnetwork.
-It is zero if either no input or no output of the task is covered by the subnetwork.
-It is between zero and one if at least one input and at least one output of the task is covered, but at least one input or output is not covered.
-The total coverage is a useful indicator if all inputs and outputs are important, as they are counted equally.
-In the case of the Moons-Circles Dataset, the total coverage is used.
-For datasets where not all inputs or outputs are necessary or even desired to be used, the input coverage, output coverage or a combination thereof might be a more useful metric.
+A network is considered \textbf{separated} if and only if each of its subnetworks has coverage of exactly one and there are as many subnetworks as there are tasks.
+If one of the subnetworks has coverage of less than one, the whole network is considered \textbf{degraded}, even though some other networks might cover the tasks perfectly.
 
-!!! Maybe move this to dataset.
-!!! explain task description in dataset
-!!! revise the math part. C is overloaded and number of tasks / subnetworks needs an identified. MAybe J, K and j, k for the running vars.
-
-For instance, given the dataset in ref2, the dataset contains two tasks: the `Moons'-task and the `Circles'-task. 
+Concretely, consider the dataset in paragraph~\ref{sec:independece_dataset}.
+The overall coverage $c_{inout}$ is used since all inputs and outputs are essential for the network to function well.
+It contains two tasks: the `Moons'-task and the `Circles'-task. 
 The moons-task $T^{(1)}$ is associated with the inputs $T^{(1)}_{in} = \{x_1,x_2\}$ and the output $T^{(1)}_{out} = \{y_1\}$.
 The circles-task $T^{(2)}$ is associated with the inputs $T^{(2)}_{in} = \{x_3,x_4\}$ and the output $T^{(1)}_{out} = \{y_4\}$.
 
-The input, output, or total coverage can be collected in a matrix $C$ of size $\tau \times j$, where $\tau$ is the number of tasks and $j$ the number of subnetworks. 
-$c_{i,j}$ represents the value at the $i$-th row and the $j$-th column and $0 \leq c_{i,j} \leq 1$ holds.
-Further, the sum of the matrix is upper bound by the number of tasks.
+The coverages can be collected in a matrix $C$ of size $J \times K$, where $J$ is the number of tasks and $K$ is the number of subnetworks. 
+$c_{j,k}$ represents the value at the $i$-th row and the $j$-th column and $0 \leq c_{j,k} \leq 1$ holds.
+The sum of the matrix is upper bound by the number of tasks.
 \[
-\sum^{i} \sum^{j} c_{i,j} \leq \tau
+\sum^{i} \sum^{j} c_{j,k} \leq J
 \]
-
 
 Given an unpruned network and a dataset with two tasks the matrix would look like the following 
 \[
@@ -445,15 +435,11 @@ C = \begin{pmatrix}
 \]
 After further pruning the network, all the connections to one of the input nodes might be pruned.
 Then, one of the subnetworks would not be completely covered anymore.
-Assuming there is one output node and two input nodes for task 1 and the subnetwork 2 covers all nodes except one input.
-The resulting coverage would be 
+Assuming that the input feature $x_2$ of the `Moons'-task $T^{(1)}$ is completely disconnected, the input-coverage would be evaluated as 
 \[
-c^{(1,2)} =  \frac{
-    | C^{(1,2)}_{in}| * | C^{(1,2)}_{out} |
-    }{
-    |T^{(1)}_{in}| * |T^{(1)}_{out}|
-} = \frac{1}{2}
+    c_{in} = \frac{|N_{in}  \cap T_{in} |}{|T_{in} |} = \frac{|\{x_1\} \cap \{x_1, x_2\}|}{|\{x_1, x_2\}|} = \frac{1}{2}
 \]
+
 and the resulting matrix $C$ would look like the following
 
 \[
@@ -463,14 +449,13 @@ C = \begin{pmatrix}
 \]
 
 If the sum of $C$ is equal to the number of tasks and the number of subnetworks is equal to the number of tasks, then the network is perfectly split.
-
 If the sum of $C$ is equal to the number of tasks, but there are fewer subnetworks than tasks, the network still needs to split.
 The number of splits that are required can be the difference between the number of tasks and the number of subnetworks.
 
 If the sum of $C$ is less than the number of tasks, the network already has lost one input or output.
-This scenario will be referred to as a `degraded' network.
-Once a network is degraded, a perfect separation cannot be reached.
-In the case of the Moons-Circles dataset, the training is stopped as soon as the network is degraded to save computational resources.
+This scenario is referred to as a `degraded' network.
+Once a network is degraded, a perfect separation cannot be reached anymore.
+Generally throughout this thesis, the training is stopped as soon as the network is degraded to save computational resources.
 
 \section{Model Extension}
 Model extension is a technique used to create models that are comparable based on prunable parameters. 

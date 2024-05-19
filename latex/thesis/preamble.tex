@@ -17,7 +17,7 @@
 \usepackage[T1]{fontenc}    % Ensure proper font encoding
 \renewcommand{\familydefault}{\sfdefault} % Set the default font to sans-serif (Helvetica)
 
-%\usepackage{titlesec}
+\usepackage{titlesec}
 %\titleformat*{\section}{\sffamily\LARGE}
 %\titleformat*{\subsection}{\sffamily\Large}
 %\titleformat*{\subsubsection}{\sffamily\middle}
@@ -80,7 +80,30 @@ sorting=ynt,
 % skip some space after a paragraph. also no indent, its ugly.
 \usepackage[skip=10pt plus1pt, indent=0pt]{parskip}
 
-
 \usepackage{csvsimple}
 \usepackage{booktabs}
 \usepackage{floatrow}
+
+
+\usepackage{tocloft}
+%%gmedina solution
+\newcommand{\listequationsname}{List of Formulas}
+\newlistof{myequations}{equ}{\listequationsname}
+\newcommand{\myequations}[1]{
+\addcontentsline{equ}{myequations}{\protect\numberline{\theequation}#1}\par}
+\setlength{\cftmyequationsnumwidth}{2.5em}
+
+
+\titleformat{\chapter}[display]
+  {\normalfont\sffamily\huge\bfseries}
+  {\chaptertitlename\ \thechapter}{0pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\sffamily\Large\bfseries}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\sffamily\Large}
+  {\thesubsection}{1em}{}
+\titleformat{\subsubsection}
+  {\normalfont\sffamily\large}
+  {\thesubsubsection}{1em}{}
+
