@@ -66,7 +66,7 @@ def make_dataset(name, n_samples, noise, seed, factor, scaler):
         case Datasets.MINI_MNIST:
             return __make_mnist(
                 scaler, 
-                transforms=torchvision.transforms.Resize((12, 12)), 
+                transforms=torchvision.transforms.Resize((12, 12), antialias=True), 
                 subset=[0,1,2]
             )
         case Datasets.FASHION:
@@ -74,13 +74,13 @@ def make_dataset(name, n_samples, noise, seed, factor, scaler):
         case Datasets.MINI_FASHION:
             return __make_fashion_mnist(
                 scaler, 
-                transforms=torchvision.transforms.Resize((12, 12)), 
+                transforms=torchvision.transforms.Resize((12, 12), antialias=True), 
                 subset=(1, 6, 7)
             )
         case Datasets.TINY_FASHION_AND_MNIST:
             return __make_minst_and_fashion_mnist(
                 scaler, 
-                transforms=torchvision.transforms.Resize((12, 12)), 
+                transforms=torchvision.transforms.Resize((12, 12), antialias=True), 
                 mnist_subset=(0,1),
                 fashion_subset=(1,6),
                 train_size=1000, # per_class
