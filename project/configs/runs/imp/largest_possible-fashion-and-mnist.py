@@ -4,13 +4,12 @@ from training.datasets import Datasets, Scalers
 from training.models import Init
 from training.routines import Routines
 
-# Ranking
-# this worked amazingly well 
-pruning_levels, shape, batch_size, lr = 20, [392, 784, 784, 10], 64 ,0.001 # split at 160, acc .99
+pruning_levels, shape, batch_size, lr = 18, [1568, 784, 784, 20], 128 ,0.001
 
 run_config = Config(
+    model_seed=1, # 0 nice
     pipeline=Routines.imp,
-    dataset=Datasets.HALF_FASHION_AND_MNIST,
+    dataset=Datasets.LARGEST_FASHION_AND_MNIST,
     scaler=Scalers.StandardUnitVariance,
     model_class=MultiTaskMultiClassMLP,
     model_shape=shape,
@@ -38,7 +37,7 @@ run_config = Config(
     pruning_scope="global",
     prune_biases=False,
     prune_weights=True,
-    pruning_target=100,
+    pruning_target=600,
     pruning_levels=pruning_levels,
     reinit=True,
 )

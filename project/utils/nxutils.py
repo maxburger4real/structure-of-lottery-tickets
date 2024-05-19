@@ -273,7 +273,7 @@ def build_nx(model: torch.nn.Module) -> nx.DiGraph:
         # connect the nodes of current and previous layer
         for previous_layer, previous_node_idx in previous_nodes:
             for current_layer, current_node_idx in current_nodes:
-                weight = module.weight[current_node_idx, previous_node_idx].item()
+                weight = module.weight[current_node_idx, previous_node_idx].detach().cpu().item()
                 G.add_edge(
                     u_of_edge=(previous_layer, previous_node_idx),
                     v_of_edge=(current_layer, current_node_idx),
