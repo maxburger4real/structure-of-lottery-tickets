@@ -1,24 +1,23 @@
-\section{Literature Review}
+\chapter{Literature Review}
 
-overparameterization : [3] Yann Dauphin and Yoshua Bengio. Big neural networks waste capacity. CoRR, abs/1301.3583, 2013.
+overparameterization: [3] Yann Dauphin and Yoshua Bengio. Big neural networks waste capacity. CoRR, abs/1301.3583, 2013.
 
 Misha Denil, Babak Shakibi, Laurent Dinh, Nando de Freitas, et al. Predicting parameters in deep learning. In Advances in Neural Information Processing Systems, pages 2148-2156, 2013.
 
 Great intro to compression in Zhou et al Supermasks.
 
-TODO: introduction to the literature review  
+TODO introduction to the literature review  
 at the core this thesis is about understanding the structure of lottery tickets. So what is or was important about that?
 \begin{itemize}
-    \item 
     \item lottery ticket Hypothesis, its relevance 
     \item derivative works of the lth, attempts to understand it
-    \item structure of lottery tickets ? is there really nothing? connectedness, degree (original LTH), Han et al says there will be dead neurons, All allive pruning says they kill them
+    \item structure of lottery tickets? is there really nothing? connectedness, degree (original LTH), Han et al says there will be dead neurons, All allive pruning says they kill them
     \item understanding networks, mechanistic interpretability, independence as a nice thing to understand stuff. Bimt showing independece is in the network
 \end{itemize}
 
 Is the structure of the lottery ticket useful? interpretable? or is it merely super overfitted random shit that doesnt help you anyway.
 
-\subsection{Deep Learning}
+\section{Deep Learning}
 The field of deep learning is largely responsible for the advances of modern machine learning applications.
 With increasing amounts of available data and computational resources, the size of neural networks has increased drastically, as well as their performance.
 However, this increase in size poses challenges in constrained environements.
@@ -26,7 +25,7 @@ Larger and deeper networks tend to require more memory and compute, which can be
 Also, larger models typically require more time and more energy for training as well as for inference.
 Neural Network Pruning \autocite{LeCun, OptimalBrainSurgeon, HanEtAl15, PruningFiltersForEfficientConvets} has been proposed as a tool to reduce network size for inference, while maintaining accuracy.
 
-\subsection{Neural Network Pruning}
+\section{Neural Network Pruning}
 Neural Network Pruning is a category of methods that eliminate components of the network whilst aiming to minimally impact its performance.
 Pruning algorithms can reduce parameter count by up to 90\% without harming accuracy.
 \autocite{LeCun, OptimalBrainSurgeon, HanEtAl15, PruningFiltersForEfficientConvets}
@@ -46,8 +45,8 @@ The condition for this to work, is that they are not randomly reinitialized.
 Instead, the respective values at initialization of the unpruned network are assigned to the remaining weights of the pruned network. 
 Based on this finding, the authors formulate the \textit{Lottery Ticket Hypothesis}.
 
-\subsection{The Lottery Ticket Hypothesis}
-The basis of the field of Lottery Tickets is the work of \cite{DBLP:conf/iclr/FrankleC19}. 
+\section{The Lottery Ticket Hypothesis}
+The basis of the field of Lottery Tickets is the work of~\cite{DBLP:conf/iclr/FrankleC19}. 
 They show that dense neural networks consistently contain subnetworks that can be trained in isolation to comparable accuracy.
 They find these well-performing subnetworks, which they call \textit{winning tickets}, in a variety of scenarios.
 They are found with fully connected neural networks (FCNN) on MNIST\footnote{\cite{mnist}} and with convolutional neural networks\footnote{\cite{cnn}} (CNN)  on CIFAR-10\footnote{\cite{cifar}}.
@@ -147,7 +146,8 @@ $$\theta^{(i+1)} = \theta_k^{(0)} \odot \prod_{j=0}^{i}m^{(j)}; \quad i \in (0,N
 The resulting subnetwork can be written as:
 $$
 \theta_{match} = \theta_{k}^{(0)}\prod_{j=1}^{N-1}m_j
-$$, where $N$ refers to the number of iterations of IMP.
+$$
+, where $N$ refers to the number of iterations of IMP.
 
 The condition for winning tickets is, that the weights are from initialization, meaning $k=0$. 
 Networks with weights from iteration $k > 0$ are called \textit{matching} \autocite{LinearModeConnectivity}, hence, $\theta_{match}$.
@@ -160,7 +160,7 @@ The experiments were only done with dense networks and extremely sparse networks
 These results suggest that, at least with the current tools available, no actual winning tickets could be found for these deeper networks thus far.
 However, progress was made from a different angle.
 
-\subsubsection{Pruning Strategies for Lottery Tickets}
+\subsection{Pruning Strategies for Lottery Tickets}
 The original Lottery Ticket experiments use a simple pruning strategy of masking a certrain percentage of weights with the lowest magnitudes \autocite{DBLP:conf/iclr/FrankleC19}, as in \autocite{HanEtAl15}. This simple heuristic has yielded impressive results, yet there are many other possible heuristics one could image for such a task.
 
 \textcite{DBLP:conf/nips/ZhouLLY19} perform an ablation study with regards to pruning strategies. Mask criteria are defined as functions that determine a score for each parameter. This score is used to rank the parameters and the bottom $p\%$ are masked.
@@ -169,19 +169,24 @@ The criteria use
 
 A variety of criteria is considered, including: 
 \begin{itemize}
-  \item magnitude at initialization: mask the smallest (or largest) weights by their magnitude at initialization
-  \item magnitude after training : mask the smallest (or largest) weights by their magnitude after training
+  \item magnitude at initialization \\
+  mask the smallest (or largest) weights by their magnitude at initialization
+  \item magnitude after training \\
+  mask the smallest (or largest) weights by their magnitude after training
   \item magnitude at initialization and after training: mask the weights that had the smallest (or largest) magnitudes at initialization and after training
-  \item magnitude increase : mask the weights that have the highest decrease or smallest increase in magnitude after training
-  \item movement : mask the weights that, after training, are closest to value at initialization
-  \item random : mask randomly as a baseline
+  \item magnitude increase \\
+  mask the weights that have the highest decrease or smallest increase in magnitude after training
+  \item movement \\
+  mask the weights that, after training, are closest to value at initialization
+  \item random \\
+  mask randomly as a baseline
 \end{itemize}
 
 The authors followed the experimental setup of \textcite{DBLP:conf/iclr/FrankleC19} and evaluate with fully connected networks as well as convolutional neural networks. The simple magnitude pruning approach is among the best performing in the experiments. However, also pruning by movement produced well performing lottery tickets.
 
 The results suggest that pruning the smallest weights of a network is a competetive strategy. Although it may not be the best strategy, as other alternatives produce competitive results, it definetly is relevant algorithm to use and study. 
 
-\subsubsection{Theoretical Understanding of Iterative Magnitude Pruning}
+\subsection{Theoretical Understanding of Iterative Magnitude Pruning}
 \textcite{WhyLotteryTicketsWin} state a hypothesis as to why lottery tickets work. They hypothesize that lottery tickets effectively relearn the same solution as the one achieved by pruning alone, which they term 'pruned solution'.
 The authors show that the lottery tickets are significantly closer to the subnetwork that was pruned solution than randomly reinitialized sparse models were after training. 
 The experiments are conducted on the original LeNet5 architecture trained on MNIST, as well as ResNet-50 Architecture trained on ImageNet. Further they show that the trained lottery tickets reside in the same basin of the loss landscape as the pruned solution, by linearly interpolating between the two networks, in the same way as in \autocite{LinearModeConnectivity}.
@@ -192,15 +197,15 @@ This loss increases when the model is close to the same solution as in the previ
 This forces the network to find a new solution every iteration.
 With the repellent loss, no lottery tickets could be found, which further indicates that the solution found with IMP indeed relearns the pruned solution.
 
-TODO: what are the theories for why it works? learn to the same basin as sgd.
+TODO what are the theories for why it works? learn to the same basin as sgd.
 
-\subsection{Understanding Lottery Tickets}
-\subsubsection{Numerical Characteristics}
+\section{Understanding Lottery Tickets}
+\subsection{Numerical Characteristics}
 \autocite{maene_towards_2021} note that the average magnitude of the unpruned weights increases with each pruning round. The smallest magnitude weights in the network are pruned, and the remaining weights train to similar values, therby increasing the average magnitude. The authors note, that this follows from the regurgitating tickets interpretation, described in chapter (?).
 In the original lottery tickets paper by \textcite{DBLP:conf/iclr/FrankleC19}, the authors analyse the distribution of weight magnitudes after training. Before the first pruning iteration, the distribution of weight magnitudes follows a gaussian distribution. After several pruning iterations, the distributions tends towards a bimodal distribution, where the values close to zero are carved out.
 The authors attempted to reinitialize the sparse subnetworks randomly according to the distribution of the the lottery ticket weight magnitudes, however the performance was only slightly better that reinitialization with the original weight distribution.
 
-\subsubsection{Lottery Ticket as a Directed Acyclic Graph}
+\subsection{Lottery Ticket as a Directed Acyclic Graph}
 It can be interesting to view the lottery ticket as a directed Acyclic Graph (DAG).
 Since it is sparsely connected, the remaining connections could provide insight into the funcionality of the network.
 \textcite{DBLP:conf/iclr/FrankleC19} analyse the connectivity of each node in the Lottery Ticket DAG.
@@ -227,11 +232,11 @@ This improvement is attributed to the increased capacity of the subnetwork, sinc
 
 Only a few researchers looked at lottery tickets derived with Iterative Magnitude Pruning through the lens of Directed Acyclic Graphs. 
 The insights relate the function of the network to its structure.
-'Dead neurons' \autocite{HanEtAl15, AllAlivePruning} are neurons are part of the graph structure that can be removed without harming the function. 
+`Dead neurons' \autocite{HanEtAl15, AllAlivePruning} are neurons are part of the graph structure that can be removed without harming the function. 
 \textcite{DBLP:conf/iclr/FrankleC19} discover that inputs that do not transmit information are pruned at higher rates, leaving them with less outgoing connections.
 Overall the structure of Lottery Tickets and how it relates to its function remains elusive.
 
-\subsubsection{BIMT - Brain inspired modular training}
+\subsection{BIMT - Brain inspired modular training}
 A sparse network where the structure of the network relates to the underlying algorithm or problem structure can be beneficial for interpretability.
 \textcite{BIMT} propose a training method called Brain-Inspired Modular Training (BIMT) that aims to produce sparse networks that can more easily be visually interpreted.
 The authors aim to encourage modularity in the network through embedding the neurons in a euclidean space.
@@ -242,10 +247,10 @@ On symbolic datasets, BIMT succeeds in discovering independence, feature sharing
 The authors also use BIMT to train a feed forward neural network on simple classification tasks as well as the MNIST dataset, where they used three dimensional euclidean space to embed the network.
 With larger models and especially in three dimensions, the shortcomings of the method become apparent as visual inspection does not help for interpretation any longer.
 
-\subsection{Alternative Lottery Strategies}
+\section{Alternative Lottery Strategies}
 several algorithms have been proposed to find lottery tickets. here is an inexaustive collection of some of them 
 
-\subsubsection{Supermasks}
+\subsection{Supermasks}
 In follow-up work by \textcite{DBLP:conf/nips/ZhouLLY19}, the authors demonstrate that it is possible to find well-performing subnetworks at initialization by only pruning.
 First, each weight in the network is assigned a score, which is 1 for every weight at the beginning. 
 The scores are denoted $s$, where $|s| = |\theta|$.
@@ -257,7 +262,7 @@ The scores are the learned parameters and are updated via backpropagation.
 Experiments were conducted with a FCNN on MNIST and a CNN on CIFAR-10, reaching 95.3\% and 65.4\% test accuracy, respectively.
 The authors call these masks \textit{supermasks}.
 
-\subsubsection{Edge Popup}
+\subsection{Edge Popup}
 Based on those results, \textcite{DBLP:conf/cvpr/RamanujanWKFR20} scale up the experiments and modify the algorithm for producing the mask slightly.
 They remove the stochastic sampling of the Bernoulli sampler, as they claim that the stochasticity limits the performance. 
 Instead of sampling the mask values, a real-valued score is learned for each weight. 
@@ -276,7 +281,7 @@ Despite that, the experiments show that there exist well-performing subnetworks 
 In addition, a variety of other methods \autocite{GraSP,SNIP,SynFlow} were introduced to prune networks at initialization. However, empirical investigations by \textcite{PruningAtInitMissingTheMark, SanityCheckingPruningMethods} show that none of these approaches perform better than carefully selecting layer-wise sparsities.
 Based on this finding, \autocite{SanityCheckingPruningMethods} propose a method that select layer-wise sparsities called Smart-Ratio (SR).
 
-\subsubsection{Rare Gems}
+\subsection{Rare Gems}
 Drawing Inspiration from the EP-algorithm, \textcite{RareGems} propose an algorithm called Gem-Miner (GM) that overcomes the issues of the apparent lack of trainability of the obtained subnetworks.
 The GM-algorithm assigns a normalized score to each weight. 
 To obtain the mask $m$, a simple rounding function is applied to each score. The authors used a simple deterministic rounding function, where values below $0.5$ are rounded down to $0$ and all other values to $1$.
@@ -294,17 +299,17 @@ The results show that the subnetworks obtained via the GM-algorithm, are indeed 
 Furthermore, the subnetworks have reasonably high accuracy \textit{before} any weight training, which earns them the name \textit{Rare Gems}. 
 This makes the set of rare gems a subset of winning tickets. 
 They are winning tickets, that already perform well before weight training.
-The obtained subnetworks do not always outperform winning tickets obtained with IMP.
+The obtained subnetworks do not always outperform winning tickets obtained with IMP. 
 However, there is a considerable improvement over IMP in terms of resource intensity.
 The authors claim, that their algorithm is up to \textbf{19x} faster than the iterative approach with IMP. 
 This increase in efficiency is compelling for repeated experiments.
 
-\subsection{Conclusion}
+\section{Conclusion}
 The study of lottery tickets is a broad and diverse field. Even though theoretical studies were mentioned in the literature review, the majority of research conducted in this space is of empirical nature.
-TODO: review all the papers and cite all of them again.
+TODO review all the papers and cite all of them again.
 A blind spot in the literature is the connection between the structure of a lottery ticket and its function. 
 
-\subsection{Other possibly related stuff}
+\section{Other possibly related stuff}
 \begin{itemize}
     \item dynamic sparse training
     \item network distillation

@@ -9,19 +9,44 @@
 
 \usepackage{subcaption}
 
-\AddToHook{cmd/section/before}{\clearpage}
+% start a new page with a new section
+%\AddToHook{cmd/section/before}{\clearpage}
 
+% change headings
+\usepackage[scaled]{helvet} % Scale Helvetica to match the size of the default font
+\usepackage[T1]{fontenc}    % Ensure proper font encoding
+\renewcommand{\familydefault}{\sfdefault} % Set the default font to sans-serif (Helvetica)
+
+%\usepackage{titlesec}
+%\titleformat*{\section}{\sffamily\LARGE}
+%\titleformat*{\subsection}{\sffamily\Large}
+%\titleformat*{\subsubsection}{\sffamily\middle}
+
+\emergencystretch=2em
+%\usepackage[final]{microtype}
+
+% change caption appearance
+\usepackage[font={sf, small,it}]{caption}
+
+% nice font for code
+%\usepackage{nimbusmononarrow}
+%\renewcommand*\familydefault{\ttdefault}
 % code snippets
+
 \usepackage{listings}
 \usepackage{xcolor}
 \definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{bg}{HTML}{EEE5E9}
+\definecolor{orange}{HTML}{CF5C36}
+\definecolor{gray}{HTML}{7C7C7C}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
 \definecolor{codepurple}{rgb}{0.58,0,0.82}
 \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
 \lstdefinestyle{python}{
-    backgroundcolor=\color{backcolour},   
-    commentstyle=\color{codegreen},
-    keywordstyle=\color{magenta},
+    basewidth  = {.5em,0.4em},
+    backgroundcolor=\color{bg},   
+    commentstyle=\color{gray},
+    keywordstyle=\color{orange},
     numberstyle=\tiny\color{codegray},
     stringstyle=\color{codepurple},
     basicstyle=\ttfamily\footnotesize,
@@ -34,16 +59,22 @@
     showspaces=false,                
     showstringspaces=false,
     showtabs=false,                  
-    tabsize=4
+    tabsize=4,
+    %frame=shadowbox,
+    xleftmargin=2em,
+    frame=single,
+    framexleftmargin=1.5em
 }
 \lstset{style=python}
+
+\usepackage{lmodern}
 
 % citations
 \usepackage[
 backend=biber,
 style=apa,
 url=false,
-sorting=ynt
+sorting=ynt,
 ]{biblatex}% authoryear
 
 % skip some space after a paragraph. also no indent, its ugly.
@@ -53,5 +84,3 @@ sorting=ynt
 \usepackage{csvsimple}
 \usepackage{booktabs}
 \usepackage{floatrow}
-% automatically use a new page for a new section
-\AddToHook{cmd/section/before}{\clearpage}

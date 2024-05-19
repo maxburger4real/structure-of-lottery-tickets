@@ -1,16 +1,28 @@
-\section{Methodology}
+\chapter{Methodology}
 Introduction goes here, no headline
 train lottery tickets on simple task that contains independence.
-\subsection{Idea}
+
+\section{Idea}
 The structure of lottery tickets is still mysterious. 
 Analyzing the structure of a large and sparse Directed acyclic graph is not an easy task. 
 However, one could approach the problem the other way around. 
 Instead of analyzing the structure of an existing Lottery ticket, one could see what kind of structure appears given a problem with a known structure.
 Inspired by the experiments in \autocite{BIMT}, a dataset that contains an independence problem was created.
 The question is:
-"Will a lottery ticket trained on an independece dataset result in seperate networks?"
+`Will a lottery ticket trained on an independece dataset result in seperate networks?'
 In the course of this thesis, it is demonstrated that IMP indeed finds lottery tickets composed of two disconnected subnetworks inside a larger network.
-\subsection{the independence dataset}
+
+\section{Software Stack}
+All software developed within the scope of this thesis is written in python~\autocite{python}.
+Several freely available python packages are used.
+PyTorch~\autocite{pytorch}, a commonly used machine learning library, is used to define the neural networks and train them.
+NetworkX~\autocite{networkx}, a well known library for working with mathematical graphs, is used to transform the pytorch model into a directed graph and analyse it.
+Scikit-Learn~\autocite{sklearn} which is also a popular machine learning library, is used to generate the datasets.
+Matplotlib~\autocite{matplotlib} is used to generate the plots to visualize the results of the experiments.
+Sympy~\autocite{sympy} is a python package for symbolic computing. It is used to solve equations regarding the pruning trajectories.
+Numpy~\autocite{numpy}, a package to work with matrices in python, is used throughout this thesis to manipulate vectors and matrices.
+
+\section{The Independence Dataset}\label{sec:independece_dataset}
 \textcite{BIMT} executed the experiements on symbolic regression datasets.
 These are simple toy datasets where the labels are computed with a symbolic formula. 
 For instance regarding the independence task, the inputs are $x_1, x_2, x_3, x_4$ and the outputs are $y_1={x_2}^2 + \sin{(\pi*x_4)}$ and $y_2=(x_1+x_3)^3$
@@ -20,13 +32,19 @@ However with regards to lottery tickets, the existing literature focuses on clas
 Therefore instead of using the independence dataset from \autocite{BIMT}, a different dataset has to be created.
 
 To create a simple toy classification task with independance, two classic toy datasets are concatenated into one dataset.
+
 \begin{figure}[ht]
     \centering
     \includegraphics[width=1.0\linewidth]{moons-circles.png}
-    \caption{This figure depicts the two dataset. On the left, the 'Two Moons Dataset' is displayed. On the right, the 'Circles' dataset. The datasets are normalized to have zero mean and unit variance in each feature.}
-    \label{fig:moons_circles}
+    \caption{
+        This figure depicts the two dataset. 
+        On the left, the `Two Moons Dataset' is displayed. 
+        On the right, the `Circles' dataset. 
+        The datasets are normalized to have zero mean and unit variance in each feature.
+    }\label{fig:moons_circles}
 \end{figure}
-The two selected datasets are the two moons dataset and the Circles dataset, depicted in Figure \ref{fig:moons_circles}.
+
+The two selected datasets are the two moons dataset and the Circles dataset, depicted in figure~\ref{fig:moons_circles}.
 
 Both datasets can be interpreted as a two dimensional plane, where the inputs describe coordinates of points on the plane. 
 The labels of the dataset relates to the class.
@@ -43,28 +61,70 @@ The radius of the inner circle is set to be $0.35$.
 Gaussian noise with a mean of $0$ and standard deviation of $0.1$ is added to each point in the dataset.
 The values of noise the size of the inner cirlce are selected, such that the points do not mix among the circles.
 
-The classic machine learning library 'scikit-learn' is used to generate the data. 
+The classic machine learning library `scikit-learn' is used to generate the data. 
 The following code snippet demonstrates how the data was generated.
-The described sampling strategy for the datasets relates to the content of the functions of 'scikitlearn', 'makemoons' and 'makecircles' respectively.
+The described sampling strategy for the datasets relates to the content of the functions of `scikitlearn', `makemoons' and `makecircles' respectively.
 
-\begin{lstlisting}[language=Python]
-    import sklearn
-    # create the moons dataset
-    moons = sklearn.datasets.make_moons(
-        n_samples=2000, 
-        noise=0.1
-    )
+\begin{figure}[ht]
+\centering
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[
+    language=Python,
+    captionpos=b, 
+    label={code:data},
+    caption={
+    This code snippet contains python-flavoured pseudo code.
+    It depicts the procedure of generating the Moons-Circles dataset.
+    },
+]
+# the sklearn package is used to generate the datasets
+import sklearn 
 
-    # create the circles dataset
-    circles = sklearn.datasets.make_circles(
-        n_samples=2000, 
-        noise=0.1, 
-        factor=0.35
-    )
+# generates a shuffled set of data points with labels
+circles_x, circles_y = sklearn.datasets.make_circles(
+    n_samples=2000, 
+    noise=0.1, 
+    factor=0.35
+)
+
+# generates a shuffled set of data points with labels (1000,)
+moons_x, moons_y = sklearn.datasets.make_moons(
+    n_samples=2000, 
+    noise=0.1
+)
+
+# Note: 
+#   - moons_x and circles_x are numpy arrays of shape (1000, 2) 
+#   - moons_y and circles_y are numpy arrays of shape (1000, ) 
+
+# concatenated data points have shape (1000,4)
+circles_moons_x = concatenate(circles_x, moons_x)
+
+# concatenate labels have shape shape (1000,2)
+circles_moons_y = concatenate(circles_y, moons_y)
+
+# split the dataset in half
+x_train, x_test, y_train, y_test = sklearn.model_selection.train_test_split(
+    circles_moons_x, 
+    circles_moons_y, 
+    test_size=0.5, 
+)
+
+# scale data to zero mean, unit variance, based on training data
+scaler = sklearn.preprocessing.StandardScaler().fit(x_train)
+x_train = scaler.transform(x_train)
+x_test = scaler.transform(x_test)
+
+(x_train, y_train) # the training data
+(x_test, y_test) # the test data
+
+
 \end{lstlisting}
+\end{minipage}
+\end{figure}
 
 Since ranges of values of the datasets are different due to their sampling strategy, each feature is normalized individually to have zero mean and unit variance.
-The final, normalized dataset is depicted in Figure \ref{fig:moons_circles}
+The final, normalized dataset is depicted in figure~\ref{fig:moons_circles}
 
 To create a single dataset out of the two seperate datasets, the input features as well as the labels are concatenated.
 Concretely, one sample of the concatenated dataset $\hat x$ contains one randomly selected sample from the two moons dataset and one randomly selected sample from the circles dataset.
@@ -78,38 +138,66 @@ The result is a training set and a test set with 1000 samples each.
 
 This dataset contains two seperate and indepdent tasks.
 For each task, only the respective inputs contain valuable information for the prediction of the class.
-To demonstrate this, the points each task are displayed however with the classes of the other task.
-In all scenarios, there is no clear connection between the inputs and labels of the dataset.
 
-Insert x1, x2 vs y2 ; x3, x4 vs y1
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=1.0\linewidth]{moons-circles-inverted.png}
+    \caption{
+        This figure depicts the moons dataset on the left, where the colors are the labels of the circles dataset.
+        On the right, the circles dataset is depicted, with the colors representing the class of the moons dataset.
+    }\label{fig:moons_circles_inverted}
+\end{figure}
 
-\subsection{The Model}
-The neural network used to train on this task was inspired by the original lottery ticket experiments \autocite{DBLP:conf/iclr/FrankleC19}. A simple fully connected feed forward neural network was used.
-Throughout this thesis the genreral architecture consists an input layer with four features ($x_1$ to $x_4$), two hidden layers of varyign sizes and one output layer with two features ($y_1$ and $y_2$).
-All layers have ReLU activations and weights are initialized with Kaiming normal initialization \autocite{Kaiming} and biases are initialized with 0.
+This is demonstrated in figure~\ref{fig:moons_circles_inverted}.
+The data is the exact same data as is visible in figure~\ref{fig:moons_circles}. 
+However, one dataset is displayed with the labels of the other dataset and vice versa.
+Concretely, on the left side, the coordinates represent $x_1$ and $x_2$, but the colors refer to $y_2$.
+On the right side on the other hand, $x_2$ and $x3$ are displayed with the colors defined by $y_1$.
+There is no clear visible pattern discernible from these dataset given on their own.
 
-\subsection{The Algorithm}
+
+\section{The Network}
+The neural network used to train on this task was inspired by the original lottery ticket experiments \autocite{DBLP:conf/iclr/FrankleC19}. 
+A fully connected feed forward neural network was used.
+The network has four input neurons, two output neurons and between one and three hidden layers.
+Throughout the thesis, experiments with varying numbers of hidden layers are conducted.
+The input neurons correspond to $x_1, x_2, x_3, x_4$ defined in the previous section~\ref{sec:independece_dataset}.
+The network outputs correspond to $y_1$ and $y_2$.
+
+As non-linearity, the Rectified Linear Unit (ReLU) is used.
+The gaussian Xavier-initialization~\textcite{XAVIER-GLOROT} was used by \textcite{DBLP:conf/iclr/FrankleC19} in the original experiments.
+However, the authors did not justify their decision.
+Since the networks use the ReLU activation function, gaussian Kaiming-initialization~\autocite{KAIMING-HE} will be used as the initialization technique.
+The initialization of the biases is not mentioned by \textcite{DBLP:conf/iclr/FrankleC19}.
+Throughout this thesis, biases of the network are initialized with zero.
+The random initialization of the weights is explicitly controlled via a random seed, to enable reproducibility.
+Throughout the thesis, experiments are repeated with three to five different seeds for more robust results.
+
+For the Moons-Circles dataset, the binary cross entropy loss function is used.
+It is calculated seperately for every output feature of the network.
+
+\section{The Training Process}
 With the dataset and architecture described above the aim was to find lottery tickets.
 To accomplish this task, the classic Iterative Magnitude Pruning algorithm described in refIMP was employed used by \textcite{DBLP:conf/iclr/FrankleC19} in the original lottery ticket experiments.
 The weights are rewound to $0$.
 \textcite{LinearModeConnectivity} demostrated that the LeNet architecture trained on MNIST is stable at initialization, meaning that lottery can be found rewinding the weights to $t=0$ (the value at initialization). 
 Since the model and dataset in our case is significantly less complex, it is assumed that the resetting the weights to zero is sufficient to discover lottery tickets.
 
-As pruning criterion, the original Magnitude pruning used by \autocite{DBLP:conf/iclr/FrankleC19} is used. 
+As pruning criterion, the original magnitude pruning used by \autocite{DBLP:conf/iclr/FrankleC19} is used. 
 Since \autocite{DBLP:conf/nips/ZhouLLY19} showed that magnitude pruning is amongst the best performing criteria, it was selected due to its simplicity and widespread usage.
 Biases are not pruned.
 
 Contrary to \autocite{DBLP:conf/iclr/FrankleC19} where layerwise pruning is applied, the network is pruned globally.
 Concretely, the pruning criterion is applied to all weights at once.
-This enables the algorithm to 'select' the sparsity for each layer on it's own, resulting in less assumptions that have to be made.
+This enables the algorithm to `select' the sparsity for each layer on it's own, resulting in less assumptions that have to be made.
 
 One training run consists of $L$ pruning levels. 
 At each pruning level, $p$-percent (pruning rate) of the remaining prunable parameters are set to zero.
 The number of prunable parameters equals the number of weights that have not yet been pruned.
-After $L$ pruning levels, the number of prunable parameters is termed the 'pruning target'.
+After $L$ pruning levels, the number of prunable parameters is termed the `pruning target'.
 
 Over the pruning levels, the number of prunable parameters goes from the initial number to the pruning target.
-The sequence of prunable paremters is termed 'parameter trajectory'.
+The sequence of prunable paremters is termed `parameter trajectory'.
 A parameter trajectory can be uniquely defined by 3 out of the following 4 values:
 \begin{itemize}
     \item prunable parameters at initialization
@@ -122,20 +210,72 @@ Different combinations can be useful for different scenarios.
 
 The networks are trained with the ADAM optimizer.
 The learning rate is set to 0.001 and a batch size of 64 is used.
+These values were selected based on their effectiveness in preliminary experiments. However it is important to note that they are somewhat arbitrary and may be suboptimal.
 Further, throughout the experiments, early stopping is used to reduce the computational time.
 
-As a pruning target, 112 weights was selected.
-The pruning target is specified in absolute terms rather than as a percentage of the unpruned model, because several model sizes are used.
-To select a pruning size, a small model was selected and evaluated to be trainable.
-A model with 2 hidden layers with 8 neurons each, was selected and evaluated.
-The pruning target refers to the number of prunable weights after all pruning iterations and not the number of active weights.
-One could lower the pruning target even further, but the number of active weights can be significantly lower than the pruning target.
-The model converges in less than 400 epochs and reaches almost $99.6$\% Accuracy.
+As a pruning target for the experiments with the Moons-Circles dataset, values between 100 and 120 were selected.
+The pruning target is, in many experiments, derived from the model architecture which will be described in detail in a later chapter.
+The pruning target refers to the number of unpruned weights after all pruning iterations are completed.
+This however does not mean, that all the unpruned weights are of use to the network.
+The number of active weights, which will be discussed in detail in this chapter, can be significantly lower than the pruning target.
+It refers to the weights that actually influence the output of the network.
 
-INSERT TEST LOSS IMAGE, ACCURACY
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[language=Python,caption={This code snippet contains python-flavoured pseudo code.
+    It depicts the general procedure of iterative magnitude pruning used for the experiments in this thesis.},captionpos=b, label={code:imp}]
 
+    # given
+    model: torch.nn.module  # the freshly initialized model 
+    parameter_trajetory: List[int] # defines the pruning process
+    train_data, test_data  # data for training
+    
+    # save state to reinitialze after pruning
+    initial_model_state = save_model_state(model)
+    
+    parameter_count = parameter_trajetory[0]
+    for target in parameter_trajectory:
 
-\subsubsection{Network Splitting}
+        # no pruning before the first training
+        if not first_iteration:
+
+            # the number of parameters to prune from the model
+            pruning_amount = parameter_count - parameter_target
+            parameter_count = parameter_target
+
+            # prune the model 
+            prune(model, pruning_amount)
+
+            # reinitialize the remaining values with initial values
+            reinit(model, initial_model_state)
+
+        # actual training and evaluation
+        train_loss = train(model, train_data)
+        val_loss, val_accuracy = evaluate(model, test_data)
+
+        # transform to a graph and see if it split or degraded
+        dag = transform_to_digraph(model)
+        evaluate_dag(dag)
+
+        # the run is stopped when graph is degraded 
+        # to limit training time
+        if graph_degraded:
+            break
+
+        # early stopping is used to limit training time
+        if early_stopping:
+            break
+    \end{lstlisting}
+\end{minipage}
+
+In the code snippet~\ref{code:imp} the algorithm for iterative magnitude pruning is depicted in python-flavoured pseudo code.
+Details have been omited for readability.
+Imporantly, the order of the commands are outlined to give a better sense of the algorithm.
+The algorithm requires a model, parameter trajectory and data.
+The model refers to the freshly initialized neural network.
+The parameter trajectory, as described earlier in this paragrah, refers to the number of weights the network should have at every pruning level.
+The difference between two neighbouring entries in the parameter trajectory gives the number of parameters to prune in the given level.
+
+\section{Network Splitting}
 Since the goal of the experiments is to show if two seperate networks for inside the initial network, a mechanism to check if this is the case is needed.
 
 Before the first pruning level, the network is converted into a Directed Acyclic Graph $\mathcal{G}$.
@@ -149,14 +289,14 @@ Four categories are defined for the nodes and edges in the graph.
 \begin{enumerate}
     \item active parameters  \\
     Nodes or edges in the graph that are connected to at least one input node and at least one output node.
-    \item inactive parameters : \\
+    \item inactive parameters \\
     Nodes or edges that are not connected to any output node. They do not influence the result of the network and they do not receive gradients. They can be removed.
-    \item pruned parameters : \\
+    \item pruned parameters \\
     Nodes or edges that have been masked out by the pruning algorithm.
-    \item zombie parameters : \\
+    \item zombie parameters \\
     Nodes or edges that are not connected to any input node, but are connected to at least one output node.
 \end{enumerate}
-Before the first pruning level, all nodes and edges are classified as 'active parameters'.
+Before the first pruning level, all nodes and edges are classified as `active parameters'.
 In the next step, each parameter in the graph will be assigned a category.
 First, the newly pruned weights are extracted from the pytorch module.
 Each edge in the graph that was pruned, is assigned that category.
@@ -173,7 +313,7 @@ Furhter, all edges that are connected to a zombie node are classified as a zombi
 
 An active subgraph $\mathcal{G}_{active}$, where all nodes are connected to at least one input node and at least one output node.
 
-\subsubsection{Matching Networks and Tasks}
+\subsection{Matching Networks and Tasks}
 The active graph $\mathcal{G}_{active}$ is used to find seperate components in the graph.
 Conveniently, this can be done with a single networkx function.
 \begin{lstlisting}[language=Python]
@@ -232,7 +372,7 @@ For datasets where not all inputs or outputs are necessary or even desired to be
 !!! explain task description in dataset
 !!! revise the math part. C is overloaded and number of tasks / subnetworks needs an identified. MAybe J, K and j, k for the running vars.
 
-For instance, given the dataset in ref2, the dataset contains two tasks: the 'moons'-task and the 'circles'-task. 
+For instance, given the dataset in ref2, the dataset contains two tasks: the `moons'-task and the `circles'-task. 
 The moons-task $T^{(1)}$ is associated with the inputs $T^{(1)}_{in} = \{x_1,x_2\}$ and the output $T^{(1)}_{out} = \{y_1\}$.
 The circles-task $T^{(2)}$ is associated with the inputs $T^{(2)}_{in} = \{x_3,x_4\}$ and the output $T^{(1)}_{out} = \{y_4\}$.
 
@@ -287,16 +427,16 @@ If the sum of $C$ is equal to the number of task, but there are less subetworks 
 The number of splits that are required can is the difference between the number of tasks and the number of subnetworks.
 
 If the sum of $C$ is less than the number of tasks, the network already has lost at one input or output.
-This scenario will be referred to as a 'degraded' network.
+This scenario will be referred to as a `degraded' network.
 Once a network is degraded, it is impossible that a perfect split is reached.
 In the case of the Moons-Circles dataset, the training is stopped as soon as the network is degraded to save computational resources.
 
 (additional)
 For mnist, we use the output coverage, since it is expected that the network will come to ignore inputs.
-Then the output coverage is used. Also between 0 and 1 . Works the same way as with the total coverage in the previous case.
+Then the output coverage is used. Also between 0 and 1. Works the same way as with the total coverage in the previous case.
 
-\subsubsection{Model Extension}
-A technique used to create models that are comparable on the basis of prunable parameters is termed 'model extension'. First, the problem is described which model extension is intended to solve, then the technique is described in detail.
+\section{Model Extension}
+A technique used to create models that are comparable on the basis of prunable parameters is termed `model extension'. First, the problem is described which model extension is intended to solve, then the technique is described in detail.
 
 To compare networks over pruning levels, a significant quantity is the number of prunable parameters the networks has left at each iteration.
 For instance, comparing two networks with 1000 and 1200 prunable parameters in the beginning, 6 pruning levels and a pruning rate of $0.2$, the following parameter trajectories $t_{1000}$ and $t_{1200}$ would form.
@@ -333,11 +473,12 @@ The second network would only split earlier if it would split with 22 additional
 When scaling up networks, the intervals at which the had the possibility to split are spaced further from each other, making this effect even more pronounced.
 
 Ideally, different networks would have parameter trajectory that are shared, such that they can be compared at every step.
-To achieve this on can 'extend the model'.
+To achieve this on can `extend the model'.
 
 Let a network with $n$ prunable parameters be the base of the extension.
 The network is pruned for any number of pruning levels with a given pruning rate $p$.
 
-TODO: write about model extension.
+TODO write about model extension.
 
 Extending the model means to add parameters to the model, such that pruning it once with the set pruning rate would result in the same number as paraemter
+

@@ -38,6 +38,7 @@ class Config:
     log_graphs: bool = True
     log_graphs_before_split: bool = False
     stop_on_degradation: bool = True
+    stop_on_seperation: bool = False
 
     num_concat_datasets: int = None
     run_name: str = None

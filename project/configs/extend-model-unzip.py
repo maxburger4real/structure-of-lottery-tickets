@@ -12,12 +12,15 @@ description = """
 TODO
 """
 
+import os
+os.environ["WANDB_SILENT"]="true"
 
 # These are the networks that did split
 seeds = [3]
 extension_levels = [10, 11, 13, 14, 16, 17, 18]
-
-
+extension_levels = [10]
+extension_levels = [18]
+extension_levels = [11, 13, 14, 16, 17]
 
 sweep_config = {
     "method": "grid",
@@ -34,6 +37,8 @@ run_config = Config(
     # sweeped
     model_shape=[4, 4, 4, 4, 2],  # is overwritten
     base_model_shape=[4, 4, 4, 4, 2],
+
+    stop_on_seperation = True,
 
     pipeline=Routines.imp,
     dataset=Datasets.CIRCLES_MOONS,
