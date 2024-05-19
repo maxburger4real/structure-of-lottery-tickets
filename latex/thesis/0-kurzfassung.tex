@@ -1,11 +1,12 @@
 \chapter*{Kurzfassung}
 \addcontentsline{toc}{chapter}{Kurzfassung}
 
-Die von \textcite{LTH} aufgestellte Lottery Ticket Hypothese hat einen neuen Teilbereich der Forschung begründet, der sich mit \textit{Sparse Neural Networks} beschäftigt, welche erfolgreich trainiert werden könne.
-\textit{Iterative Magnitude Pruning} ist eine Schlüsselmethode für dieses Feld, da sie die schlanken und performanten Subnetzwerke, die sogenannten \textit{Winning Tickets} erfolgreich ausfindig machen kann.
-Wieso diese Methode erfolgreich ist und was die Subnetzwerke, die \textit{Winning Tickets} so erfolgreich macht, ist großteils unerklärt.
-Eine Möglichkeit um \textit{Winning Tickets} und deren Erzeugung besser zu verstehen, ist die Analyse des Netzwerkgraphens.
-Dadurch, dass diese Subnetze \textit{sparse} sind, könnte ihre Struktur wertvolle Einblicke in die Funktion des Netzwerkes bieten.
-Im Rahmen dieser Masterarbeit wird die Struktur der \textit{Winning Tickets} und ihre Verbindung zur Funktion des Netzes untersucht.
-Dazu wurden Experimente auf Datensätzen mit unabhängigen Aufgaben erstellt \rule[0.5ex]{.5em}{0.5pt} ein einfacher synthetischer Datensatz und eine Kombination aus dem MNIST und dem Fashion-MNIST Datensatzes.
+Die von \textcite{LTH} aufgestellte Lottery Ticket Hypothese hat einen neuen Teilbereich der Forschung begründet, der sich mit \textit{Sparse Neural Networks} beschäftigt, welche erfolgreich in Isolation trainiert werden können.
+\textit{Iterative Magnitude Pruning} ist eine Schlüsselmethode für dieses Feld, da sie die performanten Subnetzwerke, die sogenannten \textit{Winning Tickets} erfolgreich ausfindig machen kann.
+Wieso und wie \textit{Iterative Magnitude Pruning} funktioniert und was  \textit{Winning Tickets} so erfolgreich macht, ist großteils unerklärt.
+Um \textit{Winning Tickets} und deren Eigenschaften besser zu verstehen wird in dieser Arbeit die Struktur der Netzwerke analysiert.
+Durch das Entfernen von Verbindungen sind die Netzwerke \textit{sparse}.
+Deshalb könnte ihre Struktur wertvolle Einblicke in die Funktion der Netzwerke bieten.
+Trainingsdaten mit einer bekannten Struktur werden verwendet um zu testen, ob die Struktur des Datensatzes im \textit{Winning Ticket} erkennbar ist.
+Dazu wurden Experimente auf Datensätzen mit unabhängigen Aufgaben erstellt \rule[0.5ex]{.5em}{0.5pt} ein synthetischer Datensatz und eine Kombination aus dem MNIST und dem Fashion-MNIST Datensatz.
 Mittels \textit{Iterative Magnitude Pruning} können für beide Datensätze unabhängige Subnetwzerke im \textit{Winning Ticket} gefunden werden, wobei jedes Subnetzwerk eine Aufgabe des Datensatzes löst.

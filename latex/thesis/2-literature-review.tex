@@ -1,23 +1,12 @@
 \chapter{Literature Review}\label{literature_review}
 In this chapter, the prerequisites and related research are reviewed and discussed.
-Neural network pruning and the lottery ticket hypothesis, as well as relevant follow-up work, are covered in detail.
-Alternative methods to find winning tickets are also outlined.
-Further, aspects of the winning ticket network itself are covered, such as the numerical characteristics of the parameters and the structure of the network graph.
+First, neural network pruning is introduced. 
+Next, the lottery ticket hypothesis and relevant follow-up work are discussed.
+Furthermore, alternative methods to find winning tickets are outlined.
 
 \section{Neural Network Pruning}
-The field of deep learning is largely responsible for the advances of modern machine learning applications.
-With increasing amounts of available data and computational resources, the size of neural networks has increased drastically, as well as their performance.
-However, this increase in size poses challenges in constrained environments.
-Larger and deeper networks tend to require more memory and computational resources, which can be problematic for inference on constrained devices.
-Also, larger models typically require more time and more energy for training as well as for inference.
-
-Neural Network Pruning \autocite{LeCun, OptimalBrainSurgeon, HanEtAl15, PruningFiltersForEfficientConvets} has been proposed as a tool to reduce network size for inference while maintaining accuracy.
-Pruning algorithms can reduce parameter count by up to 90 percent without harming accuracy.
-\autocite{LeCun, OptimalBrainSurgeon, HanEtAl15, PruningFiltersForEfficientConvets}
-Pruning can be done in a single step, where the network is trained once and then pruned.
-It can also be done iteratively. 
-The network is repeatedly trained and pruned over several iterations. 
-It has been shown that iterative pruning can further reduce network size significantly whilst maintaining performance \autocite{HanEtAl15}.
+Neural network pruning has been proposed as a tool to reduce network size for inference while maintaining accuracy~\autocite{OptimalBrainDamage, OptimalBrainSurgeon, HanEtAl15, PruningFiltersForEfficientConvets}.
+Pruning can be done at once (often denoted \textit{one-shot} pruning) or iteratively combined with retraining, where the latter has been shown to produce smaller and better-performing subnetworks~\autocite{HanEtAl15}.
 The resulting sparse subnetwork can represent an equally accurate function with significantly fewer parameters. 
 The question arises: If it can represent the function, why not train the sparse network directly?
 \textcite{HanEtAl15} and \textcite{PruningFiltersForEfficientConvets} attempted to train the pruned networks from scratch after they have been randomly reinitialized.

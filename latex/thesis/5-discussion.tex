@@ -1,12 +1,12 @@
 \chapter{Conclusion}\label{chapter:conclusion} 
 
 In this thesis, the structure of winning tickets created with iterative magnitude pruning was analyzed empirically.
-It was shown, that feed-forward neural networks consistently separated into two independent subnetworks by iterative magnitude pruning when trained on a dataset with independent tasks.
-With the right conditions, such as a large enough network and enough pruning levels, the networks consistently separate over different pruning rates and network sizes.
+It was shown that feed-forward neural networks consistently separated into two independent subnetworks by iterative magnitude pruning when trained on a dataset with independent tasks.
+Under suitable conditions, such as a large enough network and enough pruning levels, the networks consistently separate over different pruning rates and network sizes.
 The separation was tested on custom datasets with two independent tasks.
 Systematic experiments were conducted on the Moons-Circles dataset, a toy dataset that contains two independent tasks.
 Due to the success of the method on the toy task, experiments were also conducted on the MNIST-Fashion-MNIST dataset, which is significantly more realistic.
-In both cases, neural networks were found to separate with non-trivial accuracy and without any regularization techniques.
+In both cases, winning tickets were found to separate with non-trivial accuracy and without any regularization techniques.
 
 These results indicate that iterative magnitude pruning (IMP) indeed produces winning tickets with meaningful structure.
 Also, the results indicate that there is a probabilistic element to the degree to which these structures come to light.
@@ -14,11 +14,12 @@ Also, the results indicate that there is a probabilistic element to the degree t
 \section{Limitations}
 The findings of this thesis are empirical, and due the the scope and scale of the thesis, there are numerous untested scenarios.
 The experiments were only conducted on toy datasets and on MNIST-Fashion-MNIST which might also be counted as a toy dataset.
-Whether the findings remain true for larger and more realistic tasks remains an open question.
+Whether the findings remain true for larger and more realistic tasks is an open question.
 
-Another limitation is the restriction to datasets with similarly complex tasks.
-Scenarios with tasks that vary in size or complexity were not tested in this thesis.
-Further, only fully connected networks were tested.
+Another limitation is the restriction to datasets with two similarly complex tasks.
+Scenarios with more than two tasks or tasks that vary in size or complexity were not tested in this thesis.
+
+Furthermore, only fully connected networks were tested.
 Other architectures such as convolutional neural networks were not used in any experiments.
 All of the limitations invite for future work on this topic.
 
@@ -30,9 +31,15 @@ A winning ticket could be trained and if independent networks occur, it could hi
 The same might be true for other types of semantic structure, like feature sharing or compositionality.
 
 \section{Future Work}
-An interesting avenue for future research in this line of work would be to examine the numerous other variants for finding sparse subnetworks, like Rare Gems~\autocite{RareGems}.
-Would they also separate? And if so, would they separate earlier or with better performance still?
-Many methods that enhance iterative magnitude pruning like learning rate schedules and resetting to later training iterations, as well as L1 and L2-regularization could also be tested.
-Similar to the work by \textcite{BIMT}, other semantic structures of the data might be considered, like compositionality or weight sharing.
-One could examine the methods on larger and more realistic datasets like CIFAR-10 or ImageNet.
-Finally, the findings from this thesis could be translated into convolutional neural net architectures, where network separation has not been tested yet.
+An interesting avenue for future research in this line of work would be to examine the numerous other variants for finding sparse subnetworks, like the Gem-Miner algorithm by~\textcite{RareGems}.
+Do winning tickets uncovered by other algorithms also separate?
+If so, would they separate earlier or with better performance?
+Further, the effect on network separation from enhancements to iterative magnitude could be studied.
+Methods that worked well for finding winning tickets, like learning rate rewinding, resetting to later training steps and regularization techniques might improve network separation.
+Additionally, other semantic structures besides independence could be studied.
+Similar to the work by \textcite{BIMT}, compositionality or weight sharing are such structures that could be examined in a similar way.
+Scaling up the experiments to larger and more realistic datasets like CIFAR-10 or ImageNet is also a valuable research direction, to see whether networks separate for more complex tasks as well.
+Finally, the findings from this thesis could be translated into convolutional neural network architectures, where network separation has not been tested yet.
+
+\section{Open Source}
+All the source code is available at https://github.com/mx-mn/structure-of-lottery-tickets.

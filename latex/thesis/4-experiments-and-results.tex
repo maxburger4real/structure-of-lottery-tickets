@@ -10,7 +10,7 @@ These are simple toy datasets where the labels are computed with a symbolic form
 For instance regarding the independence task, the inputs are $x_1, x_2, x_3, x_4$ and the outputs are $y_1={x_2}^2 + \sin{(\pi*x_4)}$ and $y_2={(x_1+x_3)}^3$.
 In this case, the independence is obvious, as $y_1$ depends only on $x_2$ and $x_4$, and $y_2$ depends only on $x_1$ and $x_3$.
 However, concerning the lottery ticket hypothesis, the existing literature focuses on classification tasks, while this is a regression task.
-Therefore instead of using the independence dataset from \autocite{BIMT}, 
+Therefore instead of using the independence dataset from \textcite{BIMT}, 
 two classification datasets that contain independent tasks are created in the scope of this thesis, which are described in the following sections.
 
 \subsection{Moons-Circles Dataset}\label{sec:independece_dataset}
@@ -145,6 +145,7 @@ The Moons-Circles dataset only has four input features and two output features.
 Further, the previous task was a combination of two binary classification tasks.
 Now, each dataset represents a multiclass classification problem with 10 classes.
 
+\newpage
 \section{Experiments on the Moons-Circles Dataset}
 The first round of experiments is dedicated to finding out what conditions are required, such that the network separates when trained on the Moons-Circles dataset.
 During a preliminary exploration phase, some scenarios where the network indeed separates were found.
@@ -164,7 +165,6 @@ The chosen value, while somewhat arbitrary, was selected by promising results on
 \textcite{LTH} used a pruning rate of $0.2$ in the original experiments for the fully connected feed-forward network trained on the MNIST dataset.
 However, with a larger pruning rate, a larger space of network sizes can be covered with the same number of iterations, which is why the larger pruning rate of $0.32$ was selected.
 
-
 \subsection{Exploring Network Architectures - Model Extension}\label{two-hidden}
 The first experiment architecture that is discussed is the network with two hidden layers.
 The base network, which is the network that is used as a base for extending, has the shape $(4,8,8,2)$.
@@ -174,8 +174,8 @@ The network is extended up to 25 times.
 At the extension level 25, the network has a shape of $(4,1310,1310,2)$, with 1.723.960 weights.
 The number of extension levels corresponds to the number of pruning levels the network goes through.
 After each pruning level, the network is evaluated to check if it is separated or degraded.
-When considering all pruning levels, there are four different scenarios for a network:
 
+When considering all pruning levels, there are four different scenarios for a network:
 \begin{enumerate}
 \item \textbf{Separated:}
 The network separates at some pruning level. 
@@ -190,7 +190,7 @@ The network does neither separate nor degrade.
 The result is a single network that contains all input and output nodes of all tasks.
 \end{enumerate}
 
-\begin{table}\scriptsize
+\begin{table}[t]\scriptsize
     {
     \sffamily
     \caption[Parameter Trajectories of different network sizes]{
@@ -328,7 +328,7 @@ A similar effect occurs but unlike the single-layer network, the network does no
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{When do Networks Separate?}
+\subsection{When Do Networks Separate?}
 Do the networks always start to separate at the same pruning level or with the same number of unpruned parameters?
 This question is investigated in the following paragraph.
 Interestingly, when extending the network to higher levels, it tends to separate into earlier pruning levels.
@@ -457,7 +457,7 @@ The data indicates that more pruning levels with lower pruning rates are general
 It is reasonable to assume, that the same phenomenon takes place concerning network separation.
 Less pruning levels versus lower pruning rates represent a trade-off between favorable conditions and computational cost.
 
-\subsection{How do Networks Separate?}
+\subsection{How Do Networks Separate?}
 Another open question is, what the process of separation looks like.
 In the beginning, when the network is fully connected, it is not yet clear which weight and neuron belongs to which task.
 One available option, however, is to view the network from the perspectives of the inputs and outputs.
@@ -567,7 +567,7 @@ With the two-layer architectures extended over several levels as shown in table~
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=.7\linewidth]{inactive-abs-2l.png}
+    \includegraphics[width=.9\linewidth]{inactive-abs-2l.png}
     \caption[Inactive Weights during training runs, absolute]{
         The number of inactive weights over the training runs. 
         Each line represents a different extension level. 
@@ -587,7 +587,7 @@ However, due to the reduction in the overall network size, this is to be expecte
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=.7\linewidth]{inactive-rel-2l.png}
+    \includegraphics[width=.9\linewidth]{inactive-rel-2l.png}
     \caption[Inactive Weights during training runs, relative]{
         The number of inactive weights over the training runs. 
         Each line represents a different extension level. 
