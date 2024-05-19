@@ -4,15 +4,15 @@ The lottery ticket hypothesis sparked many directions of research in the field o
 However, how and why they work remains elusive.
 
 In this thesis, an empirical analysis was conducted on the relationship between the semantic structure of the data and the structure of the sparse lottery ticket subnetwork.
-In the experiments conducted, it was shown that networks trained with \textit{Iterative Magnitude Pruning}, produced two independent subnetworks on datasets with independent tasks.
+In the experiments conducted, it was shown that networks trained with \textit{Iterative Magnitude Pruning}, produced two independent subnetworks on datasets with two independent tasks.
 Systematic experiments were conducted on the `Moons-Circles' dataset, a simplistic toy dataset that contains two independent tasks.
 Due to the success of the method on the toy task, experiments were also conducted on the `MNIST-Fashion-MNIST' dataset, which is significantly more realistic.
 In both cases, neural networks were found to separate with non-trivial accuracy.
 
 \section{Limitations}
 The findings of this thesis are empirical, and due the the scope and scale of the thesis, there are numerous untested scenarios.
-The experiments were only conducted on toy datasets and on MNIST and Fashion-MNIST which might also be counted as a toy task.
-If the findings remain true for larger and more realistic tasks remains to be seen.
+The experiments were only conducted on toy datasets and on MNIST-Fashion-MNIST which might also be counted as a toy dataset.
+Whether the findings remain true for larger and more realistic tasks remains an open question.
 
 \section{Discussion}
 The experiments in this thesis demonstrate that iterative magnitude pruning finds independent subnetworks.
