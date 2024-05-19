@@ -2,7 +2,7 @@
 Description generall
 limiations of work
 
-\section{Extending the network}
+\section{Experiments on the Moons-Circles Dataset}
 The first round of experiments is dedicated to find out what conditions are required, such that the network seperates.
 During a preliminary exploration phase, some scenarios where the network indeed seperates were found.
 Yet, they were sparse and could not be easily interpreted.
@@ -50,15 +50,15 @@ However with a larger pruning rate, a larger space of network sizes can be cover
     14 & 4425 & 26550 & 154 & 24640 & 114 & 26676 \\
     15 & 6507 & 39042 & 188 & 36472 & 139 & 39476 \\
     16 & 9569 & 57414 & 229 & 53815 & 169 & 58136 \\
-    17 & - & - & 278 & 78952 & - & - \\
-    18 & - & - & 337 & 115591 & - & - \\
-    19 & - & - & 410 & 170560 & - & - \\
-    20 & - & - & 498 & 250992 & - & - \\
-    21 & - & - & 604 & 368440 & - & - \\
-    22 & - & - & 733 & 541687 & - & - \\
-    23 & - & - & 890 & 797440 & - & - \\
-    24 & - & - & 1080 & 1172880 & - & - \\
-    25 & - & - & 1310 & 1723960 & - & - \\
+    17 &   &   & 278 & 78952 &   &   \\
+    18 &   &   & 337 & 115591 &   &   \\
+    19 &   &   & 410 & 170560 &   &   \\
+    20 &   &   & 498 & 250992 &   &   \\
+    21 &   &   & 604 & 368440 &   &   \\
+    22 &   &   & 733 & 541687 &   &   \\
+    23 &   &   & 890 & 797440 &   &   \\
+    24 &   &   & 1080 & 1172880 &   &   \\
+    25 &   &   & 1310 & 1723960 &   &   \\
     \bottomrule
     \end{tabular}
     }
@@ -96,7 +96,10 @@ When looking at this over the the course of all pruning levels, there are four d
     \centering
     \includegraphics[width=1.0\linewidth]{2-layer-histogram-split-behaviour.png}
     \caption{
-        Proportional Stacked Area Chart
+        This figure depicts the proportional stacked area chart for the network with two hidden layers.
+        On the x-axis, the extension level is displayed. 
+        Along the y-axis, the percentage of runs per category is shown.
+        Each color determines the category that the run belongs to.
         }\label{fig:2laxer-histogram}
 \end{figure}
 
@@ -146,7 +149,7 @@ However even with this caveat, a clear trend is visible.
 The more pruning levels the network experiences, the smaller the percentage of the networks weights that is active.
 For some networks that were extended 20 or more levels, the final percentage of active weights in the network is only $\sim20$ percent, which translates to only $\sim22$ active weights.
 
-Techniques like L1-Regularisation used in \autocite{HanEtAl15} and ??\autocite{DBLP:conf/iclr/FrankleC19}?? or All-Alive-Pruning \autocite{AllAlivePruning} could counteract this effect of compounding inactive parameters.
+Techniques like L1-Regularisation used in \autocite{HanEtAl15} or All-Alive-Pruning \autocite{AllAlivePruning} could counteract this effect of compounding inactive parameters.
 However, this is a topic for future research and not addressed in this thesis. 
 
 \subsection{When do networks seperate?}
@@ -167,7 +170,7 @@ How does the number of extension levels / the networks size influence the iterat
 \end{figure}
 
 Interestingly, when extending the network more, it tends to split in earlier pruning levels.
-In figure \ref{fig:2l-active-split}, the number of available/unpruned weights (orange) weights at each pruning level is displayed.
+In figure~\ref{fig:2l-active-split}, the number of available/unpruned weights (orange) weights at each pruning level is displayed.
 Only the range of extension levels where the network seperated are displayed.
 Each point on the line represents an average of three runs, repeated with different seeds for the network initialization.
 The error bars depict the minimum and maximum value amonst those three repeated runs.
@@ -177,7 +180,7 @@ However, when looking at the the number of active weights the networks have at i
 It increases slightly but almost remains flat, covering a narrow range of around 80 to 120 weights.
 
 TODO: revise. Does this make any sense?
-This data indicate that the number of active weights is a central quantity to splitting.
+This data indicate that the number of active weights is an important quantity to splitting.
 Since the active subgraph is indeed the graph on which the splitting is checked, this seems plausible.
 A certain `barrier' might be inherent to each combination of network architecture, dataset and hyperparameters.
 Given a dataset where there is exactly zero correlation between the two tasks might move the barrier towards higher number of edges where the network is likely to split.
@@ -268,8 +271,10 @@ It has a similar number of weights compared to the base network with two layers.
     \centering
     \includegraphics[width=1.0\linewidth]{1-layer-histogram-split-behaviour.png}
     \caption{
-        Proportional Stacked Area Chart
-        This Figure depicts the network with shape $(4,20,2)$.
+        This figure depicts the proportional stacked area chart for the network with one hidden layer.
+        On the x-axis, the extension level is displayed. 
+        Along the y-axis, the percentage of runs per category is shown.
+        Each color determines the category that the run belongs to.
     }\label{fig:1layer-histogram}
 \end{figure}
 
@@ -278,9 +283,9 @@ A similar trend is visible.
 After a certain number of pruning levels and network size, the networks begin to consistently split.
 Given a few more pruning levels, the networks start to degrade more often, either before or after they seperate.
 Interestingly, at iteration 12, the network starts degrade more often before it splits.
-Begginging at 14 extension levels, where the networks are the largest, they never splits and only degrades.
-
-Why? 
+Begginging at 14 extension levels, where the networks are the largest, they never split and only degrades.
+The reason for this behaviour is unknown.
+It might be that the networks with more layers also exhibit such a behaviour at even higher extension levels. 
 
 In figure~\ref{fig:1layer-active}, the number of active weights (blue) in the network versus the number of available, unpruned weights (orange) is compared.
 Only the range of extension levels where the network seperated are displayed.
@@ -294,12 +299,14 @@ Regarding the network with three hidden layers, the results are similar.
     \centering
     \includegraphics[width=1.0\linewidth]{3-layer-histogram-split-behaviour.png}
     \caption{
-        This Figure depicts the network with shape $(4,20,2)$.
+        This figure depicts the proportional stacked area chart for the network with three hidden layers.
+        On the x-axis, the extension level is displayed. 
+        Along the y-axis, the percentage of runs per category is shown.
+        Each color determines the category that the run belongs to.
     }\label{fig:3layer-histogram}
 \end{figure}
 
-\begin{figure}[ht]
-    
+\begin{figure}[ht] 
     \centering
     \includegraphics[width=0.5\linewidth]{3-layer-active-available-at-split-log.png}
     \caption{
@@ -426,6 +433,39 @@ Since the experiments were stopped as soon as a network degrades, the red points
 Even though the cluster looks compact along the y-axis it covers a fairly large range between 0.08 and 0.56 loss. These losses correspond to an accuracy of roughly $95$\% and $65$\% respectively.
 The seperated and interconnected networks still generally inhabit an area with lower loss than the degraded networks.
 
+
+\section{Experiments on the MNIST-Fashion-MNIST Dataset}
+Due to the success of the method in seperating the neural network, the same was attempted on the more realistic dataset described in paragraph~\ref{sec:mnist}.
+The experiments cannot be executed as systematically as before, due to significantly higher computational cost.
+However with experience gained from previous experiments, it was indeed possible to find seperated networks.
+
+The hyperparameters are mostly the same as in the previous experiments.
+The network is trained with ADAM and a learning rate of $0.001$.
+Additionally, a larger batch size of 128 is selected.
+
+The dataset provides 1568 input features and there are 20 output features. 
+The network architecture selected for this task was $(1568, 784, 784, 20)$.
+In preliminary experiments, the networks seperated at significantly larger numbers of parameters.
+Therefore, the pruning target was set to 600.
+In the beginning the network has $1859648$ weights.
+With 20 pruning levels, this results in an effective pruning rate of $\sim0.331$\%.
+The full parameter trajectory is displayed in table
+
+\[
+\big[1859648, 1189791, 761221, 487025, 311595, 
+\]
+\[
+199357, 127547, 81604, 52210, 33403,21371,
+\]
+\[
+13673, 8748, 5597, 3581, 2291, 1466, 938, 600\big]    
+\]
+
+
+
+
+
+This network contains
 
 \subsection{Conclusion: Network Extension}
 They always split
