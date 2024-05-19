@@ -440,10 +440,11 @@ The experiments cannot be executed as systematically as before, due to significa
 However, with experience gained from previous experiments, it was indeed possible to find separated networks.
 
 The hyperparameters are mostly the same as in the previous experiments.
-The network is trained with ADAM and a learning rate of $0.001$.
-Additionally, a larger batch size of 512 is selected.
+The network is trained with the ADAM optimizer and a learning rate of $0.001$.
+Additionally, a larger batch size of 512 is selected, since the data is more diverse and there are significantly more samples.
 
-The dataset provides 1568 input features and there are 20 output features. 
+
+The dataset includes 1568 input features and there are 20 output features. 
 
 The experiments were conducted with a network architecture of the shape $(1568, 784, 392, 20)$.
 In preliminary experiments, the networks separated at significantly larger numbers of parameters.
