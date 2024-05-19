@@ -24,19 +24,19 @@ class Logger:
         for key, x in keyword_metrics.items():
             self.__metric(x, prefix + key)
 
-    def __metric(self, x: np.ndarray, prefix: str):
+    def __metric(self, x: np.ndarray, key: str):
         if not isinstance(x, np.ndarray):
-            self.__strict_insert(prefix, x)
+            self.__strict_insert(key, x)
             return
 
         # single value in array
         if x.shape == (1,) or x.shape == (1, 1):
-            self.__strict_insert(prefix, x.item())
+            self.__strict_insert(key, x.item())
             return
 
         # single dimensional. assuming batch
         if len(x.shape) == 1:
-            self.__strict_insert(prefix, x.mean().item())
+            self.__strict_insert(key, x.mean().item())
             return
 
         # batch and task
@@ -48,15 +48,20 @@ class Logger:
 
             batch_metric = x.mean(axis=0)
 
-            self.__strict_insert(prefix, batch_metric.mean())
+            self.__strict_insert(key, batch_metric.mean())
 
             if num_tasks < 2:
                 return
 
-            for (name, (_, __)), task_metric in zip(
+            if '/' in key:
+                key = f"tasks_{key}"
+            else:
+                key = f"tasks/{key}"
+
+            for (task_name, (_, __)), task_metric in zip(
                 self.task_description, batch_metric
             ):
-                key = f"{prefix}taskwise/{name}-"
+                key = f"{key}_{task_name}"
                 self.__strict_insert(key, task_metric.item())
             return
 
