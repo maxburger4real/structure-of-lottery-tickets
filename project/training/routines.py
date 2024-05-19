@@ -1,5 +1,6 @@
 """high level training routines."""
 from enum import Enum
+from re import I
 from tqdm import tqdm
 from typing import Iterable
 from training.config import Config

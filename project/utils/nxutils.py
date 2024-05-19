@@ -11,6 +11,7 @@ import matplotlib.colors as mcolors
 from enum import Enum
 from typing import List, Dict, Tuple
 import plotly.graph_objects as go
+import pickle
 
 ParamState = Enum(
     "ParamState", ["active", "inactive", "zombious", "zombie_downstream", "pruned"]
@@ -183,6 +184,17 @@ class GraphManager:
             self.is_split = True
         elif self.untapped_potential < 0:
             self.is_degraded = True
+
+        G = subgraph_by_state(self.G, include=[ParamState.active]).copy()
+        for node in G.nodes():
+            if 'state' in G.nodes[node]:
+                del G.nodes[node]['state']
+        for edge in G.edges():
+            if 'state' in G.edges[edge]:
+                del G.edges[edge]['state']
+                
+        nx.write_graphml(G, f'file{iteration}.graphml')
+
 
     def fig(
         self,
