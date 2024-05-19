@@ -1,0 +1,29 @@
+\section{BIMT MEchiInterp}
+
+
+
+Neural Networks have achieved remarkable success in various tasks.
+However, even though scientist and engineers seem to have tamed them, they largely remain black boxes.
+Mechanistic Interpretability is the study of undestanding the inner workings of neural networks.
+By finding subcomponents of neural networks, the behaviour of a network can be understood through the interaction of the subcomponents \autocite{zoomin}.
+The existence of intependent componenents may simplify interpretation significantly.
+
+\textcite{BIMT} introduce a technique named Brain Inspired Modular Training (BIMT).
+The aim of BIMT is to produce networks that resemble the structure of the problem: neurons that belong to the same task should be close to each other.
+Through training with BIMT, the authors show that the resulting networks exhibit the independece, compositionality and feature sharing inherent to the dataset.
+
+However
+
+
+Neural Network Pruning \autocite{LeCun, OptimalBrainSurgeon, HanEtAl15, PruningFiltersForEfficientConvets} has been proposed to reduce the number of parameters after the network is trained, while maintaining accuracy.
+Although the pruned networks performed well, they could not successfully be trained when reinitialized and trained from scratch \autocite{HanEtAl15, PruningFiltersForEfficientConvets}.
+
+To address this issue
+
+The Lottery Ticket Hypothesis by \textcite{DBLP:conf/iclr/FrankleC19} has shown that there exist small, well-initialized subnetworks that can be trained in isolation to reach the same accuracy as the unpruned networks. 
+
+In contrast to previous attempts where the subnetwork structure after pruning is randomly reinitialized \autocite{HanEtAl15, PruningFiltersForEfficientConvets}, \textcite{DBLP:conf/iclr/FrankleC19} reinitialize the subnetworks with their respective initial weights from before training.
+The subnetwork structure is uncovered by an algorithm called Iterative Magnitude Pruning (IMP).
+This paper surveys the recent advancements in finding well-performing subnetworks and the characteristics of these networks. 
+Different approaches for discovering small, well-performing subnetworks are presented, including Supermasks \autocite{DBLP:conf/nips/ZhouLLY19}, Edge Popup \autocite{DBLP:conf/cvpr/RamanujanWKFR20}, and Gem-Miner\autocite{RareGems}.
+
