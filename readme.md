@@ -1,5 +1,5 @@
 # Winning The Lottery Twice
-This Repository contains my Masters thesis, all the code and the thesis itself.
+This Repository contains my master's thesis, all the code and the thesis itself.
 
 ## Abstract:
 The Lottery Ticket Hypothesis has sparked a novel field of research that focuses on finding well-trainable sparse neural networks.
@@ -14,3 +14,8 @@ The experiments in this thesis are conducted on datasets that contain two indepe
 With both datasets, the resulting winning tickets resemble the structure of the datasets, namely the independence.
 The winning tickets contain separate, independent subnetworks where each subnetwork solves one independent task.
 
+## Poster (Preliminary Results)
+![Poster](./poster.png)
+
+## Contact me
+If you want to know more, contact me.
