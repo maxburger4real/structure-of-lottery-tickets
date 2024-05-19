@@ -10,6 +10,7 @@ wandb/
 .runs/
 .others/
 **/mnist_data/
+**/fashion_mnist_data/
 **/pdfs/
 
 **/LT

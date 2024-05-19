@@ -37,7 +37,7 @@ def start_routine(config: Config):
             raise ValueError(" Unsupported ")
 
 
-def vanilla(training_epochs, device, factory):
+def vanilla(training_epochs, device, factory: Factory):
     """Classical training loop."""
 
     # prepare model and data
