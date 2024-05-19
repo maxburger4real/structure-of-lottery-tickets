@@ -1,48 +1,17 @@
 \chapter{Methodology}\label{chapter:method} 
-
 In this chapter, the algorithms, methods and network architectures used for the experiments in chapter~\ref{chapter:experiments} are described in detail.
 First, the network architecture and the hyperparameters used are discussed.
 Then, iterative magnitude pruning and the rest of the training procedure are presented.
 Following, the concept of network extension is explained, which enables finding comparable network architectures.
-Finally, the methods used to find subnetworks and how they are related to tasks in datasets are presented. 
-
-\section{old intro}
-Winning tickets are highly sparse and therefore represent a performant yet reduced form of a function.
-Due to their sparsity, the structure of the network may contain useful insights about its functionality.
-Analyzing the structure of a network graph, however, is quite challenging.
-A different approach would be to use data with a known structure and test if the resulting sparse lottery ticket resembles that structure in any way, as in \autocite{BIMT}.
-
-The following research question was formulated for this thesis:
-
-\begin{quote}
-\textit{``Does a lottery ticket that was trained on a dataset with two independent tasks contain two independent subnetworks?''}
-\end{quote}
-
-Concretely, for the scope of this thesis, subnetworks derived with iterative magnitude pruning and parameter resetting are examined.
-The semantic structure of data can be quite complex.
-Therefore, in this thesis, a fundamental semantic structure will be at the center of the investigation: Independence.
-Inspired by experiments from in \textcite{BIMT}, two dataset that contain independent tasks are created.
-
-In this chapter, the methods and algorithms are described in detail.
-The network architecture, related hyperparameters, and the training procedure are outlined.
-Following, the methods used for analyzing whether the networks separated and the process of network extension are discussed.
-
-
-% What are the networks
-% TODO: introduce the network with some math maybe.
-
-
+Finally, the methods used to find subnetworks and match subnetworks to tasks of the datasets are introduced. 
 
 \section{Network Architecture and Hyperparameters}
 The experiments in this thesis are conducted with a Multilayer Perceptron (MLP) architecture.
-The decision was inspired by the use of the Lenet-300-100~\autocite{LeCun} architecture by \textcite{LTH} for the experiments on the MNIST dataset~\autocite{mnist}, which has two hidden layers of 300 and 100 hidden neurons respectively.
+The decision was inspired by the use of the LeNet~\autocite{LeCun} architecture by \textcite{LTH} for the experiments on the MNIST dataset~\autocite{mnist}, which has two hidden layers of 300 and 100 hidden neurons respectively.
 
 Concretely, let $f(x; \theta)$ be the function that defines the MLP, where $x$ represents the network input and $\theta$ the parameters of the network, namely the weights $W_i$ and biases $b_i$ of each layer $i$.
-
 Each layer of the MLP is defined by the following equation:
-\[
-a_i = \sigma(W_i^\top a_{i-1} + b_{i})
-\]
+\[ a_i = \sigma(W_i^\top a_{i-1} + b_{i}) \]
 , where $W_i$ and $b_i$ denote the weight matrix and bias vector of the $i$-th layer respectively.
 The function $\sigma$ represents the activation function and $a_i$ is the activation of the $i$-th layer.
 When $i=1$, the activation $a_{i-1}$ is the network input $x$.
@@ -59,38 +28,25 @@ Throughout the thesis, experiments are repeated with several different seeds for
 Throughout this thesis, MLPs with one to three layers and different numbers of hidden neurons are used.
 
 
-% The neural network employed in the thesis consists of four input neurons, two output neurons, and a variable number of hidden layers ranging from one to three.
-% The experiments conducted throughout the thesis involve exploring different configurations of hidden layers.
-% The input neurons correspond to $x_1, x_2, x_3, x_4$ defined of the `Moons-Circles' dataset, defined in the previous paragraph~\ref{sec:independece_dataset}.
-% The network outputs correspond to the labels $y_1$ and $y_2$ of the dataset.
-
-
-% The network simultaneously classifies two independent tasks.
-% Each of those tasks is a binary classification problem.
-% Therefore, the binary cross entropy is used as a loss function.
-% It is calculated for each task separately.
-% The total loss is calculated as the sum of the losses of each binary classification task. 
-
-
-
 \section{Finding Winning Tickets}
-To find winning tickets, the standard iterative magnitude pruning algorithm described in paragraph~\ref{sec:lth}, which was used by \textcite{LTH} in the original lottery ticket experiments.
+To find winning tickets, the standard iterative magnitude pruning algorithm is used, which is described in paragraph~\ref{sec:lth} was used by \textcite{LTH} in the original lottery ticket experiments.
 
-\textcite{LinearModeConnectivity} demonstrated that the LeNet architecture trained on MNIST is stable at initialization, meaning that lottery can be found rewinding the weights to the value at initialization. 
-Since the most complex dataset in this thesis was based on the MNIST dataset, it is assumed that resetting the weights to their initial value is sufficient to discover lottery tickets.
+\textcite{LinearModeConnectivity} demonstrated that the LeNet architecture trained on MNIST is stable at initialization.
+This means, that winning tickets can be found when the parameters are reset to their respective values at initialization.
+For the experiments in this thesis, it is assumed that similar architectures are also stable since the datasets used are less or similarly complex than the MNIST dataset.
+
 \subsection{Iterative Magnitude Pruning}
-Iterative Magnitude pruning consists of several iterations, which are called  \textit{pruning levels}.
+Iterative magnitude pruning consists of several iterations, which are called  \textit{pruning levels}.
 One pruning level includes training the network to convergence, pruning a fixed percentage of the network and resetting the unpruned parameters to their values before training.
 One complete run of iterative magnitude pruning, which includes all pruning levels, will be denoted as a \textit{training run}.
 One training run consists of $L$ pruning levels.
 
-To formally describe the iterative magnitude pruning algorithm, let $f(x; \theta^{(i)})$ be the neural network function with randomly initialized parameters $\theta^{(i)}$ of the $i$-th pruning level and the network input $x$.
+To formally describe the iterative magnitude pruning algorithm, let $f(x; \theta^{(0)})$ be the neural network function with randomly initialized parameters $\theta^{(0)}$ of the $i$-th pruning level and the network input $x$.
 Consider a pruning function $\textit{P}: \mathbb{R}^{|\theta|} \to {\{0,1\}}^{|\theta|}$, which produces a binary pruning mask that covers all parameters.
 The function masks out $p$-percent of all unmasked weights in $|\theta|$, where $p$ is called the \textit{pruning rate}.
-The network is trained to convergence, producing the updated weights $\hat \theta^{(0)}$.
-The test accuracy of the resulting network is denoted $\hat a^{(0)}$.
 
 Now, a neural network with initial weights $\theta^{(0)}$ is trained to convergence, resulting in the trained parameters $\hat \theta^{(0)}$.
+The test accuracy of the resulting network is denoted $\hat a^{(0)}$.
 Then, the function $\textit{P}$ is applied to the trained parameters, resulting in the mask $m^{(0)} = \textit{P}(\hat \theta^{(0)})$.
 The mask is multiplied element-wise with the initial weights, producing the weights for the next iteration $\theta^{(1)} = m^{(0)} \odot \theta^{(0)}$, where $\odot$ denotes the element-wise product.
 These weights are used to initialize the network, which is then trained to convergence resulting in $\hat \theta^{(1)}$ and the whole process repeats.
@@ -98,54 +54,49 @@ These weights are used to initialize the network, which is then trained to conve
 This procedure is repeated $L$-times, resulting in the update rules:
 \[ m^{(i)} = \textit{P}(\hat \theta^{(i)}); \quad i \in (0,L-1) \]
 \[ \theta^{(i+1)} = \theta^{(0)} \odot \prod_{j=0}^{i}m^{(j)}; \quad i \in (0,L-1) \] 
-where $\prod$ denotes the element-wise product and $\hat \theta^{(i)}$ denotes the updated weights after training a network with weights $\theta^{(i)}$.
-
+where $\prod$ denotes the element-wise product and $\hat \theta^{(i)}$ denotes the updated weights after training a network with weights $\theta^{(i)}$, for any pruning level $i$.
 Because all masks are multiplied with the initial weights, the final subnetwork can be expressed as:
 \[\theta^{(L)} = \theta^{(0)} \odot \prod_{i=0}^{L-1}m^{(i)} \]
 The final subnetwork with parameters $\theta^{(L)}$ is then trained to convergence, resulting in the test accuracy $\hat a^{(L)}$.
-
 The subnetwork is considered a winning ticket, if:
 \begin{enumerate}
-  \item  $\hat a^{(L)} \geq \hat a^{(0)}$: the accuracy of the trained subnetwork is larger than or equal to the accuracy of the trained dense network.
-  \item $|\theta^{(L)}| \ll |\theta^{(0)}|$: the subnetwork has significantly fewer parameters than the dense network.
+\item  $\hat a^{(L)} \geq \hat a^{(0)}$: The accuracy of the trained subnetwork is larger than or equal to the accuracy of the trained dense network
+\item $|\theta^{(L)}| \ll |\theta^{(0)}|$: The subnetwork has significantly fewer parameters than the dense network
 \end{enumerate}
 
 In this thesis, the pruning function $P$ masks $p$ percent of the unpruned weights with the lowest magnitude, as in the original experiments~\autocite{LTH}. 
 Since \autocite{Supermasks} showed that magnitude pruning is amongst the best-performing criteria, it was selected due to its simplicity and widespread usage.
 Contrary to \autocite{LTH} where layerwise pruning is applied, the network is pruned globally in the following experiments.
 Concretely, the pruning criterion is applied to all weights at once.
-This enables the algorithm to `select' the sparsity for each layer on its own, resulting in fewer assumptions that have to be made.
+This enables the algorithm to implicitly select the sparsity for each layer, resulting in fewer assumptions that have to be made.
 Biases are not pruned in the scope of this thesis, because they are initialized with zero.
 Preliminary experiments have shown, that they develop different ranges of magnitudes to the weights, which mostly led to the complete pruning of all biases.
 To further simplify the process, biases are not pruned.
 After all, they only make up an insignificant fraction of the number of parameters. 
 
-At the beginning, all parameters of the network are unpruned.
-The number of prunable parameters is denoted by $|\theta_p|$.
-If weights and biases were pruned, the number of prunable parameters would simply be $|\theta|$.
-After $L$ pruning levels, the so-called \textit{pruning target} is reached, which denotes the final number of unpruned parameters.
-In the pruning target, parameters like biases that are not available for pruning are ignore.
+The number of prunable parameters is denoted by $|\theta_p|$, which is the sum of the number of prunable weights and the number of prunable biases.
+If both, weights and biases, were pruned, the number of prunable parameters would simply be $|\theta|$.
+Parameters that were already pruned are not considered to be prunable.
+After $L$ pruning levels, the so-called \textit{pruning target} is reached, which denotes the final number of prunable parameters.
 In mathematical terms, the pruning target $T$ is the result of applying the pruning function $L$ times.
-The number of unpruned parameters that remain is given as
-\[ T^{(L)} = |\theta_p| * {(1-p)}^L \]
-
-The number of unpruned parameters at every pruning level can be calculated with this formula.
-The sequence of unpruned parameters at every pruning level is termed the \textit{parameter trajectory}.
+The number of prunable parameters that remain after any given pruning level $i$, can be calculated as follows:
+\[ T^{(i)} = |\theta_p| * {(1-p)}^i ; \quad i \in (0,L) \]
+The sequence of prunable parameters at every pruning level is termed the \textit{parameter trajectory}.
 The parameter trajectory is used to define the pruning part of the training run.
-A parameter trajectory can be uniquely described by three out of the following four values:
+A parameter trajectory can be uniquely described by three of the following four values:
 \begin{itemize}
-    \item initial number of parameters available for pruning, $|\theta_p|$
-    \item number of pruning levels in the training run, $L$
-    \item pruning rate, $p$
-    \item pruning target, $T$
+    \item $|\theta_p|$ Prunable parameters: Initial number of prunable parameters before the first pruning level
+    \item $L$ Pruning levels: Number of iterations of IMP for the training run
+    \item $p$ Pruning rate: Percentage of prunable parameters removed every pruning level
+    \item $T$ Pruning target: Number of prunable parameters after $L$ pruning levels
 \end{itemize}
 Different combinations can be useful for different scenarios.
 For example, for some experiments, the networks must have the same number of final parameters.
 Then, it can be defined with the pruning target.
-In a different scenario, the networks may need the same number of iterations and pruning rate, but the pruning target does not need to be fixed.
+In a different scenario, the networks may need the same number of pruning levels and pruning rate, but the pruning target does not need to be fixed.
 
 \begin{minipage}{\linewidth} % IMP pseudo code
-\begin{lstlisting}[language=Python,caption={[Iterative Magnitude Pruning]Iterative magnitude pruning with parameter resetting, using PyTorch~\autocite{pytorch}; Python pseudo code
+\begin{lstlisting}[language=Python,caption={[Iterative Magnitude Pruning]Iterative magnitude pruning with parameter resetting; Python pseudo code
 },captionpos=b, label={code:imp}]
 model # the freshly initialized neural network 
 parameter_trajetory: List[int] # defines the pruning process
@@ -166,7 +117,7 @@ for target in parameter_trajectory:
     train_loss = train(model, train_data)
     val_loss, val_accuracy = evaluate(model, test_data)
 
-    # transform to a graph and see if it split or degraded
+    # transform to a graph and see if it separated or degraded
     dag = transform_to_digraph(model)
     evaluate_dag(dag)
 
@@ -187,7 +138,6 @@ The \lstinline{model} refers to the freshly initialized neural network.
 The parameter trajectory, as described earlier in this paragraph, refers to the number of unpruned parameters the network will have at every pruning level.
 The difference between two neighboring entries in the parameter trajectory gives the number of parameters to prune at the given level.
     
-
 \subsection{Training Details}
 The networks are trained with the ADAM optimizer~\autocite{ADAM}.
 The learning rate is set to $0.001$ and a batch size of $64$ is used.
@@ -199,9 +149,7 @@ Early stopping is implemented with a patience of $30$ epochs.
 The metric that is watched is the validation loss.
 This means, that if the validation loss does not improve for $30$ consecutive epochs, the training of the level is stopped and the next level is started.
 As a pruning rate, a value of $0.32$ was selected, due to promising results in preliminary experiments.
-The pruning target is, in many experiments, derived from the model architecture which will be described in detail in a later chapter.
-
-
+The pruning target is, in many experiments, derived from the model architecture which will be described in detail in chapter~\ref{chapter:experiments}.
 
 \section{Network Extension}\label{sec:extension}
 Network extension is a technique used to create models that are comparable based on the number of unpruned parameters they have. 
@@ -229,15 +177,15 @@ With this change, the pruning targets are aligned and therefore, the final netwo
 However, the number of unpruned parameters is \textit{only} aligned at the very end.
 Consider the following situation.
 The network $f_{1000}$ separates after the fourth pruning level, where it has $341$ prunable parameters left. 
-The other network $f_{1200}$ separates at iteration after the fifth level, where it has $269$.
-At first glance, one could say that the network $f_{1000}$ was separated earlier.
+The other network $f_{1200}$ separates after the fifth level, where it has $269$.
+At first glance, one could say that the network $f_{1000}$ separated earlier.
 It separated when it had more parameters available than the other network.
 However, this misses part of the picture.
 Given that the networks can only separate at the predefined trajectory, the network $f_{1200}$ would have had to separate at $363$ parameters to separate with more parameters than the other network.
 Therefore, the $f_{1200}$ \textit{possibly would} seperate earlier than $f_{1000}$.
 In the range of $363$ to $341$ where the $f_{1200}$ would have more parameters than $f_{1000}$, separation is not possible because the network never obtains that number of parameters.
 This makes it hard to compare the networks during the pruning levels.
-Especially regarding the pruning level when they split, as they cannot be compared fairly.
+Especially regarding the pruning level when they separated, as they cannot be compared fairly.
 Ideally, different networks would have parameter trajectories that are shared, such that they can be compared at every step.
 
 To achieve this, we will start with a small network which will be referred to as the base network.
@@ -258,9 +206,8 @@ Concretely, let $N$ be the number of weights in a network.
 The equation to calculate the number of weights is given as follows
 
 \begin{equation} \label{eq:num_params}
-    d_h d_{in}+(m-1)d_h^2 + d_h d_{out} = N
+d_h d_{in}+(m-1)d_h^2 + d_h d_{out} = N
 \end{equation}
-
 , where $d_{in}$ and $d_{out}$ refer to the input and output dimension respectively, $m$ to the number of hidden layers and
 $d_h$ to the number of neurons per hidden layer.
 For the base network with shape $(4, 8, 8, 2)$ the values are $d_h=8$, 
@@ -269,10 +216,10 @@ $d_{in}=4$, $d_{out}=2$ and $m=2$.
 To extend the network with a given pruning rate $p=0.32$, the number of parameters is updated to a target value denoted $\hat N$.
 The value $\hat N$ should have the property that, when pruned with a pruning rate of $p$, it should again be $N$.
 Therefore, for one extension level:
-\[ \hat N = {(\frac{N}{1-p})} \]
+\[ \hat N = {\frac{N}{1-p}} \]
 And generalizing for any number of extension levels
-\[ \hat N = {\frac{N}{{(1-p)}^L}} \]
-, where $L$ refers to the number of extension levels and $\hat N$ now represents the target number of parameters. 
+\[ \hat N_i = {\frac{N}{{(1-p)}^i}} \]
+, where $i$ refers to the number of extension levels and $\hat N_i$ now represents the target number of parameters. 
 To find a network architecture that has this amount of parameters, $\hat N$ is inserted into equation~\ref{eq:num_params}.
 All parameters except for $d_h$ are set to a fixed value and the equation is solved for $d_h$.
 Equation~\ref{eq:num_params} can be reformulated to a standard quadratic equation.
@@ -293,27 +240,22 @@ Therefore, the value is simply rounded to the nearest integer.
 In the case of the network with $112$ weights and a pruning rate of $0.32$, $\hat N$ evaluates to $164.706$.
 Entering $\hat N$ into the equation and solving for $d_h$, the two solutions are $d_h=10.1795$ and $d_h=-16.1795$.
 Only positive solutions are of interest, therefore the second solution can be omitted.
-Rounded to the nearest integer, the number of hidden neurons in each layer is set to $10$.
+Rounded to the nearest integer, the number of hidden neurons in each layer is set to $10$ for the extended network.
 
 Through rounding the pruning rate is slightly different at every iteration.
 This is generally the case when a pruning rate is given as a percentage since the number of weights that are pruned is always discrete.
-In the previous example, the actual pruning rate would be calculated as follows:
+In the previous example, the effective pruning rate would be calculated as follows:
 The number of weights for the architecture extended by one level would be $160$.
 The effective pruning rate is therefore $p_{eff}=1-\frac{112}{160}=0.3$.
 
 A network can be extended an arbitrary number of times.
 Importantly, the number of weights is fixed for each extension level.
-The number of weights a network has at level one does not change, independent of the number of total extension levels.
+This means that the number of weights a network has at level one does not change, independent of the number of total extension levels.
 Therefore, the networks share the same parameter trajectory as long as they are extended from the same base network with the same pruning rate.
 This enables comparing networks of different sizes throughout all pruning levels they share.
 
 
-
 \section{Network Analysis}
-In this thesis, the structure of the winning tickets is analyzed.
-To do this, the network is converted into a directed acyclic graph.
-The parameters of the network are categorized and all parameters that are not easily removable are kept.
- 
 \subsection{Conversion to Directed Acyclic Graph}
 Before the first pruning level, the network is converted into a directed acyclic graph $\mathcal{G}$.
 This graph representation is maintained throughout the pruning levels and updated after each level.
@@ -329,7 +271,7 @@ Functionally, there are four different states a weight or neuron can have in the
 These four states are as follows:
 \begin{enumerate}
 \item \textbf{Active}: Nodes or edges in the graph that are connected to at least one input node and at least one output node. They are the \textit{normal} parameters of the network, that influence the network output by manipulating the network input.
-\item \textbf{Inactive}: Nodes or edges that are not connected to any output node. They do not influence the result of the network and they do not receive gradients. Hence can be removed without any changes to the network output.
+\item \textbf{Inactive}: Nodes or edges that are not connected to any output node. They do not influence the result of the network and they do not receive gradients. Hence they can be removed without any changes to the network output.
 \item \textbf{Zombie}: Nodes or edges that are not connected to any input node, but are connected to at least one output node. Zombie parameters can influence the network output, if the neuron without incoming connections has a bias term that results in a non-zero activation.
 \item \textbf{Pruned}: Nodes or edges that have been masked out by the pruning algorithm. They do not influence the network output.
 \end{enumerate}
@@ -354,15 +296,15 @@ Pruned parameters are not actively visualized, since they are removed from the n
 
 \subsection{Finding Subnetworks}\label{sec:FindSubnet}
 To find independent subnetworks in the network, the previously defined categories are assigned to each parameter after every pruning level.
-
-First, after a network is pruned, each newly pruned weight is tagged as such.
+First, after a network is pruned, each newly pruned weight is categorized as such.
 From the directed acyclic graph of the network $\mathcal{G}$ that contains the parameters of all categories a subgraph is created.
 Concretely, let $\mathcal{G}$ be defined as the pair $\{V, E\}$, where $V$ is the set of all vertices or nodes and $E$ is the set of all edges.
 The set $E_p$ is a subset of $E$, containing all pruned edges of the graph.
-The set of unpruned edges is
+The set of unpruned edges $E_{\neg p}$ is defined as:
 \[ E_{\neg p} = E - E_p \]
+, where $E-E_p$ denotes the set difference.
 Since biases are not pruned, the set of unpruned nodes is simply $V_{\neg p} = V$
-With the vertices $V$ and the unpruned edges $E_{\neg p}$ a subgraph of $\mathcal{G}$ is created, denoted $\mathcal{G}_{\neg p}$.
+With the vertices $V_{\neg p}$ and the unpruned edges $E_{\neg p}$ a subgraph of $\mathcal{G}$ is created, denoted $\mathcal{G}_{\neg p}$.
 
 On this subgraph, $\mathcal{G}_{\neg p}$, inactive nodes and edges are found and assigned their category.
 To find inactive parameters, each node except the output nodes is examined.
@@ -371,8 +313,8 @@ Since the graph is directed, the path is only allowed along the direction of the
 Consequently, all incoming edges of an inactive node are also inactive.
 
 The set $E_i$ is a subset of $E_{\neg p}$, and it contains all the inactive edges.
-Similarly, the set $V_i$ is a subset of $V$ and contains all the inactive nodes.
-All nodes and edges that are neither pruned nor inactive are collected in the sets $V_{\neg i}$ and $E_{\neg i}$ respectively.
+Similarly, the set $V_i$ is a subset of $V_{\neg p}$ and contains all the inactive nodes.
+All nodes and edges that are neither pruned nor inactive are collected in the sets $V_{\neg pi}$ and $E_{\neg pi}$ respectively.
 They are defined as:
 \[ V_{\neg pi} = V_{\neg p} - V_i \]
 \[ E_{\neg pi} = E_{\neg p} - E_i \]
@@ -382,7 +324,7 @@ The subgraph of $\mathcal{G}_{\neg p}$, which contains only the nodes in $V_{\ne
 On the subgraph $\mathcal{G}_{\neg pi}$, which neither contains pruned nor inactive parameters, all zombie parameters are collected.
 All nodes, where there is no path from any input to the node, are collected in the set $V_z$.
 Further, all edges to or from nodes in the set $V_z$ are collected in $E_z$.
-The sets of nodes and edges are defined as:
+The sets of the remaining active nodes and edges are defined as:
 \[ V_a = V_{\neg piz} = V_{\neg pi} - V_z \]
 \[ E_a = E_{\neg piz} = E_{\neg pi} - E_z \]
 Because all categories of parameters except for active ones are removed from the sets, they are simply denoted $E_a$ and $V_a$ for short.
@@ -430,7 +372,7 @@ As described previously, the active subgraph \lstinline{G_a} is created.
 Connected components of the graph, if there are more than one, are obtained.
 A connected component is a subgraph of a graph, where every node is connected via a path to every other node.
 Therefore, if the graph is separated, there exist at least two connected components.
-The function \lstinline{nx.connected_components}, provided by NetworkX, retrieves all the connected components, which are collected in a list.
+The function \lstinline{nx.connected_components}, provided by NetworkX, retrieves all the connected components.
 
 \section{Datasets with Independent Tasks}\label{sec:taskmatch}
 In this thesis, one area of interest is to see if the network separates given that there exist independent tasks in the dataset.
@@ -442,7 +384,7 @@ Consider the dataset $\mathcal{D}$ with its set of input features $\mathcal{D}_X
 Let $T$ be a task, which is defined by the inputs $T_X$ and outputs $T_Y$ that belong to the task, where $T_X$ is a subset of $\mathcal{D}_X$ and $T_Y$ a subset of $\mathcal{D}_Y$.
 The tasks $T$ is said to be independent if the set of inputs $T_X$ and outputs $T_Y$ are not shared with any other task.
 Independent tasks must not overlap.
-Classical machine learning datasets like MNIST~\textcite{mnist} contain one independent task because all input features may be necessary to predict all labels.
+Classical machine learning datasets like MNIST~\autocite{mnist} contain one independent task because all input features may be necessary to predict all labels.
 
 However, there can exist datasets with more than one independent task.
 Concretely, consider a task $T^{(1)}$ with inputs $T^{(1)}_X$ and outputs $T^{(1)}_Y$ and task $T^{(2)}$ with inputs $T^{(2)}_X$ and outputs $T^{(2)}_Y$.
@@ -487,21 +429,21 @@ In a scenario where all outputs are necessary to perform, but not all inputs are
 Now with the coverages calculated, the network can be categorized.
 First, a coverage term that is used for the categorization must be selected.
 Consider the network $N$ with $J$ subnetworks $\{N_1, \dots, N_J\}$ and a dataset $\mathcal{D}$ with $K$ tasks $\{T_1, \dots, N_K\}$.
-Either the input-, output- or total coverage can be used and will be referred to as $c^{(k)}$ for short, in this section.
+Either the input-, output- or total coverage can be used and will be referred to as $c^{(k)}$ for task $k$ in this section.
 
 The network $N$ is assigned to one of three categories, depending on the coverage of its subnetworks:
 \begin{itemize}
-    \item \textbf{interconnected}: the network is considered interconnected if the coverage of each task is $1$, but the networks are not separated. Therefore, the number of tasks $K$ is greater than the number of subnetworks $J$.
+    \item \textbf{Interconnected}: The network is considered interconnected if the coverage of each task is $1$, but the networks are not separated. Therefore, the number of tasks $K$ is greater than the number of subnetworks $J$.
     An unpruned, fully-connected network is per definition interconnected.
     \[ c^{(k)} = 1; \quad\forall\quad k \in [1, \dots, K]\]
     \[ K > J \]
 
-    \item \textbf{separated}: the network is considered separated if the coverage of each task is $1$, and there is an equal number of subnetworks and tasks.
+    \item \textbf{Separated}: The network is considered separated if the coverage of each task is $1$, and there is an equal number of subnetworks and tasks.
     \[ c^{(k)} = 1; \quad\forall\quad k \in [1, \dots, K]\]
     \[ K = J \]
 
-    \item \textbf{degraded}: the network is considered degraded if the coverage of at least one task is less than $1$.
-    \[ c^{(k)} \leq 1; \quad\textit{for any}\quad k \in [1, \dots, K]\]
+    \item \textbf{Degraded}: The network is considered degraded if the coverage of at least one task is less than $1$.
+    \[ c^{(k)} < 1; \quad\textit{for any}\quad k \in [1, \dots, K]\]
 \end{itemize}
 
 Concretely, consider a dataset that contains two tasks, $T^{(1)}$ and $T^{(2)}$, with their accociated input sets $T^{(1)}_X$, $T^{(2)}_X$ and output sets $T^{(1)}_Y$, $T^{(2)}_Y$.
@@ -509,7 +451,7 @@ Let $J$ denote the number of subnetworks.
 The coverages can be collected in a matrix $C$ of size $J \times K$, where $K=2$. 
 $c_{j,k}$ represents the value at the $j$-th row and the $k$-th column and $0 \leq c_{j,k} \leq 1$ holds.
 The sum of the matrix is upper bound by the number of tasks $K$.
-\[ \sum^{i} \sum^{j} c_{j,k} \leq K \]
+\[ \sum_{j=1}^{J} \sum_{k=1}^{K} c_{j,k} \leq K \]
 Given an unpruned network and a dataset with two tasks the matrix would look like the following 
 \[ C = \begin{pmatrix} 1 & 1 \end{pmatrix} \]
 Each task would be completely covered by the same network.
@@ -529,9 +471,8 @@ Assuming that half of the features of interest of a given task are not covered a
 \[ C = \begin{pmatrix} 1 & 0 \\ 0 & 0.5 \end{pmatrix} \]
 
 If the sum of $C$ is equal to the number of tasks and the number of subnetworks is equal to the number of tasks, then the network is (perfectly) separated.
-If the sum of $C$ is equal to the number of tasks, but there are fewer subnetworks than tasks, the network still needs to split.
-The number of splits that are required can be the difference between the number of tasks and the number of subnetworks.
-
+If the sum of $C$ is equal to the number of tasks, but there are fewer subnetworks than tasks, the network still needs to separate.
+The number of separations that are required can be calculated by the difference between the number of tasks and the number of subnetworks.
 If the sum of $C$ is less than the number of tasks, the network already has lost at least one input or output.
 This scenario is referred to as a degraded network.
 Once a network is degraded, a perfect separation cannot be reached anymore.
