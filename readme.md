@@ -1,7 +1,7 @@
 # Winning The Lottery Twice
 This Repository contains my Masters thesis, all the code and the thesis itself.
 
-Abstract:
+## Abstract:
 The Lottery Ticket Hypothesis has sparked a novel field of research that focuses on finding well-trainable sparse neural networks.
 **Iterative Magnitude Pruning** is a central method in this field.
 It successfully uncovers sparse subnetworks that achieve performance comparable to the original dense network when trained in isolation. 
