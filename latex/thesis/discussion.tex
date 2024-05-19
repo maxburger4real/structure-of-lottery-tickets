@@ -1,30 +1,32 @@
-\chapter{Conslusion}\label{chapter:conclusion} 
+\chapter{Conclusion}\label{chapter:conclusion} 
 
-Over different network sizes, different architectures with varying numbers of hidden layers as well as different pruning rates, the networks separate quite reliably, given the right conditions.
-The experiments where the network did not separate either had too small networks, too few pruning levels and too high of a pruning rate.
-Also for the more complicated MNIST-Fashion-MNIST dataset, the networks separated with the standard training iterative pruning method.
-
-The results indicate, that iterative magnitude pruning indeed produces lottery tickets with separate subnetworks for independent tasks.
-
-The lottery ticket hypothesis sparked many directions of research in the field of sparse network training and pruning in general.
-However, how and why they work remains elusive.
-
-In this thesis, an empirical analysis was conducted on the relationship between the semantic structure of the data and the structure of the sparse lottery ticket subnetwork.
-In the experiments conducted, it was shown that networks trained with \textit{Iterative Magnitude Pruning}, produced two independent subnetworks on datasets with two independent tasks.
-Systematic experiments were conducted on the `Moons-Circles' dataset, a simplistic toy dataset that contains two independent tasks.
+In this thesis, the structure of winning tickets created with iterative magnitude pruning was analyzed empirically.
+It was shown, that feed-forward neural networks consistently separated into two independent subnetworks by iterative magnitude pruning when trained on a dataset with independent tasks.
+With the right conditions, such as a large enough network and enough pruning levels, the networks consistently separate over different pruning rates and network sizes.
+The separation was tested on custom datasets with two independent tasks.
+Systematic experiments were conducted on the Moons-Circles dataset, a simplistic toy dataset that contains two independent tasks.
 Due to the success of the method on the toy task, experiments were also conducted on the `MNIST-Fashion-MNIST' dataset, which is significantly more realistic.
-In both cases, neural networks were found to separate with non-trivial accuracy.
+In both cases, neural networks were found to separate with non-trivial accuracy and without any regularization techniques.
+
+These results indicate, that iterative magnitude pruning indeed produces winning tickets with meaningful structure.
+Also, the results indicate that there is a probabilistic element to the degree to which these structures come to light.
 
 \section{Limitations}
 The findings of this thesis are empirical, and due the the scope and scale of the thesis, there are numerous untested scenarios.
 The experiments were only conducted on toy datasets and on MNIST-Fashion-MNIST which might also be counted as a toy dataset.
 Whether the findings remain true for larger and more realistic tasks remains an open question.
 
+Another limitation is the restriction to datasets with similarly complex tasks.
+Scenarios with tasks that vary in size or complexity were not tested in this thesis.
+Further, only fully connected networks were tested.
+Other architectures such as convolutional neural networks were not used in any experiments.
+All of the limitations invite for future work on this topic.
+
 \section{Discussion}
 The experiments in this thesis demonstrate that iterative magnitude pruning finds independent subnetworks.
-This can be valuable for understanding what the structure of lottery tickets represents.
+This can be valuable for understanding what the structure of winning tickets represents.
 Further, it could also be valuable for machine learning interpretability.
-A lottery ticket could be trained and if independent networks occur, it could hint at independence in the dataset.
+A winning ticket could be trained and if independent networks occur, it could hint at independence in the dataset.
 The same might be true for other types of semantic structure, like feature sharing or compositionality.
 
 \section{Future Work}
