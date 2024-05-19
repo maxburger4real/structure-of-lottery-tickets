@@ -118,7 +118,7 @@ def imp(
         )
 
         graph_metrics = {}
-        if graph_manager is not None:
+        if graph_manager is not None and level > 10:
             graph_manager.update(model, level)
             graph_metrics = graph_manager.metrics()
             logger.metrics(graph_manager.layerwise_split_metrics, prefix='layersplit/')
