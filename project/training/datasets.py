@@ -26,7 +26,7 @@ class Datasets(Enum):
 
     CIRCLES_MOONS = OrderedDict(circles=(2, 1), moons=(2, 1))
     MNIST = OrderedDict(mnist=(784, 10))
-    FASHION = OrderedDict(mnist=(784, 10))
+    FASHION = OrderedDict(fashion=(784, 10))
 
     # mini datasets
     MINI_MNIST = OrderedDict(mnist=(144, 3))
@@ -63,6 +63,7 @@ def make_dataset(name, n_samples, noise, seed, factor, scaler):
         case Datasets.CIRCLES_MOONS:
             return __make_circles_and_moons(n_samples, noise, seed, factor, scaler)
         case Datasets.MNIST:
+            print('mnist')
             return __make_mnist(scaler)
         case Datasets.MINI_MNIST:
             return __make_mnist(
@@ -71,7 +72,9 @@ def make_dataset(name, n_samples, noise, seed, factor, scaler):
                 subset=[0,1,2]
             )
         case Datasets.FASHION:
+            print('fashion')
             return __make_fashion_mnist(scaler)
+        
         case Datasets.MINI_FASHION:
             return __make_fashion_mnist(
                 scaler, 

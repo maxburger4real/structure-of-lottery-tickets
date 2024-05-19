@@ -4,43 +4,37 @@ from training.datasets import Datasets, Scalers
 from training.models import Init
 from training.routines import Routines
 
-# Ranking
-# this worked amazingly well TOO!
-pruning_levels, shape, batch_size, lr = 20, [1568, 784, 784, 20], 128 ,0.001
-
-pruning_levels, shape, batch_size, lr = 14, [1568, 784, 784, 20], 128 ,0.001
+pruning_levels, shape = 18, [784, 300, 100, 10]
 
 run_config = Config(
+    model_seed=0,
     pipeline=Routines.imp,
-    dataset=Datasets.FULL_FASHION_AND_MNIST,
+    dataset=Datasets.FASHION,
     scaler=Scalers.StandardUnitVariance,
     model_class=SingleTaskMultiClassMLP,
     model_shape=shape,
     base_model_shape=shape,
 
     # training
-    lr=lr,
+    lr=0.001,
     epochs=1000,
-    batch_size=batch_size,
+    batch_size=128,
     optimizer="adam",
 
     # early stop
-    early_stop_patience=30,
+    early_stop_patience=10,
     early_stop_delta=0.0,
-
-    # newly added
     init_strategy_weights=Init.kaiming_normal,
     init_strategy_biases=Init.zero,
-    stop_on_degradation=True,
-    stop_on_seperation=True,
+    stop_on_degradation=False,
+    stop_on_seperation=False,
 
     # pruning
-    only_consider_out_features_for_degrading=True,
     pruning_method="magnitude",
     pruning_scope="global",
     prune_biases=False,
     prune_weights=True,
-    pruning_target=100,
+    pruning_target=600,
     pruning_levels=pruning_levels,
     reinit=True,
 )

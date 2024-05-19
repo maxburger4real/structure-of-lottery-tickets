@@ -6,7 +6,7 @@ from typing import Iterable
 from training.config import Config
 from factory import Factory
 from training.utils import evaluate, train_and_evaluate
-
+import torch
 
 class Routines(Enum):
     vanilla = "vanilla"
@@ -119,7 +119,7 @@ def imp(
         )
 
         graph_metrics = {}
-        if graph_manager is not None and level > 10:
+        if graph_manager is not None:
             graph_manager.update(model, level)
             graph_metrics = graph_manager.metrics()
             logger.metrics(graph_manager.layerwise_split_metrics, prefix='layersplit/')

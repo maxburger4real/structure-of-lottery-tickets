@@ -4,8 +4,8 @@ from training.datasets import Datasets, Scalers
 from training.models import Init
 from training.routines import Routines
 
-pruning_levels, shape, batch_size, lr = 18, [1568, 784, 784, 20], 128 ,0.001
 pruning_levels, shape, batch_size, lr = 20, [1568, 784, 392, 20], 512 ,0.001
+pruning_levels, shape, batch_size, lr = 18, [1568, 784, 784, 20], 128 ,0.001
 
 run_config = Config(
     model_seed=0, # 0 nice
