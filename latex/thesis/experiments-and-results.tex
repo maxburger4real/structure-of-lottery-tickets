@@ -280,7 +280,7 @@ The network does neither separate nor degrade.
 The result is a single network that contains all input and output nodes of all tasks.
 \end{enumerate}
 
-\begin{figure}[ht]
+\begin{figure}[ht] % Stacked Area d=2
     \centering
     \includegraphics[width=1.0\linewidth]{2-layer-histogram-split-behaviour.png}
     \caption{
@@ -299,20 +299,19 @@ The shape and number of weights at that level are $(4,38,38,2)$ and 1672 respect
 Starting at shape $(4,57,57,2)$ or extension level 9, which represents an increase of $~32$-times, the majority of the networks separate.
 Up until the 6th extension level, none of the networks separate or degrade. 
 However, if the network were pruned further, at some point every network would degrade eventually.
-Therefore it is also reasonable to assume that some of the networks that are still interconnected after all pruning iterations would separate well if they were pruned to less weights.
+Therefore it is also reasonable to assume that some of the networks that are still interconnected after all pruning iterations would separate well if they were pruned to a smaller pruning target.
 
 Another interesting observation is that only after extension level 10, do the networks begin to degrade.
 What follows from the data is the more extension levels, the more likely it is that a network degrades, either before or after it separates.
-
-One possible explanation for this is that at each pruning level, a certain number of `inactive weights' are produced.
+One possible explanation for this is that at each pruning level, a certain number of weights are made inactive.
 As noted in \autocite{HanEtAl15, AllAlivePruning}, this is a known phenomenon.
-However, since no regularisation is used in these experiments, the inactive weights do not decrease in magnitude.
+However, since no regularization is used in these experiments, the inactive weights do not decrease in magnitude.
 Rather, they are frozen with their last value.
-If more inactive parameters are created at each pruning level than pruned, the percentage of inactive weights in the network grows over the iterations.
+If more inactive parameters are created at each pruning level than pruned, the percentage of inactive weights in the network grows with every iteration.
 Therefore, the more pruning levels the network experienced, the less of its available, unpruned parameters are active.
 This effectively makes the network smaller, which in turn makes it more likely to separate or degrade.
 
-\begin{figure}[ht]
+\begin{figure}[ht] % Less active more pruning
     \centering
     \includegraphics[width=1.0\linewidth]{2-layer-compund-damage.png}
     \caption{
@@ -320,7 +319,7 @@ This effectively makes the network smaller, which in turn makes it more likely t
     }\label{fig:collateral_damage}
 \end{figure}
 
-This effect is visible in figure~\ref{fig:collateral_damage}.
+This effect is visualized in figure~\ref{fig:collateral_damage}.
 The colors are encoded in the same way as in figure~\ref{fig:2laxer-histogram}.
 Each dot represents a single training run. 
 On the x-axis, the extension level is displayed.
@@ -331,26 +330,18 @@ Therefore in this graph, the degraded networks might have larger numbers of acti
 However, even with this caveat, a clear trend is visible.
 The more pruning levels the network experiences, the smaller the percentage of the active network weights.
 For some networks that were extended to 20 or more levels, the final percentage of active weights in the network is only $\sim20$ percent, which translates to only $\sim22$ active weights.
-
 Techniques like L1-Regularisation used in \autocite{HanEtAl15} or All-Alive-Pruning \autocite{AllAlivePruning} could counteract this effect of compounding inactive parameters.
 However, this is a topic for future research and is not addressed in this thesis. 
 
 To gain a broader picture of the effects shown on the network with two hidden layers, the same experiments were conducted on networks with one and three hidden layers.
-Similar effects can be seen for the architectures with one and three hidden layers.
-As shown in table~\ref{tab:trajectory}, the networks were only extended for 16 levels instead of 25. 
+Similar effects can be seen for these architectures.
+As shown in table~\ref{tab:trajectory}, the networks were only extended for 16 levels instead of 25.
 This is due to computational constraints. 
 As the networks get larger and the number of pruning levels is higher, the computational effort increases significantly.
 For the network with one hidden layer a base network with shape $(4,20,2)$ was selected.
 It has a similar number of weights compared to the base network with two layers.
 
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=0.5\linewidth]{1-layer-active-available-at-split-log.png}
-    \caption{Active vs. available weights: One hidden layer
-    }\label{fig:1layer-active}
-\end{figure}
-
-\begin{figure}[ht]
+\begin{figure}[ht] % Stacked Area d=1
     \centering
     \includegraphics[width=1.0\linewidth]{1-layer-histogram-split-behaviour.png}
     \caption{Separate/Degrade Proportional Stacked Area Chart: One hidden layer
@@ -370,87 +361,86 @@ The reason for this behavior is unknown.
 It might be that the networks with more hidden layers also exhibit such behavior at even higher extension levels. 
 However, this mystery is not answered in the course of this thesis.
 
-In figure~\ref{fig:1layer-active}, the number of active weights in the network versus the number of available/unpruned weights is compared.
-On the x-axis, the number of levels the network was extended to is displayed, which is also the number of pruning levels.
-The orange line shows the number of unpruned weights that are available to the network at each iteration where they separate.
-The blue line indicates the number of active weights.
-The error bars show the minimum and maximum values from the different experiments.
-Only the range of extension levels where the network is separated is displayed.
-The graph is displayed on a logarithmic scale.
-
-Similarly to the experiment with two layers, the networks separate in earlier iterations when they are larger and have more pruning levels.
-This is indicated by the larger number of available weights, which directly correlate with the pruning level.
-The number of active weights remains in a fairly tight range between 70 and 120 active weights.
-
 Regarding the network with three hidden layers, the results are similar.
-\begin{figure}[ht]
+\begin{figure}[ht] % Stacked Area d=3
     \centering
     \includegraphics[width=1.0\linewidth]{3-layer-histogram-split-behaviour.png}
     \caption{
         Separate/Degrade Proportional Stacked Area Chart: Three hidden layers
     }\label{fig:3layer-histogram}
 \end{figure}
-
-\begin{figure}[ht] 
-    \centering
-    \includegraphics[width=0.5\linewidth]{3-layer-active-available-at-split-log.png}
-    \caption{
-        Active vs. available weights: Three hidden layers
-    }\label{fig:3layer-active}
-\end{figure}
-
 In figure~\ref{fig:3layer-histogram} the splitting behaviour is depicted.
 A similar effect occurs but unlike the single-layer network, the network does not stop to separate in the range that was tested. 
 
-In figure~\ref{fig:3layer-active} the number of active weights and the number of available weights is displayed.
-Only the range of extension levels where the network is separated is displayed.
-The networks at extension level 7 until 11 all split at the last pruning level, which can be deducted by the number of available parameters which is equal to the pruning target of 108.
-The number of active weights is slightly lower than in the other experiments.
-Generally, the same pattern can be seen, with a slightly more pronounced increase in active weights for larger networks.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{When do networks separate?}
 Do the networks always separate at the same pruning level or with the same number of unpruned parameters?
 This question is investigated in the following paragraph.
-Interestingly, when extending the network more, it tends to split into earlier pruning levels.
-
-\begin{figure}[ht]
+Interestingly, when extending the network to higher levels, it tends to split into earlier pruning levels.
+This results in an increased number of available weights to the network at the iteration they separated.
+\begin{figure}[ht] % Active/Available d=2
     \centering
     \includegraphics[width=.5\linewidth]{2-layer-active-available-at-split-log.png}
-    \caption{
-        Active vs. available weights: Two hidden layers
-    }\label{fig:2l-active-split}
+    \caption{Active vs. available weights: Two hidden layers}\label{fig:2l-active-split}
 \end{figure}
-
-The figure~\ref{fig:2l-active-split} depicts the number of available/unpruned weights in orange and the number of active weights in blue at the pruning level when the networks separated.
-Each dot represents an average of four runs with different seeds.
+Figure~\ref{fig:2l-active-split} depicts the number of available/unpruned weights in orange and the number of active weights in blue, for the different extension levels of networks with two hidden layers.
+Each dot represents the average numberof active or available weights at the exact iteration where the network separated.
+Only training runs where the network separates are taken into account.
+For each extension level, the training run was repeated with four different seeds for the initialization of the network weights.
+On the x-axis, the extension level of the network is displayed, which is also the number of pruning levels the network goes through.
+The more extension levels, the larger the network.
 The error bars indicate the maximum and minimum values of the different runs.
-While the number of available weights at the split iteration increases, the number of active weights stays fairly constant.
-Logarithmic.
-Only the range of extension levels where the network is separated is displayed.
 The graph is shown on a logarithmic scale, and the increase follows almost an exponential curve.
-The earlier the network separates in terms of pruning levels, the more unpruned weights it has.
-However, when looking at the number of active weights the networks have at the iteration they split, the curve does not have the same exponential growth trajectory.
-It increases slightly but almost remains flat, covering a narrow range of around 80 to 120 weights.
 
+A clearly visible trend, is the exponential increase of the number of available weights at the level where the network separates (orange).
+This comes from the fact that the networks separate in earlier iterations, where there are more available weights.
+Interestingly, the number of active weights does not experience a comparable growth when the network is extended more.
+Active weights are the weights that are contained in the active subgraph $\mathcal{G}_a$, that was introduced in chapter~\ref{chapter:method}.
+It increases slightly but almost remains flat, covering a narrow range of around $80$ to $120$ weights, while the available weights grow from $120$ to almost $1000$.
 This data indicates that the number of active weights might be an important quantity to splitting.
-Since the active subgraph is indeed the graph on which the splitting is checked, this seems plausible.
+Since the active subgraph $\mathcal{G}_a$ is indeed the graph which is used to evaluate network separation, this seems plausible.
  
+% 1 hidden layer
+\begin{figure}[ht] % Active/Available d=1
+    \centering
+    \includegraphics[width=0.5\linewidth]{1-layer-active-available-at-split-log.png}
+    \caption{Active vs. available weights: One hidden layer}\label{fig:1layer-active}
+\end{figure}
+When looking at the graph of the architectures with one hidden layer, this effect is even more dramatic, which is shown in figure~\ref{fig:1layer-active}
+Similarly to the experiment with two layers, the networks separate in earlier iterations when they are larger and have more pruning levels.
+The number of active weights remains in a fairly tight range between $70$ and $120$ active weights, while the number of available weights goes from around $125$ to over $1400$.
+Notably, as shown in figure~\ref{fig:1layer-histogram}, the netowork does not separate anymore after the 13th extension level.
+At the 13th level, only around $10$ percent of the weights in the network are active at the separation iteration.
+
+\begin{figure}[ht] % Active/Available d=1
+    \centering
+    \includegraphics[width=0.5\linewidth]{3-layer-active-available-at-split-log.png}
+    \caption{Active vs. available weights: Three hidden layers}\label{fig:3layer-active}
+\end{figure}
+When considering the network with three hidden layer, a similar effect is visible, however significanlty less pronounced.
+Figure~\ref{fig:3layer-active} the number of active weights and the number of available weights of the three layer architectures with different extension levels.
+The networks at extension level 7 until 11 all split at the last pruning level, which can be deducted by the number of available parameters which is equal to the pruning target of 108.
+The number of active weights is slightly lower than in the other experiments.
+The data indicates that separating a three layer network with the same number of available parameters is less likely than a two or a one layer network, because the number of available weights does not grow as quickly.
+Also when looking at the number of active weights at the separation-iteration, the numbers are significantly lower compared to the other architectures.
+
 \subsection{What makes the networks separate?}
-As seen in figure~\ref{fig:2laxer-histogram}, the network starts to split at 7 extension levels and a network shape of $(4,38,38,2)$, with 1672 weights.
-However, it is not obvious what the main contributor to network splitting is.
-To gain a better understanding of that phenomenon an experiment was conducted that compares different combinations of pruning levels, network size, and pruning rate.
+As seen in figure~\ref{fig:2laxer-histogram}, the networks with two hidden layers starts to split at 7 extension levels and a network shape of $(4,38,38,2)$, with 1672 weights.
+However, it is not obvious what the main contributor to network separation is.
+To gain a better understanding of that phenomenon an experiment was conducted that compares different combinations of pruning levels, network size, and pruning rate for the two-layer architectures.
 For this experiment, four architectures were selected.
 One network with shape $(4,31,31,2)$ (extension level 6), which did not separate in any run.
-Networks with 38 and 48 hidden neurons (extension levels 7 and 8), where only one in four networks is separated.
+Networks with $38$ and $48$ hidden neurons (extension levels 7 and 8), where only one in four networks is separated.
 And finally a network with 57 hidden neurons, where all four runs have separated.
 This range of architectures is assumed to encompass a critical area, due to the change in separation behavior.
-Further, each of the four architectures was trained with 0 to 10 pruning levels.
-The pruning target is fixed at 112, such that all networks end up at the same number of unpruned parameters after the last pruning level.
+Further, each of the four architectures was trained with $0$ to $10$ pruning levels.
+The pruning target is fixed at $112$, such that all networks end up at the same number of unpruned parameters after the last pruning level.
 Therefore, the pruning rate is variable depending on network size and number of levels.
 The larger the network, the higher the pruning rate, given a fixed number of iterations.
 Each training run with a combination of network size and number of pruning levels was repeated four times, with different seeds for the network initialization.
 
-\begin{figure}[ht]
+\begin{figure}[ht] % what influences separation : size
     \centering
     \includegraphics[width=1.0\linewidth]{grid-2-layer-eval-abs.png}
     \caption{Influence of network size: Two hidden layers}\label{fig:grid-1}
@@ -461,12 +451,13 @@ On the y-axis, the size of the network is encoded by its hidden dimension.
 On the x-axis, the number of active weights after all pruning levels is depicted.
 Each dot represents one training run of the experiment.
 The colors denote if the network separated, degraded or stayed connected.
-Regarding the two smaller networks with hidden dimensions 31 and 38, none of the networks separated. 
+Regarding the two smaller networks with hidden dimensions $31$ and $38$, none of the networks separated. 
 Increasing the number of pruning levels and decreasing the pruning rate did not result in a separated network.
 On the other hand, the two larger networks separate numerous times.
-These results indicate, that there is a phase change in the ability of the network to separate and that it has to have a certain minimum of overparameterization.
+These results indicate, that there is a phase change in the ability of the network to separate.
+A certain level of overparameterization seems to be necessary for the network to separate well.
 
-\begin{figure}[ht]
+\begin{figure}[ht] % what influences separation : plevels
     \centering
     \includegraphics[width=1.0\linewidth]{grid-2-layer-pruning-rate-48-hd.png}
     \caption{Influence of pruning levels: Two hidden layers
@@ -492,10 +483,10 @@ Less pruning levels versus lower pruning rates represent a trade-off between fav
 
 \subsection{How do networks separate?}
 Another open question is, what the process of separation looks like.
-In the beginning, it is not yet clear which weight and neuron belongs to which task.
+In the beginning, when the network is fully connected, it is not yet clear which weight and neuron belongs to which task.
 One available option, however, is to view the network from the perspectives of the inputs and outputs.
 The input and output features are the only parts of the network that can already be associated with a task when it is fully connected.
-This enables us to determine the degree to which the neighboring layers have separated as well.
+This enables to determine the degree to which the neighboring layers have separated as well.
 
 For instance, regarding the simple Moons-Circles dataset, there are two output neurons.
 Each neuron in the penultimate layer has two outgoing connections: one to the Circles-output and one to the Moons-output.
@@ -504,14 +495,11 @@ When one of the connections is pruned, the neuron and all its incoming connectio
 The number of neurons in any given layer that are only connected to one of the outputs of one task is denoted $N_{decided}$.
 The number of neurons that are connected to both tasks is denoted $N_{undecided}$.
 The degree of separation is determined by 
-\[
-\frac{N_{decided}}{N_{decided}+N_{undecided}}
-\]
-
+\[ \frac{N_{decided}}{N_{decided}+N_{undecided}} \]
 This calculation can be done from either the side of the inputs or the outputs and it works in the same way.
 Only if a layer has at least one neuron that has `decided' to which task it belongs, neurons in the next layer can `decide' as well.
 
-\begin{figure}[ht]
+\begin{figure}[ht] % Layer separation from outputs
     \centering
     \includegraphics[width=0.9\linewidth]{output-view.png}
     \caption{
@@ -519,7 +507,7 @@ Only if a layer has at least one neuron that has `decided' to which task it belo
     }\label{fig:outview}
 \end{figure}
 
-\begin{figure}[ht]
+\begin{figure}[ht] % Layer separation from inputs
     \centering
     \includegraphics[width=0.9\linewidth]{input-view.png}
     \caption{    
@@ -590,8 +578,77 @@ Since the experiments were stopped as soon as a network degraded, the red points
 Even though the cluster looks compact along the y-axis it covers a fairly large range between 0.08 and 0.56 loss. These losses correspond to an accuracy of roughly $95$\% and $65$\% respectively.
 The separated and interconnected networks still generally inhabit an area with lower loss than the degraded networks.
 
+\subsection{Inactive weights and zombies}
+As introduced in chapter~\ref{chapter:method}, there are four different kinds of states the parameters of the network can be in.
+Parameters can be pruned, inactive, active or zombies.
+The number of pruned parameters increases at a predictable rate over the training run.
+How do the other kinds of parameters evolve?
+With the two-layer architectures extended over several levels as shown in table~\ref{tab:trajectory}, the inactive and zombie parameters are investigated.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=.7\linewidth]{inactive-abs-2l.png}
+    \caption{
+        The number of inactive weights over the training runs. Each line represents a different extension level
+    }\label{fig:inactive-abs}
+\end{figure}
+
+In figure~\ref{fig:inactive-abs}, the absolute number of inactive weights is displayed.
+Every line represents a certain network size, indicated by the extension level (ext-$i$).
+Further, the lines are averages of four training runs with different seeds for model initialization.
+On the x-axis, the number of available parameters of the network is displayed.
+On the y-axis, the number of inactive weights in the network is shown.
+Networks that were extended to higher levels, experienced more pruning levels and therefore have longer lines in the graph.
+It is visible, that the number of inactive weights is larger with larger networks.
+Especially at the earlier pruning iterations of each network, the numbers grow and subsequently fall significantly.
+However, due to the reduction in the overall network size, this is to be expected.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=.7\linewidth]{inactive-rel-2l.png}
+    \caption{
+        The relative amount of inactive weights of all unpruned weights. Each line represents a different extension level
+    }\label{fig:inactive-rel}
+\end{figure}
+The same graph, however with the relative amount of inactive weights in shown in figure~\ref{fig:inactive-rel}.
+Here, a different trend is visible.
+As the number of weights in the network decreases, the percentage of inactive weights generally increases.
+Interestingly, this increase is not steady.
+With larger network sizes, a distinct pattern emerges.
+The ratio of inactive weights increases to a certain level and subsequently decreases, which results in a visible bump in the line.
+Afterward, the value increases again until it flattens off.
+The larger the network, the larger the number of inactive weights at the final pruning levels.
+With smaller networks, this pattern cannot be seen.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=.7\linewidth]{zombie-abs-2l.png}
+    \caption{
+        The number of zombie weights over the training runs. Each line represents a different extension level
+    }\label{fig:zombie-abs}
+\end{figure}
+When examining the number of zombie weights in the network, a different pattern is visible.
+In figure~\ref{fig:zombie-abs}, the absolute number of zombie weights is displayed for the same networks.
+Similarly to figure~\ref{fig:inactive-abs}, the number of zombies is larger when the networks have more parameters available.
+However, the number of zombie weights is significantly less than the number of inactive weights.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=.7\linewidth]{zombie-rel-2l.png}
+    \caption{
+        The relative amount of zombie weights of all unpruned weights. Each line represents a different extension level
+    }\label{fig:zombie-rel}
+\end{figure}
+Again, a more interesting view is the relative amount of zombie weights at each iteration.
+Figure~\ref{fig:zombie-rel} shows the relative amount of zombie weights, compared to all other unpruned weights.
+The relative amount of zombie weight generally increases, the more the network is pruned.
+Interestingly, the values do not seem to tail off as the ratio of inactive weights in figure~\ref{fig:inactive-rel}.
+When comparing zombie weights and inactive weights, it is clear that inactive weights represent a significantly larger fraction of all weights of the network.
+Why this is the case is an interesting research direction for future work.
+
+
 \section{Experiments on the MNIST-Fashion-MNIST Dataset}
-Due to the success of the method in separating the neural network, the same was attempted on the more realistic MNIST-Fashion-MNIST dataset described in paragraph~\ref{sec:mnist}.
+Due to the success of the method in separating the neural network on the Moons-Circles dataset, the same was attempted on the more realistic MNIST-Fashion-MNIST dataset described in paragraph~\ref{sec:mnist}.
 The experiments cannot be executed as systematically as before, due to significantly higher computational cost.
 However, with experience gained from previous experiments, it was indeed possible to find separated networks.
 
@@ -651,27 +708,76 @@ This gives reason to believe, that the separation can be achieved at competitive
 This, however, is not pursued in the scope of this thesis.
 The separation by itself, at non-trivial accuracy is considered a useful insight into the structure of the network.
 
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=1.\linewidth]{input-connections-iteration-18.png}
-    \caption{
-        Input pixel heatmap MNIST-Fashion-MNIST
-    }\label{fig:input-heatmap}
+
+\subsection{Connectivity of the input layer}
+An interesting finding of \textcite{LTH} was, that certain neurons in the input layer retain significantly more incoming connections than others.
+They find this to be the case with winning tickets trained on MNIST and attribute this to the fact that certain pixels of the MNIST dataset do not contain any information.
+\begin{figure}[ht] % mnist variance
+    \centering \includegraphics[width=.7\linewidth]{mnist_mean_variance.png}
+    \caption{MNIST pixelwise mean and variance}\label{fig:mnist-input-variance}
 \end{figure}
 
-The connectivity of the network to the inputs is displayed in figure~\ref{fig:input-heatmap}.
-Each figure represents a heatmap of the connectivity to each pixel of the input.
-Pixels with no remaining connections are colored black.
-The number of input connections per input pixel is displayed.
-The heatmap has a shape of $28\times56$ pixels, where the top half represents the MNIST image and the bottom half the Fashion-MNIST image.
-On the left, the connections are displayed at iteration $11$, where $\sim20000$ weights are active in the network.
-On the top half, many of the pixels on the outer frame have been completely disconnected from the network.
-This was also hypothesized by \textcite{LTH} because the outer frame of the MNIST digits is always black and does not contain any information.
-On the bottom half where the Fashion-MNIST image would be, there is no frame visible.
-This however is also to be expected, because the Fashion-MNIST dataset does not have a padding around the objects that are displayed. 
-A larger portion of the image is used.
-If the Fashion-MNIST dataset were to be scaled down slightly and padding would be added, a similar pattern would likely emerge.
+In figure~\ref{fig:mnist-input-variance} the pixelwise mean and variance of the MNIST dataset is shown.
+Since the digits are centered in the image, there is a frame where there is little to no variance and where the values are on average close to zero.
+\begin{figure}[ht] % fashion variance
+    \centering \includegraphics[width=.7\linewidth]{fashion_mnist_mean_variance.png}
+    \caption{Fashion pixelwise mean and variance}\label{fig:fashion-input-variance}
+\end{figure}
 
-At iteration 18, where the network is separated, the connectivity is already highly sparse.
-Only around half of the input pixels are used and the connectivity to the remaining input pixels is reduced to values between 1 and 3 connected pixels.
-This also demonstrates that the separation indeed occurs very late in the pruning process, where the function of the network almost collapses.
+A similar effect is visible with the Fashion MNIST dataset as seen in figure~\ref{fig:fashion-input-variance}.
+For the Fashion dataset, the frame is notably smaller and there are pixels with significant mean and variance that lie on the outermost pixel row of the image.
+
+For each of the datasets, a neural network with the same architecture as in \autocite{LTH} was used, namely the LeNet-5 architecture with a shape of $(784,300,100,10)$.
+The networks were pruned for 18 pruning levels to a pruning target of $600$, which results in an effective pruning rate of $0.26$TODO.
+
+\begin{figure}[ht] % MNIST attention heatmap
+    \centering\includegraphics[width=1.\linewidth]{mnist_input_attention_active.png}
+    \caption{MNIST pixelwise connectivity heatmap}\label{fig:mnist-heatmap}
+\end{figure}
+
+Figure~\ref{fig:mnist-heatmap} shows the connectivity to the input layer at different pruning iterations.
+The shape of the digits as seen in figure\ref{fig:mnist-input-variance} is distinctly visible over many pruning levels.
+This means that there tend to be more outgoing connections of pixels that are in the high-variance or high-mean area of the image.
+At pruning level 11 where only 2 percent of all weights are active, many pixels on the outer frame of the image do not have any connection left.
+At iteration 15, most of the pixels on the outer frame have been completely disconnected.
+However, there remain some pixels on the frame that hold onto the connections, even though they do not carry any information.
+This suggests that there is an increased likelihood of disconnecting from pixels with no information.
+Due to the probabilistic nature of training and network initialization, there may remain connections to zero-information inputs.
+
+\begin{figure}[ht] % Fashion attention heatmap
+    \centering\includegraphics[width=1.\linewidth]{fashion_input_attention_active.png}
+    \caption{Fashion pixelwise connectivity heatmap}\label{fig:fashion-heatmap}
+\end{figure}
+
+Figure~\ref{fig:fashion-heatmap} shows this for the Fashion dataset.
+In early iterations, a pattern can be detected that resembles the overall shape of many items.
+Further, a line in the center with more connections is visible.
+This might be the case because many items have characteristic lines in the center, like trousers, shirts or jackets.
+The line is also visible in the mean and variance of the dataset as shown in figure~\ref{fig:fashion-input-variance}.
+At pruning levels one, four and seven, the number of connections per pixel shows a similar shape to the mean and variance of the dataset.
+At iterations four and seven, there is a horizontal bar of strongly connected pixels. 
+This bar is also visible in the pixelwise variance of the dataset, which indicates a connection between variance and connectivity.
+However, with the Fashion dataset, the pattern disappears in later iterations.
+Pruning level 11, there is no pattern visible anymore and at iteration 15, many of the center pixels are completely disconnected.
+
+One possible explanation for the clearer pattern in the MNIST dataset is that the different classes are more similar and take up a more compact area in the image, as seen in figure~\ref{fig:mnist-input-variance}.
+Also, the performance on the MNIST dataset is better than on the Fashion dataset, with the same hyperparameters.
+This might indicate, that the Fashion dataset is harder to learn for the {MLP}, which could also impact the connectivity of the input layer.
+
+%%% old
+\begin{figure}[ht] % mnist-fashion-mnist connectivity
+    \centering
+    \includegraphics[width=1.\linewidth]{mnist_fashion_mnist_input_attention_active.png}
+    \caption{MNIST-Fashion-MNIST pixelwise connectivity heatmap}\label{fig:mnist-fashion-map}
+\end{figure}
+
+When examining a training run on the MNIST-Fashion-MNIST set with a network of shape $(1568, 784, 392, 20)$, the same patterns emerge.
+In figure~\ref{fig:mnist-fashion-map}, the connectivity on the concatenated dataset is shown.
+The images are shown as stacked, where the MNIST image is on top and the Fashion image is on the bottom.
+On the MNIST image, the same pattern as before is visible.
+In the Fashion image, parts of the pattern are visible but significantly less pronounced.
+Given that both tasks are trained at the same time, it might be that the hyperparameters are better suited for MNIST than for Fashion-{MNIST}.
+After iteration 17, which is the rightmost image, the network separated.
+The connectivity is severely degraded at this point even though the network has an accuracy of $83$ percent at that iteration.
+This further advances the point, that the network in this example separated very late in the process.
+Improved hyperparameters and training techniques could lead to separation at earlier iterations.
