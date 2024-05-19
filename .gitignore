@@ -1,5 +1,6 @@
 .venv/
 /venv
+poster/
 __pycache__/
 .original_bimt/
 .DS_Store
@@ -12,8 +13,8 @@ wandb/
 **/mnist_data/
 **/fashion_mnist_data/
 **/pdfs/
-
 **/LT
+
 
 ### LATEX
 ## Core latex/pdflatex auxiliary files:
