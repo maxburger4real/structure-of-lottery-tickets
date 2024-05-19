@@ -1,12 +1,11 @@
 \chapter{Introduction}
-
-Neural Networks have achieved remarkable success in various tasks.
-However, their increasingly large size leads to high computational and memory requirements.
-The Lottery Ticket Hypothesis by \textcite{LTH} has shown that there exist small, well-initialized subnetworks that can be trained in isolation to reach the same accuracy as the larger dense networks.
-These small subnetworks, the so-called \textit{Winning Tickets}, are created by iterative training and pruning a fully connected dense network.
+Neural network pruning techniques are successful in significantly reducing the number of network parameters without compromising the performance~\autocite{OptimalBrainDamage, OptimalBrainSurgeon}.  
+Attempts to train the pruned models after they have been randomly reinitialized did not yield satisfying results~\autocite{HanEtAl15, PruningFiltersForEfficientConvets}.
+The Lottery Ticket Hypothesis by \textcite{LTH} has shown that there exist small, well-initialized subnetworks that can be trained in isolation to reach the same accuracy as the original dense networks.
+These small subnetworks, the so-called \textit{Winning Tickets}, are created by iterative training and pruning of a fully connected dense network.
 This process is called \textit{Iterative Magnitude Pruning}.
 The work by \textcite{LTH} defines a promising avenue towards the ability to train smaller sparse networks from the beginning.
-However, a deeper understanding of why the winning tickets can learn so well and why iterative magnitude pruning can uncover them is missing.
+However, several aspects of why winning tickets can learn so well and why iterative magnitude pruning can uncover them are not yet fully understood.
 
 Although there is plenty of research in this field, the structure of the winning tickets is rarely discussed.
 Since the winning ticket networks are sparse, their structure might give valuable insights into their functionality.
@@ -14,7 +13,7 @@ In this thesis, the structure of winning tickets and how it relates to the funct
 
 \section{Motivation}
 Understanding more about the structure of winning tickets can lead to numerous advances.
-Studying it can generate insights about the algorithms like iterative magnitude pruning, that are used to generate the winning tickets.
+By studying the structure, insights about the algorithms like iterative magnitude pruning, that are used to uncover the winning tickets, can be generated.
 Potential drawbacks of the algorithm can be discovered by analyzing weaknesses in the network structure.
 Further, the structure could give insights into the function the network has learned.
 Due to the high sparsity of winning tickets, the network structure might reflect the higher-level semantic structure of the learned function.
@@ -27,7 +26,7 @@ The general research question that follows from the objective is:
 \begin{quote}
 \textit{Do winning tickets contain meaningful structures?}
 \end{quote}
-This question serves as the main direction of the research.
+This question serves as the main research direction.
 Due to the generality of the question, it is narrowed down for this thesis to be approachable.
 Only standard fully connected feed-forward neural networks are used to derive winning tickets.
 To uncover the winning tickets, iterative magnitude pruning is employed.
@@ -41,7 +40,7 @@ This thesis contains empirical research that aims to answer this very question.
 \section{Structure of the Thesis}
 In chapter~\ref{literature_review}, a literature review is conducted, where topics relevant to this thesis are described.
 Chapter~\ref{chapter:method} explains the methodology.
-The neural network architecture and training process are outlined, as well as other algorithms used in the experiments.
+The neural network architecture and training process are outlined, as well as other algorithms and techniques used in the experiments.
 Chapter~\ref{chapter:experiments} walks through the creation of the datasets as well as the experiments that were conducted during this thesis.
 The experiment results are discussed and interpreted.
 The thesis is concluded with a discussion and possible future research in this direction in chapter~\ref{chapter:conclusion}.

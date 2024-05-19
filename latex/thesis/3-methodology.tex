@@ -1,15 +1,15 @@
 \chapter{Methodology}\label{chapter:method} 
 In this chapter, the algorithms, methods and network architectures used for the experiments in chapter~\ref{chapter:experiments} are described in detail.
-First, the network architecture and the hyperparameters used are discussed.
-Then, iterative magnitude pruning and the rest of the training procedure are presented.
-Following, the concept of network extension is explained, which enables finding comparable network architectures.
-Finally, the methods used to find subnetworks and match subnetworks to tasks of the datasets are introduced. 
+First, the network architecture and the training hyperparameters are discussed.
+Next, iterative magnitude pruning and the general training procedure are presented.
+Furthermore, the concept of network extension is explained, which enables finding comparable network architectures.
+Finally, the methods used to find subnetworks and match them to tasks of the datasets are introduced. 
 
 \section{Network Architecture and Hyperparameters}
 The experiments in this thesis are conducted with a Multilayer Perceptron (MLP) architecture.
-The decision was inspired by the use of the LeNet~\autocite{LeCun} architecture by \textcite{LTH} for the experiments on the MNIST dataset~\autocite{mnist}, which has two hidden layers of 300 and 100 hidden neurons respectively.
+The decision was inspired by the use of the LeNet architecture~\autocite{cnn} by \textcite{LTH} for the experiments on the MNIST dataset~\autocite{mnist}, which has two hidden layers of 300 and 100 hidden neurons respectively.
 
-Concretely, let $f(x; \theta)$ be the function that defines the MLP, where $x$ represents the network input and $\theta$ the parameters of the network, namely the weights $W_i$ and biases $b_i$ of each layer $i$.
+Concretely, let $f(x; \theta)$ be the function that defines the MLP, where $x$ represents the network input and $\theta$ the parameters of the network, including the weights $W_i$ and biases $b_i$ of each layer $i$.
 Each layer of the MLP is defined by the following equation:
 \[ a_i = \sigma(W_i^\top a_{i-1} + b_{i}) \]
 , where $W_i$ and $b_i$ denote the weight matrix and bias vector of the $i$-th layer respectively.
@@ -23,14 +23,11 @@ However, the authors did not justify their decision and since the networks use t
 The initialization of the biases is not mentioned by \textcite{LTH}.
 Throughout this thesis, the biases are initialized with zero.
 The random initialization of the weights is explicitly controlled via a random seed, to enable reproducibility.
-Throughout the thesis, experiments are repeated with several different seeds for weight initialization to attain robust results.
-
-Throughout this thesis, MLPs with one to three layers and different numbers of hidden neurons are used.
-
+Throughout the thesis, experiments are repeated with several different seeds for weight initialization to attain robust results. 
+MLPs with one to three layers and different numbers of hidden neurons are used in the experiments.
 
 \section{Finding Winning Tickets}
-To find winning tickets, the standard iterative magnitude pruning algorithm is used, which is described in paragraph~\ref{sec:lth} was used by \textcite{LTH} in the original lottery ticket experiments.
-
+To find winning tickets, the standard iterative magnitude pruning algorithm is used, which is described in paragraph~\ref{sec:lth}.
 \textcite{LinearModeConnectivity} demonstrated that the LeNet architecture trained on MNIST is stable at initialization.
 This means, that winning tickets can be found when the parameters are reset to their respective values at initialization.
 For the experiments in this thesis, it is assumed that similar architectures are also stable since the datasets used are less or similarly complex than the MNIST dataset.
@@ -41,9 +38,9 @@ One pruning level includes training the network to convergence, pruning a fixed 
 One complete run of iterative magnitude pruning, which includes all pruning levels, will be denoted as a \textit{training run}.
 One training run consists of $L$ pruning levels.
 
-To formally describe the iterative magnitude pruning algorithm, let $f(x; \theta^{(0)})$ be the neural network function with randomly initialized parameters $\theta^{(0)}$ of the $i$-th pruning level and the network input $x$.
+To formally describe the iterative magnitude pruning algorithm, let $f(x; \theta^{(0)})$ be the neural network function with randomly initialized parameters $\theta^{(0)}$.
 Consider a pruning function $\textit{P}: \mathbb{R}^{|\theta|} \to {\{0,1\}}^{|\theta|}$, which produces a binary pruning mask that covers all parameters.
-The function masks out $p$-percent of all unmasked weights in $|\theta|$, where $p$ is called the \textit{pruning rate}.
+The function masks out $p$-percent of all unmasked weights in $\theta$, where $p$ is called the \textit{pruning rate}.
 
 Now, a neural network with initial weights $\theta^{(0)}$ is trained to convergence, resulting in the trained parameters $\hat \theta^{(0)}$.
 The test accuracy of the resulting network is denoted $\hat a^{(0)}$.
@@ -65,14 +62,13 @@ The subnetwork is considered a winning ticket, if:
 \end{enumerate}
 
 In this thesis, the pruning function $P$ masks $p$ percent of the unpruned weights with the lowest magnitude, as in the original experiments~\autocite{LTH}. 
-Since \autocite{Supermasks} showed that magnitude pruning is amongst the best-performing criteria, it was selected due to its simplicity and widespread usage.
-Contrary to \autocite{LTH} where layerwise pruning is applied, the network is pruned globally in the following experiments.
+Since \textcite{Supermasks} showed that magnitude pruning is amongst the best-performing criteria, it was selected due to its simplicity and widespread usage.
+Contrary to \textcite{LTH} where layerwise pruning is applied, the network is pruned globally in the following experiments.
 Concretely, the pruning criterion is applied to all weights at once.
 This enables the algorithm to implicitly select the sparsity for each layer, resulting in fewer assumptions that have to be made.
 Biases are not pruned in the scope of this thesis, because they are initialized with zero.
 Preliminary experiments have shown, that they develop different ranges of magnitudes to the weights, which mostly led to the complete pruning of all biases.
-To further simplify the process, biases are not pruned.
-After all, they only make up an insignificant fraction of the number of parameters. 
+After all, biases only make up an insignificant fraction of the number of parameters. 
 
 The number of prunable parameters is denoted by $|\theta_p|$, which is the sum of the number of prunable weights and the number of prunable biases.
 If both, weights and biases, were pruned, the number of prunable parameters would simply be $|\theta|$.
@@ -85,10 +81,10 @@ The sequence of prunable parameters at every pruning level is termed the \textit
 The parameter trajectory is used to define the pruning part of the training run.
 A parameter trajectory can be uniquely described by three of the following four values:
 \begin{itemize}
-    \item $|\theta_p|$ Prunable parameters: Initial number of prunable parameters before the first pruning level
-    \item $L$ Pruning levels: Number of iterations of IMP for the training run
-    \item $p$ Pruning rate: Percentage of prunable parameters removed every pruning level
-    \item $T$ Pruning target: Number of prunable parameters after $L$ pruning levels
+    \item $|\theta_p|$ \textbf{Prunable parameters}: Initial number of prunable parameters before the first pruning level
+    \item $L$ \textbf{Pruning levels}: Number of iterations of IMP for the training run
+    \item $p$ \textbf{Pruning rate}: Percentage of prunable parameters removed every pruning level
+    \item $T$ \textbf{Pruning target}: Number of prunable parameters after $L$ pruning levels
 \end{itemize}
 Different combinations can be useful for different scenarios.
 For example, for some experiments, the networks must have the same number of final parameters.
@@ -166,7 +162,7 @@ Therefore, let the pruning rate $p$ be variable.
 The pruning target is set to the same value for both networks.
 The pruning rate can be calculated with 
 \[ p = 1 - \sqrt[L]{\frac{T}{|\theta_p|}} \]
-where $L$ is the number of pruning levels, $|\theta|$ denotes the number of prunable parameters before pruning and $T$ denotes the pruning target.
+where $L$ is the number of pruning levels, $|\theta_p|$ denotes the number of prunable parameters before pruning and $T$ denotes the pruning target.
 Let the pruning target be $T=200$ with $L=6$ pruning levels.
 The pruning rates are $p_{1000} = 0.235$ and $p_{1200} = 0.258$ respectively.
 The resulting parameter trajectories are as follows.
