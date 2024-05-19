@@ -4,6 +4,8 @@ from training.datasets import Datasets, Scalers
 from training.models import Init
 from training.routines import Routines
 
+# this model learns to 97% accuracy.
+
 run_config = Config(
     pipeline=Routines.vanilla,
     dataset=Datasets.MNIST,

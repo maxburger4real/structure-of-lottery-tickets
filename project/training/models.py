@@ -126,11 +126,8 @@ class MultiTaskBinaryMLP(MLP):
 
 class SingleTaskMultiClassMLP(MLP):
     """
-    MLP that supports parallel Multiclass classification.
-    each output of the model is treated as a binary classification problem, which is independent
-    of the other outputs.
+    
     """
-
     def __init__(
         self,
         shape: torch.Size,
@@ -155,3 +152,56 @@ class SingleTaskMultiClassMLP(MLP):
         predictions = self.predict(logits)
         accuracy = accuracy_score(targets, predictions, normalize=True)
         return accuracy
+
+
+class MultiTaskMultiClassMLP(MLP):
+    """
+    
+    """
+    def __init__(
+        self,
+        shape: torch.Size,
+        task_map: tuple,
+        activation=nn.ReLU,
+        seed=None,
+        weight_init_func=None,
+        bias_init_func=None,
+        
+    ):
+        super().__init__(shape, activation, seed, weight_init_func, bias_init_func)
+        self.task_map = task_map
+        self.loss_fn = torch.nn.CrossEntropyLoss(reduction="mean")
+        self.init()
+
+    def predict(self, logits):
+        """Logits represent class probabilities. Maximum value is the prediction."""
+        return logits.argmax(axis=1)
+
+    def loss(self, logits, targets):
+        assert sum(self.task_map) == logits.shape[-1], "Sum of sizes must match the size of the tensor along the last dimension"
+    
+        losses = 0
+        a = 0
+        for i, size in enumerate(self.task_map):
+            b = a + size
+            _logits = logits[...,a:b]
+            _targets = targets[...,i].to(torch.long)
+            loss = self.loss_fn(_logits, _targets)
+            losses += loss
+            a = b
+        
+        # return average loss
+        return losses / len(self.task_map)
+
+    def accuracy(self, logits, targets):
+        accs = []
+        a = 0
+        for i, size in enumerate(self.task_map):
+            b = a + size
+            _logits = logits[...,a:b]
+            _targets = targets[...,i].to(torch.long)
+            _preds = self.predict(_logits)
+            accuracy = accuracy_score(_targets, _preds, normalize=True)
+            accs.append(accuracy)
+            a = b
+        return torch.tensor(accs) #.mean()

@@ -3,7 +3,6 @@ Pruning functions.
 TODO:
 [ ] remove the config dependency.
 [ ] relocate 'update_pruning_config'
-[ ] remove constants dependency
 """
 
 import copy
@@ -199,7 +198,9 @@ def __solve_hidden_dim(
     prune_weights: bool = True,
     prune_biases: bool = True,
 ) -> int:
-    """Solve for the hidden_size of
+    """
+    This is dumb! one can simply use the PQ formula and delete sympy.
+    Solve for the hidden_size of
     a network after extending for any number of iterations.
     """
     if not prune_weights:

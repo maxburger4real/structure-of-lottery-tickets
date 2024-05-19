@@ -1,0 +1,229 @@
+\chapter{Literature Review}\label{literature_review}
+In this chapter, the prerequisites and related research are reviewed and discussed.
+First, neural network pruning is introduced. 
+Next, the lottery ticket hypothesis and relevant follow-up work are discussed.
+Furthermore, alternative methods to find winning tickets are outlined.
+
+\section{Neural Network Pruning}
+Neural network pruning has been proposed as a tool to reduce network size for inference while maintaining accuracy~\autocite{OptimalBrainDamage, OptimalBrainSurgeon, HanEtAl15, PruningFiltersForEfficientConvets}.
+Pruning can be done at once (often denoted \textit{one-shot} pruning) or iteratively combined with retraining, where the latter has been shown to produce smaller and better-performing subnetworks~\autocite{HanEtAl15}.
+The resulting sparse subnetwork can represent an equally accurate function with significantly fewer parameters. 
+The question arises: If it can represent the function, why not train the sparse network directly?
+\textcite{HanEtAl15} and \textcite{PruningFiltersForEfficientConvets} attempted to train the pruned networks from scratch after they have been randomly reinitialized.
+With this approach, the subnetworks did not reach comparable accuracy to the unpruned networks.
+These findings seemingly demonstrate the difficulty of training sparse neural networks.
+An investigation into this apparent shortcoming of sparse networks was conducted by \textcite{LTH}.
+The authors discover the phenomenon that the sparse neural networks they created can indeed train to comparable accuracy.
+The condition for this to work is that they are not randomly reinitialized. 
+Instead, the respective values at initialization of the unpruned network are assigned to the remaining weights of the pruned network. 
+Based on this finding, the authors formulate the \textit{Lottery Ticket Hypothesis}.
+
+\section{The Lottery Ticket Hypothesis}\label{sec:lth}
+The basis of the field of lottery tickets is the work of~\cite{LTH}. 
+They show that dense neural networks consistently contain subnetworks that can be trained in isolation to comparable accuracy.
+They find these well-performing subnetworks, which they call \textit{winning tickets}, in a variety of scenarios.
+They are found with fully connected neural networks on the MNIST dataset~\autocite{mnist} and with convolutional neural networks~\autocite{cnn} on the CIFAR-10 dataset~\autocite{cifar}.
+Further, they are found with different optimizers and different regularization techniques.
+Based on these findings, the authors propose:
+
+\begin{quote}
+\textbf{The Lottery Ticket Hypothesis}: \textit{A randomly-initialized, dense neural network contains a subnetwork that is initialized such that—when trained in isolation—it can match the test accuracy of the original network after training for at most the same number of iterations.}~\cite{LTH}
+\end{quote}
+
+The authors primarily use a method called \textit{Iterative Magnitude Pruning} ({IMP}).
+The state of the network at initialization is stored.
+Then, the network is trained to convergence. 
+After training, a fixed percentage of weights with the lowest magnitudes is pruned (set to zero).
+Following the pruning step, the unpruned parameters of the network are reset to the values they had at initialization.
+This process of training, pruning and resetting is repeated iteratively until the final desired sparsity is reached.
+The result is a sparse subnetwork and, if it can be trained to comparable performance,  a \textit{winning ticket}.
+
+The experiments of \autocite{LTH} show that iterative magnitude pruning as described above suffices for finding winning tickets in small architectures.
+Concretely, for LeNet-{300}-{100}~\autocite{cnn} (which will be further referred to as LeNet) and convolutional neural networks that are smaller variants of VGG \autocite{SimonyanZisserman}.
+
+Experiments were also conducted on larger, more commonly used networks for CIFAR-10. For {IMP} to obtain winning tickets in VGG-19 \autocite{Liu19} and ResNet-18 \autocite{ResidualConnect}, the following adaptations were required. 
+\begin{enumerate}
+  \item Pruning is no longer done layer-wise but globally, as it results in smaller winning tickets. 
+  \item Learning rate warm-up is employed. The learning rate increases linearly from 0 to the specified final learning rate in the first $k$ iterations. For VGG-19 and ResNet-18, $k$ is 10000 and 20000 respectively.
+\end{enumerate}
+In follow-up work by \textcite{LinearModeConnectivity}, the authors address the problems that arise at scale.
+Experiments done by \textcite{Liu19, Gale19} show that in more challenging settings, subnetworks obtained with {IMP} do not perform better than randomly sampled subnetworks.
+To understand this phenomenon, \textcite{LinearModeConnectivity} propose a tool for understanding the failings of {IMP} in uncovering winning tickets.
+For that, the authors introduce \textit{Instability Analysis}.
+
+Instability refers to the network being susceptible to noise of Stochastic Gradient Descent (SGD).
+SGD introduces noise by stochastically selecting the order of mini-batches for the network training.
+To determine if a network is stable to this noise, first, the network has to be duplicated.
+The two identical networks are then trained with different SGD noise, realized with different random seeds.
+After training, there are two sets of weights, $\theta_A$ and $\theta_B$.
+Between both sets of weights, a linear path is defined.
+Along this path, the weights are linearly interpolated with $\theta_\alpha = \alpha \theta_A + (1 - \alpha \theta_B)$, where $\alpha \in (0,1)$. 
+For each of the interpolated sets of weights $\theta_\alpha$, the performance, or error, is measured.
+The highest increase in the error of the interpolated weight sets $\theta_\alpha$ relative to the mean of the error of the original weights $\theta_A$ and $\theta_B$ is called the \textit{error barrier height}. 
+If the error barrier height is smaller than a specified threshold, the network is considered linear mode connected and, hence, \textit{stable}.
+The authors use a threshold of 2 percent as the threshold in their experiments, intended to tolerate noise. 
+The implementation of the linear interpolation between the two weight sets is realized with 30 evenly spaced values of $\alpha$.
+
+\textcite{LinearModeConnectivity} conduct instability analysis on unpruned dense networks with different architectures and datasets at initialization as well as during training.
+For this experiment, they examined LeNet trained on MNIST, ResNet-20 and VGG-16 trained on CIFAR-10 as well as ResNet-50 and Inception-v3 \autocite{inceptionv3} on ImageNet~\autocite{imagenet}. 
+They find that only LeNet is stable at initialization, however all other networks become stable early in training.
+Furthermore and more interestingly, the authors conduct instability analysis on subnetworks uncovered by {IMP}.
+In Addition, for this purpose the {IMP}-algorithm is generalized to rewind the weights to any step $k$ in training.
+
+As described in this paragraph, the network state at initialization is saved in order to reset the network after pruning, which represents $k=0$.
+This notion is generalized to any step $k$, where the state of the network after $k$ update steps is stored for resetting.
+Networks derived with {IMP} and $k > 0$ are technically not winning tickets, since the condition for them is that the parameters are from initialization, meaning $k=0$.
+Networks with parameters from later steps $k > 0$ are called \textit{matching}~\autocite{LinearModeConnectivity}.
+
+The instability analysis at initialization shows that the subnetworks are only stable if they match.
+Subsequently, the authors apply instability analysis to multiple subnetworks created from the same dense network over multiple values for the reset step $k$.
+These experiments show that the subnetworks that are not stable when $k=0$ become stable when they are rewound to a later step $k$.
+The step $k$ when they get stable closely coincides with the step where the subnetworks become matching, which suggests a tight link between the two concepts.
+The experiments were only done with dense networks and extremely sparse networks, namely between 1.5\% and 16.8\% for the smaller networks, 30\% for ResNet-50, and InceptionNet \autocite{LinearModeConnectivity}.
+
+\subsection{Pruning Strategies}
+The original lottery ticket experiments use a simple pruning strategy of masking a certain percentage of weights with the lowest magnitudes \autocite{LTH}, as in \autocite{HanEtAl15}. This simple heuristic has yielded impressive results, yet there are many other possible heuristics one could imagine for such a task.
+\textcite{Supermasks} perform an ablation study concerning pruning strategies. Mask criteria are defined as functions that determine a score for each parameter. This score is used to rank the parameters and the bottom $p\%$ are set to zero.
+A variety of criteria is considered, including: 
+\begin{itemize}
+\item \textbf{Magnitude at initialization:} Mask the smallest (or largest) weights by their magnitude at initialization
+\item \textbf{Magnitude after training:} Mask the smallest (or largest) weights by their magnitude after training
+\item \textbf{Magnitude at initialization and after training:} Mask the weights that had the smallest (or largest) magnitudes at initialization and after training
+\item \textbf{Magnitude increase:} Mask the weights that have the highest decrease or smallest increase in magnitude after training
+\item \textbf{Movement:} Mask the weights that, after training, are closest to the value at initialization
+\item \textbf{Random:} Mask randomly as a baseline for comparison
+\end{itemize}
+The authors followed the experimental setup of \textcite{LTH} and evaluated fully connected networks as well as convolutional neural networks.
+The simple magnitude pruning approach is among the best performing in the experiments.
+However, also pruning by movement produced well-performing winning tickets.
+The results suggest that pruning the lowest magnitude weights of a network is a competitive strategy.
+Although it may not be the best strategy, as other alternatives produce competitive results, it is a relevant algorithm to use and study. 
+
+\subsection{Theory of Iterative Magnitude Pruning}
+\textcite{WhyLotteryTicketsWin} hypothesize that winning tickets effectively relearn the same solution as the one achieved by pruning alone, which they term \textit{pruned solution}.
+The authors show that the winning ticket subnetworks are significantly more similar to the pruned solution than they are to a trained but randomly reinitialized sparse network.
+The experiments are conducted on the original LeNet architecture trained on the MNIST dataset, as well as ResNet-50 Architecture trained on ImageNet. Further, they show that the trained winning tickets reside in the same basin of the loss landscape as the pruned solution, by linearly interpolating between the two networks, in the same way as in \autocite{LinearModeConnectivity}.
+
+\textcite{maene_towards_2021} name the hypothesis of \autocite{WhyLotteryTicketsWin} the regurgitating tickets interpretation.
+They designed an experiment in which they forced the network to learn a different solution by creating a repellent loss function.
+This loss increases when the model is close to the same solution as in the previous iteration of {IMP}.
+This forces the network to find a new solution every iteration.
+With the repellent loss, no winning tickets could be found, which further indicates that the solution found with {IMP} indeed relearns the pruned solution.
+
+\section{Alternative Ways to Find Winning Tickets}
+\subsection{Supermasks}
+\textcite{Supermasks} demonstrate that it is possible to find well-performing subnetworks at initialization by only pruning.
+First, each weight in the network is assigned a score, which is 1 for every weight at the beginning. 
+The scores are denoted $s$.
+In each forward pass of the network, the so-called \textit{effective weights} are used.
+The effective weights $\theta_{eff}$ are the weights at initialization $\theta$ multiplied element-wise with a stochastically sampled mask.
+This mask is sampled according to $m = \textit{Bern}(\sigma(s))$, where $\textit{Bern}(p)$ is a Bernoulli sampler producing a $1$ with probability $p$ and $\sigma(\cdot)$ is the sigmoid function. 
+Thus, the effective weights are $\theta_{eff} = \textit{Bern}(\sigma(s)) \odot \theta$.
+The scores are the learned parameters and are updated via backpropagation.
+Experiments were conducted with a fully connected feed-forward neural network on MNIST and a convolutional network on CIFAR-10, reaching 95.3\% and 65.4\% test accuracy, respectively.
+The authors call these masks \textit{supermasks}.
+
+\subsection{Edge Popup}
+Based on the results of \autocite{Supermasks}, \textcite{EdgePopup} scaled up the experiments and modified the algorithm for producing the mask slightly.
+They remove the stochastic sampling of the Bernoulli sampler, as they claim that the stochasticity limits the performance. 
+Instead of sampling the mask values, a real-valued score is learned for each weight. 
+The subnetwork is chosen by selecting the top-$k$\% highest scores in each layer.
+The algorithm for finding this mask is named \textit{Edge-Popup} (EP).
+Experiments are conducted on small fully connected and convolutional neural networks with CIFAR-10 and several ResNet architectures with ImageNet.
+Results show that even for the much harder ImageNet dataset, there exist randomly initialized subnetworks with non-trivial performance. 
+An expressive finding of the experiments shows that a larger architecture (Wide-ResNet-50, 69M parameters) can reach 73.3\% accuracy on ImageNet by only pruning the weights with {EP}.
+The resulting subnetwork has 20.6M parameters. In comparison, they show that this pruning-only approach can compete with a fully trained ResNet-34 (21.8M parameters) which also reaches 73.3\% accuracy. 
+Surprisingly, the authors note that the subnetworks obtained by EP do not respond to any further training.
+Furthermore, they note that the subnetwork does not train with the same accuracy as the dense network.
+Therefore, the subnetworks are not considered winning tickets.
+The results suggest that there is another phenomenon at play that makes these networks perform well \autocite{EdgePopup}.
+Despite that, the experiments show that there exist well-performing subnetworks at initialization, without any weight updates.
+
+\subsection{Rare Gems}
+Drawing Inspiration from the EP-algorithm, \textcite{RareGems} propose an algorithm called Gem-Miner (GM) that overcomes the issues of the apparent lack of trainability of the obtained subnetworks.
+The {GM}-algorithm assigns a normalized score to each weight. 
+To obtain the mask $m$, a simple rounding function is applied to each score. The authors used a simple deterministic rounding function, where values below $0.5$ are rounded down to $0$ and all other values to $1$.
+In the forward pass, the effective weights $\theta_{eff} = \theta \odot m$ are used, where $\theta$ are the untrained weights at initialization. 
+The scores are the learned parameters and are updated via backpropagation.
+Furthermore, the scores are renormalized to the range $[0,1]$ after they are updated, if necessary.
+Additionally, a regularization term is added to the loss, which enforces sparsity on the scores. 
+The authors use the $L_2$ norm of the scores and note that the $L_1$ norm performs almost identically.
+The final sparsity of the obtained subnetwork can be controlled by the regularization hyperparameter $\lambda$, which scales the regularization term.
+If $\lambda = 0$, there is no control over the final sparsity. 
+The authors have discovered, in line with~\cite{EdgePopup}, that the sparsity level remains close to $50$ percent, as apparently, this is where the accuracy is maximized.
+
+Experiments with different ResNet architectures on CIFAR-10, TinyImageNet \autocite{Tinyimagenet}, and Caltech-101 \autocite{Caltech101} were conducted. 
+The results show that the subnetworks obtained via the {GM}-algorithm, are indeed winning tickets since they can then be trained and reach comparable accuracy to their dense counterpart.
+Furthermore, the subnetworks have reasonably high accuracy \textit{before} any weight training, which earns them the name \textit{Rare Gems}. 
+This makes the set of rare gems a subset of winning tickets. 
+They are winning tickets, that already perform well before weight training.
+The obtained subnetworks do not always outperform winning tickets obtained with {IMP}. 
+However, there is a considerable improvement over {IMP} in terms of resource intensity.
+The authors claim, that their algorithm is up to $19\times$ faster than the iterative approach with {IMP}. 
+This increase in efficiency is compelling for repeated experiments.
+
+\subsection{Pruning at Initialization}
+In addition, a variety of other methods \autocite{GraSP, SNIP, SynFlow} were introduced to prune networks at initialization. 
+However, empirical investigations by \textcite{PruningAtInitMissingTheMark, SanityCheckingPruningMethods} show that none of these approaches perform better than carefully selecting layer-wise sparsities.
+Based on this finding, \autocite{SanityCheckingPruningMethods} propose a method that selects layer-wise sparsities called Smart-Ratio (SR).
+
+\section{Analyzing Winning Tickets}
+\subsection{Weight Distribution}
+\textcite{maene_towards_2021} note that the average magnitude of the unpruned weights increases with each pruning round of {IMP}.
+The smallest magnitude weights in the network are pruned, and the remaining weights train to similar values, thereby increasing the average magnitude.
+In the original lottery tickets paper by \textcite{LTH}, the authors analyze the distribution of weight magnitudes after training.
+Before the first pruning iteration, the distribution of weight magnitudes follows a Gaussian distribution, due to the networks initialization.
+After several pruning iterations, the distributions tend towards a bimodal distribution, where the values close to zero are carved out.
+The authors attempted to reinitialize the sparse subnetworks randomly according to the distribution of the lottery ticket weight magnitudes, however, the performance was only slightly better than reinitialization with the original weight distribution.
+This hints at the fact, that the structure of the network graph is not the only necessary component to make lottery tickets work.
+
+\subsection{Network Structure}
+Even though the structure alone is not responsible for the success of the winning ticket, it might still be worth studying.
+The structure of a neural network can viewed as a directed acyclic graph.
+Since it is sparsely connected, the remaining connections could provide insight into the functionality of the network.
+\textcite{LTH} analyze the connectivity of each node in the winning ticket network graph.
+They find that the input connectivity, namely the number of incoming edges to a node (neuron) is relatively even among nodes of the same layer.
+The input connectivity of each node in LeNet trained on the MNIST dataset is approximately proportional to the sparsity of the layer.
+Regarding the output connections, there are bigger differences in connectivity amongst nodes.
+Especially in the input layer, a significant proportion of nodes has no remaining outgoing connections at high sparsities.
+The authors hypothesize that the disconnected input nodes are not informative and likely correspond to the outer frame of the MNIST image, which does not contain information about the desired prediction task.
+
+When applying unstructured pruning (pruning individual weights instead of neurons), some neurons may end up in a state where they do not have any incoming or outgoing connections. 
+\textcite{HanEtAl15} acknowledge the possibility of such neurons, which will be referred to as \textit{dead neurons}. 
+According to \autocite{HanEtAl15}, the dead neurons do not contribute to the final loss and therefore do not receive any gradients. 
+During retraining, regularization will remove the dead neurons automatically. 
+A missing scenario is the existence of a neuron with outgoing connections, a bias, and no incoming connections. This neuron might still contribute to the output and receive gradients. 
+In this case, the neuron is considered dead, but removing it changes the output of the network.
+\textcite{AllAlivePruning} include this scenario and describe that removing such a neuron maintains the function of the network by simply transferring the bias to the next layer. 
+Therefore, all neurons with no incoming or outgoing connections can safely be considered dead, thus removable. 
+Further, all weights connected to a dead neuron can be removed as well.
+\textcite{AllAlivePruning} propose a novel pruning strategy that makes use of this knowledge, named \textit{All-Alive-Pruning}. 
+The authors use iterative magnitude pruning, similar to \autocite{LTH}.
+Dead neurons and the weights connected to them are removed after pruning, resulting in an \textit{all-alive} network.
+Only at very high sparsities, the networks pruned with All-Alive-Pruning demonstrate improved performance. 
+This improvement is attributed to the increased capacity of the subnetwork since more of its parameters are \textit{alive} and can contribute to the network output.
+
+Only a few researchers looked at winning tickets derived with iterative magnitude pruning as sparsely connected graphs. 
+The insights relate the function of the network to its structure.
+Dead neurons \autocite{HanEtAl15, AllAlivePruning} are neurons that are part of the graph structure that can be removed without harming the function.
+\textcite{LTH} discover that inputs that do not transmit information are pruned at higher rates, leaving them with fewer outgoing connections.
+Overall the structure of winning tickets and how it relates to its function remains elusive.
+
+\section{Brain-Inspired Modular Training}
+A sparse network where the structure of the network relates to the underlying algorithm or problem structure can be beneficial for interpretability.
+\textcite{BIMT} propose a training method called Brain-Inspired Modular Training (BIMT) that aims to produce sparse networks that can more easily be visually interpreted.
+The authors aim to encourage modularity in the network by embedding the neurons in an Euclidean space.
+By punishing connections that are long in Euclidean space, visible clusters of neurons form. 
+Since neurons that are next to each other in the Euclidean space do not necessarily belong to a logical group, the authors introduce an additional algorithm that swaps neurons in the network to decrease the total weighted length of connections.
+On simple symbolic tasks, \autocite{BIMT} uncover structures that represent the structure of the underlying tasks.
+On symbolic datasets, BIMT succeeds in discovering the independence, feature sharing, and compositionality of the problem, which is visible in the resulting structure of the sparse network.
+The authors also use BIMT to train a feed-forward neural network on simple classification tasks as well as the MNIST dataset, where they used three-dimensional Euclidean space to embed the network.
+With larger models and especially in three dimensions, the shortcomings of the method become apparent as visual inspection does not help for interpretation any longer.
+Critically, however, the authors demonstrate an interesting way of connecting the function of a network to its structure.
+They use a dataset with a known structure, such as independence, feature sharing or compositionality and see how it changes the structure of the network.
+
+\section{Conclusion}
+The study of lottery tickets is a broad and diverse field. 
+Even though theoretical studies were mentioned in the literature review, the majority of research conducted in this space is empirical.
+The structure of the resulting sparse networks is rarely discussed and invites further investigation.
+The experiments conducted in \autocite{BIMT} represent a valuable avenue for analyzing the structure of the network concerning the data it was trained on.

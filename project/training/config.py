@@ -25,6 +25,7 @@ class Config:
     init_strategy_biases: str = None
     init_strategy_weights: str = None
 
+    only_consider_out_features_for_degrading: bool = False
     task_description: dict = None
     n_samples: int = 800
     data_seed: int = None
@@ -38,6 +39,7 @@ class Config:
     log_graphs: bool = True
     log_graphs_before_split: bool = False
     stop_on_degradation: bool = True
+    stop_on_seperation: bool = False
 
     num_concat_datasets: int = None
     run_name: str = None

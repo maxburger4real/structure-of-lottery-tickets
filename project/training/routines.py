@@ -1,11 +1,12 @@
 """high level training routines."""
 from enum import Enum
+from re import I
 from tqdm import tqdm
 from typing import Iterable
 from training.config import Config
 from factory import Factory
 from training.utils import evaluate, train_and_evaluate
-
+import torch
 
 class Routines(Enum):
     vanilla = "vanilla"
@@ -30,20 +31,14 @@ def start_routine(config: Config):
                 factory=Factory(config),
                 first_level=-config.extension_levels,
                 stop_when_model_degrades=config.stop_on_degradation,
+                stop_when_model_seperates=config.stop_on_seperation,
             )
 
         case _:
             raise ValueError(" Unsupported ")
 
 
-def evaluate_graph(model, gm, level):
-    if gm is None:
-        return
-    gm.update(model, level)
-    return gm.metrics()
-
-
-def vanilla(training_epochs, device, factory):
+def vanilla(training_epochs, device, factory: Factory):
     """Classical training loop."""
 
     # prepare model and data
@@ -79,6 +74,7 @@ def imp(
     device: str,
     first_level: int = 0,
     stop_when_model_degrades=True,
+    stop_when_model_seperates=False,
 ):
     """Iterative Magnitude Pruning with weight resetting."""
     # prepare model and data
@@ -122,7 +118,12 @@ def imp(
             device=device,
         )
 
-        graph_metrics = evaluate_graph(model, graph_manager, level)
+        graph_metrics = {}
+        if graph_manager is not None:
+            graph_manager.update(model, level)
+            graph_metrics = graph_manager.metrics()
+            logger.metrics(graph_manager.layerwise_split_metrics, prefix='layersplit/')
+            logger.metrics(graph_manager.remaining_in_and_outputs, prefix='remaining_inout/')
 
         logger.metrics(graph_metrics, prefix="graph/")
         logger.metrics(train_eval_metrics, prefix="performance/")
@@ -131,4 +132,8 @@ def imp(
 
         if stop_when_model_degrades and graph_manager.is_degraded:
             print("Stopping Because of Degradation")
+            break
+
+        if stop_when_model_seperates and graph_manager.is_split:
+            print("Stopping Because of Seperation")
             break

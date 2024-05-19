@@ -1,24 +1,37 @@
-\documentclass{article}
+\documentclass[12pt,a4paper,notitlepage]{report}
 \input{preamble.tex}
 
-% some imports, settings etc.
-\addbibresource{bibliography.bib} 
-
-% File metadata
-\title{Winning the Lottery Twice}
-\author{Maximilian Burger\\{\small Advisor: Pieter-Jan Hoedt}}
-\date{March 2024}
 \begin{document}
+\includepdf{titlepage.pdf}
 \sffamily
-\maketitle
+\pagenumbering{roman}
 
-\input{abstract.tex}
-% TODO: \input{kurzfassung.tex}
-\input{introduction.tex}
-\input{literature-review.tex}
-\input{methodology.tex}
-\input{experiments-and-results.tex}
-% TODO: \input{mnist-experiments.tex}
-\input{conclusion.tex}
-\printbibliography
+% start of the thesis
+\pagenumbering{arabic}
+\input{0-abstract.tex}
+\input{0-kurzfassung.tex}
+\newpage
+\tableofcontents
+\input{1-introduction.tex}
+\input{2-literature-review.tex}
+\input{3-methodology.tex}
+\input{4-experiments-and-results.tex}
+\input{5-discussion.tex}
+\printbibliography[
+    title={Bibliography},
+    heading=bibintoc
+]
+
+% additional stuff
+\pagenumbering{roman}
+\newpage
+
+\listoffigures
+\addcontentsline{toc}{chapter}{List of Figures}
+\newpage
+
+\lstlistoflistings
+\addcontentsline{toc}{chapter}{List of Code Snippets}
+\listoftables
+\addcontentsline{toc}{chapter}{List of Tables}
 \end{document}

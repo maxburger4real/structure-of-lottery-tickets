@@ -61,6 +61,16 @@ class Factory:
                     weight_init_func=models.Init[self.config.init_strategy_weights],
                     bias_init_func=models.Init[self.config.init_strategy_biases],
                 )
+            case models.MultiTaskMultiClassMLP.__name__:
+                outputs = [task[1][1] for task in self.config.task_description]
+
+                model = models.MultiTaskMultiClassMLP(
+                    shape=shape,
+                    task_map=outputs,
+                    seed=seed,
+                    weight_init_func=models.Init[self.config.init_strategy_weights],
+                    bias_init_func=models.Init[self.config.init_strategy_biases],
+                )
             case models.MLP.__name__:
                 raise ValueError("You shouldnt use MLP, it doesnt have a loss defined.")
             case _:
@@ -102,7 +112,10 @@ class Factory:
 
     def make_graph_manager(self, model: torch.nn.Module) -> GraphManager:
         return GraphManager(
-            model, self.config.model_shape, self.config.task_description
+            unpruned_model=model, 
+            shape=self.config.model_shape, 
+            task_description=self.config.task_description, 
+            output_only=self.config.only_consider_out_features_for_degrading
         )
 
     def make_logger(self):

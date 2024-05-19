@@ -11,6 +11,7 @@ import matplotlib.colors as mcolors
 from enum import Enum
 from typing import List, Dict, Tuple
 import plotly.graph_objects as go
+import pickle
 
 ParamState = Enum(
     "ParamState", ["active", "inactive", "zombious", "zombie_downstream", "pruned"]
@@ -22,10 +23,11 @@ STATE = "state"
 class GraphManager:
     """A class that manages the state over the pruning iterations"""
 
-    def __init__(self, unpruned_model, shape, task_description):
+    def __init__(self, unpruned_model, shape, task_description, output_only=False):
         """Initialize the contant values of the Network, that will remain true over pruning iterations."""
         self.is_connected = self.is_split = self.is_degraded = False
 
+        self.output_only = output_only
         self.shape = shape
 
         self.num_tasks = len(task_description) if task_description is not None else 1
@@ -42,6 +44,8 @@ class GraphManager:
         self.task_description = map_tasks_to_features(
             task_description, self.in_features, self.out_features
         )
+
+        self.layerwise_split_metrics = {}
 
         self.graveyard = {}  # the pruned parameters are here
         self.catalogue: Dict[str, nx.Graph] = {}
@@ -96,11 +100,76 @@ class GraphManager:
         # tag the parameters based on new pruning mask
         tag_parameters(self.G, model, self.in_features, self.out_features)
 
-        # split the network into subnetworks
         G = subgraph_by_state(self.G, include=[ParamState.active])
         subnetworks = [
             G.subgraph(c) for c in nx.connected_components(G.to_undirected())
         ]
+
+        # WARNING: This only works for 2 tasks
+
+
+        self.layerwise_split_metrics = {}
+        self.remaining_in_and_outputs = {}
+        if False and len(self.task_description) == 2:
+
+            t0_name, (t0_in, t0_out) = self.task_description[0]
+            t1_name, (t1_in, t1_out) = self.task_description[1]
+
+            self.remaining_in_and_outputs[t0_name + '-out'] = len(set(t0_out).intersection(G.nodes))
+            self.remaining_in_and_outputs[t0_name + '-in'] =  len(set(t0_in).intersection(G.nodes))
+            self.remaining_in_and_outputs[t1_name + '-out'] = len(set(t1_out).intersection(G.nodes))
+            self.remaining_in_and_outputs[t1_name + '-in'] =  len(set(t1_in).intersection(G.nodes))
+            
+            # from outputs
+            out_t0 = set()
+            out_t1 = set()
+            for tout in t0_out:
+                if G.has_node(tout):
+                    out_t0.update(nx.ancestors(G, tout))
+            for tout in t1_out: 
+                if G.has_node(tout):
+                    out_t1.update(nx.ancestors(G, tout))
+
+            t0 = out_t0 - out_t1 # t0 and not t1
+            t1 =  out_t1 - out_t0 # t1 and not t0
+            t12 = out_t0 & out_t1
+            
+            for layer in range(len(self.shape)-1):
+                n0 = len([n for n in t0 if G.has_node(n) and G.nodes[n]['layer'] == layer])
+                n1 = len([n for n in t1 if G.has_node(n) and G.nodes[n]['layer'] == layer])
+                n01 = len([n for n in t12 if G.has_node(n) and G.nodes[n]['layer'] == layer])
+                ratio = (n0 + n1) / (n0 + n1 + n01)
+
+                self.layerwise_split_metrics[f'outview-{layer}-{t0_name}'] = n0
+                self.layerwise_split_metrics[f'outview-{layer}-{t1_name}'] = n1
+                self.layerwise_split_metrics[f'outview-{layer}-decided'] = n0 + n1
+                self.layerwise_split_metrics[f'outview-{layer}-undecided'] = n01
+                self.layerwise_split_metrics[f'outview-{layer}-p-decided'] = ratio
+
+            # FROM INPUTS
+            bottom_t0 = set()
+            bottom_t1 = set()
+            for tin in t0_in: 
+                if G.has_node(tin):
+                    bottom_t0.update(nx.descendants(G, tin))
+            for tin in t1_in: 
+                if G.has_node(tin):
+                    bottom_t1.update(nx.descendants(G, tin))
+
+            t0 = bottom_t0 - bottom_t1  
+            t1 =  bottom_t1 - bottom_t0 
+            t12 = bottom_t0 & bottom_t1
+            for layer in range(1, len(self.shape)):
+                n0 = len([n for n in t0 if G.has_node(n) and G.nodes[n]['layer'] == layer])
+                n1 = len([n for n in t1 if G.has_node(n) and G.nodes[n]['layer'] == layer])
+                n01 = len([n for n in t12 if G.has_node(n) and G.nodes[n]['layer'] == layer])
+                ratio = (n0 + n1) / (n0 + n1 + n01)
+
+                self.layerwise_split_metrics[f'inview-{layer}-{t0_name}'] = n0
+                self.layerwise_split_metrics[f'inview-{layer}-{t1_name}'] = n1
+                self.layerwise_split_metrics[f'inview-{layer}-decided'] = n0 + n1
+                self.layerwise_split_metrics[f'inview-{layer}-undecided'] = n01
+                self.layerwise_split_metrics[f'inview-{layer}-p-decided'] = ratio
 
         # update the catalogue of subnetworks
         self.__update_catalogue(subnetworks)
@@ -114,6 +183,26 @@ class GraphManager:
             self.is_split = True
         elif self.untapped_potential < 0:
             self.is_degraded = True
+
+        G = subgraph_by_state(self.G, include=[ParamState.active]).copy()
+        for node in G.nodes():
+            if 'state' in G.nodes[node]:
+                del G.nodes[node]['state']
+        for edge in G.edges():
+            if 'state' in G.edges[edge]:
+                del G.edges[edge]['state']    
+        nx.write_graphml(G, f'active-{iteration}.graphml')
+
+        G = subgraph_by_state(self.G, exclude=[ParamState.pruned]).copy()
+        for node in G.nodes():
+            if 'state' in G.nodes[node]:
+                del G.nodes[node]['state']
+        for edge in G.edges():
+            if 'state' in G.edges[edge]:
+                del G.edges[edge]['state']    
+        nx.write_graphml(G, f'unpruned-{iteration}.graphml')
+
+
 
     def fig(
         self,
@@ -129,28 +218,36 @@ class GraphManager:
 
     def __update_catalogue(self, subnetworks):
         # update the task matrix
-        self.task_matrix = task_matrix(subnetworks, self.task_description)
+        self.task_matrix = task_matrix(subnetworks, self.task_description, self.output_only)
 
-        potential = np.sum(self.task_matrix) / len(self.task_description)
+        potential = np.sum(self.task_matrix) / self.num_tasks
 
         # has full potential
         if np.isclose(potential, 1):
-            assert all(
-                i.is_integer() for i in self.task_matrix.flatten()
-            ), f"values must be integers. got {self.task_matrix}"
-            self.task_matrix = self.task_matrix.astype(int)
+            
+            # more networks than tasks, but all outputs connected
+            if self.num_tasks < self.task_matrix.shape[0]:
+                print('More networks than tasks.')
+                # hack
+                self.untapped_potential = -0.001
+            else:
+                # number of values larger than 1
+                assert all(
+                    i.is_integer() for i in self.task_matrix.flatten()
+                ), f"values must be integers. got {self.task_matrix}"
+                self.task_matrix = self.task_matrix.astype(int)
+                num_tasks_per_network = np.sum(self.task_matrix, axis=1)
+                splits_remaining = np.sum(num_tasks_per_network - 1)
+                self.untapped_potential = splits_remaining
 
-            # number of values larger than 1
-            num_tasks_per_network = np.sum(self.task_matrix, axis=1)
-            splits_remaining = np.sum(num_tasks_per_network - 1)
-            self.untapped_potential = splits_remaining
+                if (
+                    self.untapped_potential == 0
+                    and self.split_iteration is None
+                    and self.num_tasks > 1
+                ):
+                    self.split_iteration = self.iteration
 
-            if (
-                self.untapped_potential == 0
-                and self.split_iteration is None
-                and self.num_tasks > 1
-            ):
-                self.split_iteration = self.iteration
+            
 
         # changed
         elif self.untapped_potential != potential - 1:
@@ -196,7 +293,7 @@ def build_nx(model: torch.nn.Module) -> nx.DiGraph:
         # connect the nodes of current and previous layer
         for previous_layer, previous_node_idx in previous_nodes:
             for current_layer, current_node_idx in current_nodes:
-                weight = module.weight[current_node_idx, previous_node_idx].item()
+                weight = module.weight[current_node_idx, previous_node_idx].detach().cpu().item()
                 G.add_edge(
                     u_of_edge=(previous_layer, previous_node_idx),
                     v_of_edge=(current_layer, current_node_idx),
@@ -247,7 +344,7 @@ def subgraph_by_state(
     return g
 
 
-def task_matrix(subnetworks: List[nx.DiGraph], task_description):
+def task_matrix(subnetworks: List[nx.DiGraph], task_description, output_only: bool):
     L = len(task_description)
     N = len(subnetworks)
     X = np.ones(shape=(N, L)) * np.inf  # Just to be sure that it is always overwritten.
@@ -258,16 +355,13 @@ def task_matrix(subnetworks: List[nx.DiGraph], task_description):
             in_features_in_subnetwork = set(g.nodes()).intersection(in_features)
             out_features_in_subnetwork = set(g.nodes()).intersection(out_features)
 
-            # their product is the number of inout pairs in the network.
-            num_in_out_pairs = len(in_features_in_subnetwork) * len(
-                out_features_in_subnetwork
-            )
-
-            percentage_num_in_out_pairs = num_in_out_pairs / (
-                len(in_features) * len(out_features)
-            )
-
-            X[i, j] = percentage_num_in_out_pairs
+            if output_only:
+                X[i, j] = len(out_features_in_subnetwork) / len(out_features)
+            else:
+                X[i, j] = (
+                    (len(in_features_in_subnetwork) * len(out_features_in_subnetwork))/
+                    (len(in_features) * len(out_features))
+                )
 
     return X
 

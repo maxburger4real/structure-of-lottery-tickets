@@ -1,4 +1,4 @@
-@inproceedings{DBLP:conf/iclr/FrankleC19,
+@inproceedings{LTH,
   author    = {Jonathan Frankle and
                Michael Carbin},
   title     = {The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks},
@@ -11,7 +11,90 @@
   biburl    = {https://dblp.org/rec/conf/iclr/FrankleC19.bib},
   bibsource = {dblp computer science bibliography, https://dblp.org}
 }
-@article{Kaiming,
+@book{python,
+  title={Python reference manual},
+  author={Van Rossum, Guido and Drake Jr, Fred L},
+  year={1995},
+  publisher={Centrum voor Wiskunde en Informatica Amsterdam}
+}
+@ARTICLE{numpy,
+  author  = {Harris, Charles R. and Millman, K. Jarrod and van der Walt, Stéfan J and Gommers, Ralf and Virtanen, Pauli and Cournapeau, David and Wieser, Eric and Taylor, Julian and Berg, Sebastian and Smith, Nathaniel J. and Kern, Robert and Picus, Matti and Hoyer, Stephan and van Kerkwijk, Marten H. and Brett, Matthew and Haldane, Allan and Fernández del Río, Jaime and Wiebe, Mark and Peterson, Pearu and Gérard-Marchant, Pierre and Sheppard, Kevin and Reddy, Tyler and Weckesser, Warren and Abbasi, Hameer and Gohlke, Christoph and Oliphant, Travis E.},
+  title   = {Array programming with {NumPy}},
+  journal = {Nature},
+  year    = {2020},
+  volume  = {585},
+  pages   = {357-362},
+  doi     = {10.1038/s41586-020-2649-2}
+}
+@article{sympy,
+  title={SymPy: symbolic computing in Python},
+  author={Meurer, Aaron and Smith, Christopher P and Paprocki, Mateusz and Certik, Ondrej and Kirpichev, Sergey B and Rocklin, Matthew and Kumar, AMiT and Ivanov, Sergiu and Moore, Jason K and Singh, Sartaj and others},
+  journal={PeerJ Computer Science},
+  volume={3},
+  pages={e103},
+  year={2017},
+  publisher={PeerJ Inc.}
+}
+@article{matplotlib,
+  title={Matplotlib: A 2D graphics environment},
+  author={Hunter, John D},
+  journal={Computing in science \& engineering},
+  volume={9},
+  number={3},
+  pages={90--95},
+  year={2007},
+  publisher={IEEE}
+}
+@incollection{pytorch,
+title = {PyTorch: An Imperative Style, High-Performance Deep Learning Library},
+author = {Paszke, Adam and Gross, Sam and Massa, Francisco and Lerer, Adam and Bradbury, James and Chanan, Gregory and Killeen, Trevor and Lin, Zeming and Gimelshein, Natalia and Antiga, Luca and Desmaison, Alban and Kopf, Andreas and Yang, Edward and DeVito, Zachary and Raison, Martin and Tejani, Alykhan and Chilamkurthy, Sasank and Steiner, Benoit and Fang, Lu and Bai, Junjie and Chintala, Soumith},
+booktitle = {Advances in Neural Information Processing Systems 32},
+pages = {8024--8035},
+year = {2019},
+publisher = {Curran Associates, Inc.},
+url = {http://papers.neurips.cc/paper/9015-pytorch-an-imperative-style-high-performance-deep-learning-library.pdf}
+}
+@article{sklearn,
+  title={Scikit-learn: Machine learning in Python},
+  author={Pedregosa, Fabian and Varoquaux, Ga{\"e}l and Gramfort, Alexandre and Michel, Vincent and Thirion, Bertrand and Grisel, Olivier and Blondel, Mathieu and Prettenhofer, Peter and Weiss, Ron and Dubourg, Vincent and others},
+  journal={Journal of machine learning research},
+  volume={12},
+  number={Oct},
+  pages={2825--2830},
+  year={2011}
+}
+@techreport{networkx,
+  title={Exploring network structure, dynamics, and function using NetworkX},
+  author={Hagberg, Aric and Swart, Pieter and S Chult, Daniel},
+  year={2008},
+  institution={Los Alamos National Lab.(LANL), Los Alamos, NM (United States)}
+}
+@article{zoomin,
+  author = {Olah, Chris and Cammarata, Nick and Schubert, Ludwig and Goh, Gabriel and Petrov, Michael and Carter, Shan},
+  title = {Zoom In: An Introduction to Circuits},
+  journal = {Distill},
+  year = {2020},
+  note = {https://distill.pub/2020/circuits/zoom-in},
+  doi = {10.23915/distill.00024.001}
+}
+
+@InProceedings{XAVIER-GLOROT,
+  title = 	 {Understanding the difficulty of training deep feedforward neural networks},
+  author = 	 {Glorot, Xavier and Bengio, Yoshua},
+  booktitle = 	 {Proceedings of the Thirteenth International Conference on Artificial Intelligence and Statistics},
+  pages = 	 {249--256},
+  year = 	 {2010},
+  editor = 	 {Teh, Yee Whye and Titterington, Mike},
+  volume = 	 {9},
+  series = 	 {Proceedings of Machine Learning Research},
+  address = 	 {Chia Laguna Resort, Sardinia, Italy},
+  publisher =    {PMLR},
+  pdf = 	 {http://proceedings.mlr.press/v9/glorot10a/glorot10a.pdf},
+  url = 	 {https://proceedings.mlr.press/v9/glorot10a.html},
+  abstract = 	 {Whereas before 2006 it appears that deep multi-layer neural networks were not successfully trained, since then several algorithms have been shown to successfully train them, with experimental results showing the superiority of deeper vs less deep architectures. All these experimental results were obtained with new initialization or training mechanisms. Our objective here is to understand better why standard gradient descent from random initialization is doing so poorly with deep neural networks, to better understand these recent relative successes and help design better algorithms in the future.  We first observe the influence of the non-linear activations functions. We find that the logistic sigmoid activation is unsuited for deep networks with random initialization because of its mean value, which can drive especially the top hidden layer into saturation. Surprisingly, we find that saturated units can move out of saturation by themselves, albeit slowly, and explaining the plateaus sometimes seen when training neural networks. We find that a new non-linearity that saturates less can often be beneficial. Finally, we study how activations and gradients vary across layers and during training, with the idea that training may be more difficult when the singular values of the Jacobian associated with each layer are far from 1.  Based on these considerations, we propose a new initialization scheme that brings substantially faster convergence.}
+}
+
+@article{KAIMING-HE,
   author       = {Kaiming He and
                   Xiangyu Zhang and
                   Shaoqing Ren and
@@ -280,7 +363,7 @@
   bibsource = {dblp computer science bibliography, https://dblp.org}
 }
 
-@inproceedings{LeCun,
+@inproceedings{OptimalBrainDamage,
   author    = {Yann LeCun and
                John S. Denker and
                Sara A. Solla},
@@ -386,7 +469,7 @@ bibsource = {dblp computer science bibliography, https://dblp.org}
   biburl    = {https://dblp.org/rec/conf/icml/EvciGMCE20.bib},
   bibsource = {dblp computer science bibliography, https://dblp.org}
 }
-@inproceedings{DBLP:conf/cvpr/RamanujanWKFR20,
+@inproceedings{EdgePopup,
   author    = {Vivek Ramanujan and
                Mitchell Wortsman and
                Aniruddha Kembhavi and
@@ -405,7 +488,7 @@ bibsource = {dblp computer science bibliography, https://dblp.org}
   bibsource = {dblp computer science bibliography, https://dblp.org}
 }
 
-@inproceedings{DBLP:conf/nips/ZhouLLY19,
+@inproceedings{Supermasks,
   author    = {Hattie Zhou and
                Janice Lan and
                Rosanne Liu and
@@ -413,7 +496,7 @@ bibsource = {dblp computer science bibliography, https://dblp.org}
   editor    = {Hanna M. Wallach and
                Hugo Larochelle and
                Alina Beygelzimer and
-               Florence d'Alch{\'{e}}{-}Buc and
+               Florence d'Alche-Buc and
                Emily B. Fox and
                Roman Garnett},
   title     = {Deconstructing Lottery Tickets: Zeros, Signs, and the Supermask},
@@ -443,7 +526,7 @@ bibsource = {dblp computer science bibliography, https://dblp.org}
 }
 @article{cnn,
   author    = {Yann LeCun and
-               L{\'{e}}on Bottou and
+               Leon Bottou and
                Yoshua Bengio and
                Patrick Haffner},
   title     = {Gradient-based learning applied to document recognition},
@@ -459,16 +542,33 @@ bibsource = {dblp computer science bibliography, https://dblp.org}
   bibsource = {dblp computer science bibliography, https://dblp.org}
 }
 
- @article{mnist,
-  title={The mnist database of handwritten digit images for machine learning research},
-  author={Deng, Li},
-  journal={IEEE Signal Processing Magazine},
-  volume={29},
-  number={6},
-  pages={141--142},
-  year={2012},
-  publisher={IEEE}
-} 
+@article{mnist,
+  added-at = {2010-06-28T21:16:30.000+0200},
+  author = {LeCun, Yann and Cortes, Corinna},
+  groups = {public},
+  interhash = {21b9d0558bd66279df9452562df6e6f3},
+  intrahash = {935bad99fa1f65e03c25b315aa3c1032},
+  keywords = {MSc _checked character_recognition mnist network neural},
+  lastchecked = {2016-01-14 14:24:11},
+  timestamp = {2016-07-12T19:25:30.000+0200},
+  title = {{MNIST} handwritten digit database},
+  url = {http://yann.lecun.com/exdb/mnist/},
+  username = {mhwombat},
+  year = 2010
+}
+@misc{fashion,
+  added-at = {2021-10-12T06:50:19.000+0200},
+  author = {Xiao, Han and Rasul, Kashif and Vollgraf, Roland},
+  description = {Fashion-MNIST: a Novel Image Dataset for Benchmarking Machine Learning Algorithms},
+  interhash = {0c81f9a6170118f14703b6796101ce40},
+  intrahash = {de51af2f6c7d8b0f4cd84a428bb17967},
+  keywords = {Fashion-MNIST Image_Classification_Benchmark},
+  timestamp = {2023-01-31T20:34:07.000+0100},
+  title = {Fashion-MNIST: a Novel Image Dataset for Benchmarking Machine Learning
+  Algorithms},
+  url = {http://arxiv.org/abs/1708.07747},
+  year = 2017
+}
 @inproceedings{imagenet,
   title={Imagenet: A large-scale hierarchical image database},
   author={Deng, Jia and Dong, Wei and Socher, Richard and Li, Li-Jia and Li, Kai and Fei-Fei, Li},
